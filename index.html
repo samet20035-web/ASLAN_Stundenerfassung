@@ -1193,15 +1193,15 @@ function bxls(data,von,bis){
     const wb=XLSX.utils.book_new();
 
     const sorted=[...data].sort((a,b)=>a.datum.localeCompare(b.datum));
-    const r1=[["Datum","BV_NUMMER","Baustelle","Name Mitarbeiter","Stunden"]];
+    const r1=[["Datum","BV_NUMMER","Name Mitarbeiter","Stunden"]];
     sorted.forEach(e=>{
       const bv=bvById(e.bv_id);
       const ma=maById(e.ma_id);
-      r1.push([fd(e.datum),bv?.nr||"",bv?.name||"",ma?.name||"",Number(e.stunden)||0]);
+      r1.push([fd(e.datum),bv?.nr||"",ma?.name||"",Number(e.stunden)||0]);
     });
 
     const ws1=XLSX.utils.aoa_to_sheet(r1);
-    ws1["!cols"]=[{wch:12},{wch:12},{wch:35},{wch:22},{wch:10}];
+    ws1["!cols"]=[{wch:12},{wch:12},{wch:22},{wch:10}];
     XLSX.utils.book_append_sheet(wb,ws1,"Seith_Stunden");
 
     const r2=[["BV-Nummer","Adresse / Beschreibung"]];
