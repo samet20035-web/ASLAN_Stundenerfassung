@@ -494,646 +494,579 @@ input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(45,122,58,.15);}
 </div><!-- .app -->
 <script>
 // ═══ CONFIG ═══
-const TEAM_CODE="ASLAN1973";
-const SB_URL="https://orluvjqjkngjdmajtwvp.supabase.co";
-const SB_KEY="syxGy4-jyqbyn-wujfan";
+// ═══ CONSTANTS ═══
+const CODE="ASLAN1973";
+const SBU="https://orluvjqjkngjdmajtwvp.supabase.co"; // Deine Supabase URL
+const SBK="syxGy4-jyqbyn-wujfan"; // Dein Supabase Anon-Key
+const LS="a3_";
 
-// ═══ MA COLOR PALETTE ═══
-const MA_COLORS=[
+const CLRS=[
   {bg:"#dbeafe",tc:"#1e3a8a"},{bg:"#d1fae5",tc:"#064e3b"},{bg:"#fef3c7",tc:"#78350f"},
   {bg:"#ffe4e6",tc:"#881337"},{bg:"#f3e8ff",tc:"#4c1d95"},{bg:"#fce7f3",tc:"#831843"},
   {bg:"#ecfdf5",tc:"#065f46"},{bg:"#fff7ed",tc:"#7c2d12"},{bg:"#f0fdf4",tc:"#14532d"},
   {bg:"#eff6ff",tc:"#1e40af"}
 ];
 
-const DEFAULT_BV=[
-  {nr:"65410",name:"Bietigheim, Rheinstraße, K3737"},
-  {nr:"65539",name:"Karlsruhe, Litzelaustraße"},
-  {nr:"65586",name:"Weingarten, GWG Sandfeld"},
-  {nr:"65605",name:"KIT Campus Nord, Hermann-von-Helmholtz-Platz"},
-  {nr:"65608",name:"Rastatt-Rauental, Hauptstraße"},
-  {nr:"65646",name:"Ettlingen, Dorf-/Marktplatzsanierung"},
-  {nr:"65667",name:"Ettlingen, Bismarckstr."},
-  {nr:"65711",name:"Leimen/St. Ilgen, Siedlerstr."},
-  {nr:"65892",name:"Rastatt, Rosen-/Planetenstraße Dücker"},
-  {nr:"66014",name:"Pforst"},
-  {nr:"66044",name:"Linkenheim, Rheinstr. 83"},
-  {nr:"66051",name:"Philippsburg, RFL-Kasernengelände"},
-  {nr:"66182",name:"Kuppenheim, Baustrom VEGA"},
-  {nr:"66188",name:"Speyer"},
-  {nr:"66206",name:"Dettenheim, L602 Radweg"},
-  {nr:"66264",name:"Linkenheim, Karlsruher Str. 29"},
-  {nr:"66275",name:"Linkenheim, Rathausplatz 1-3"},
-  {nr:"66282",name:"Linkenheim, Bahnhofstr."},
-  {nr:"66298",name:"Neundorf, Ettlinger Str. 4"},
-  {nr:"66300",name:"Neundorf, Ulmenstr. 6"},
-  {nr:"66301",name:"Neundorf, Mannheimer Str. 127"}
-];
-
-const DEFAULT_MA=[
-  {name:"Sayim Aslan",k:"SA",bg:"#dbeafe",tc:"#1e3a8a"},
-  {name:"Ali Kantar",k:"AK",bg:"#d1fae5",tc:"#064e3b"},
-  {name:"Nesim",k:"NE",bg:"#fef3c7",tc:"#78350f"},
-  {name:"Ilyaz",k:"IL",bg:"#ffe4e6",tc:"#881337"},
-  {name:"Yordan Atanasor",k:"YA",bg:"#f3e8ff",tc:"#4c1d95"}
-];
-
 // ═══ STATE ═══
-let BV=[], MA=[], entries=[];
-let selBV=null, curDate="", editIdx=-1, editBVNr=null, editMAIdx=-1;
-let wocheOffset=0;
-let pageStack=["pg-login"];
+let BV=[],MA=[],EN=[];
+let sBV=null,cD="",eI=-1,eBV=null,eMA=-1,selC=-1,woff=0;
+let pstack=["pg-login"];
+let syncing=false;
 
-// ═══ SUPABASE REST ═══
-async function sbGet(table){
+// ═══ SUPABASE ═══
+const SBH={"apikey":SBK,"Authorization":"Bearer "+SBK,"Content-Type":"application/json"};
+
+async function sbFetch(path,opts={}){
   try{
-    const r=await fetch(`${SB_URL}/rest/v1/${table}?select=*&order=created_at.asc`,{
-      headers:{"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Content-Type":"application/json"}
-    });
-    if(r.ok) return await r.json();
-  }catch(e){}
-  return null;
+    const r=await fetch(SBU+"/rest/v1/"+path,{headers:SBH,...opts});
+    if(r.status===200||r.status===201){const t=await r.text();return t?JSON.parse(t):[];}
+    if(r.status===204)return[];
+    console.warn("SB",r.status,path);return null;
+  }catch(e){console.warn("SB err",e);return null;}
 }
-async function sbUpsert(table,data){
-  try{
-    await fetch(`${SB_URL}/rest/v1/${table}`,{
-      method:"POST",
-      headers:{"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,
-        "Content-Type":"application/json","Prefer":"resolution=merge-duplicates"},
-      body:JSON.stringify(data)
-    });
-  }catch(e){}
-}
-async function sbDelete(table,col,val){
-  try{
-    await fetch(`${SB_URL}/rest/v1/${table}?${col}=eq.${val}`,{
-      method:"DELETE",
-      headers:{"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY}
-    });
-  }catch(e){}
+async function sbSel(t,q=""){return sbFetch(`${t}?select=*${q}`);}
+
+// local cache
+function lsGet(k,def){try{const v=localStorage.getItem(LS+k);return v?JSON.parse(v):def;}catch(e){return def;}}
+function lsSet(k,v){try{localStorage.setItem(LS+k,JSON.stringify(v));}catch(e){}}
+
+// ═══ TOAST ═══
+let toastT;
+function toast(msg,dur=2000){
+  const el=document.getElementById("toast");
+  el.textContent=msg;el.classList.add("show");
+  clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove("show"),dur);
 }
 
-// ── FALLBACK: localStorage ──
-async function cloudLoad(key,def){
-  // Try Supabase first
-  const rows=await sbGet(key);
-  if(rows&&rows.length) return rows;
-  // Fallback localStorage
-  try{const v=localStorage.getItem("aslan_v3_"+key);return v?JSON.parse(v):def;}catch(e){return def;}
-}
-async function cloudSave(key,rows){
-  // Save to localStorage always
-  try{localStorage.setItem("aslan_v3_"+key,JSON.stringify(rows));}catch(e){}
-  // Save to Supabase
-  if(rows.length) await sbUpsert(key,rows);
-}
-
-// ═══ LOGIN ═══
-function doLogin(){
-  if(document.getElementById("login-code").value.trim()===TEAM_CODE){
-    document.getElementById("login-err").style.display="none";
-    initApp();
-  }else{
-    document.getElementById("login-err").style.display="block";
-    document.getElementById("login-code").value="";
-  }
-}
-document.getElementById("login-code").addEventListener("keydown",e=>{if(e.key==="Enter")doLogin();});
-
-async function initApp(){
-  setSyn("warn","Daten laden…");
-  // Load from localStorage first for speed
-  try{
-    const lbv=localStorage.getItem("aslan_v3_bv");
-    const lma=localStorage.getItem("aslan_v3_ma");
-    const le=localStorage.getItem("aslan_v3_entries");
-    BV=lbv?JSON.parse(lbv):[...DEFAULT_BV];
-    MA=lma?JSON.parse(lma):[...DEFAULT_MA];
-    entries=le?JSON.parse(le):[];
-  }catch(e){BV=[...DEFAULT_BV];MA=[...DEFAULT_MA];entries=[];}
-  // Show home immediately
-  go("pg-home");setToday();updateStats();renderWarn();
-  // Then sync from Supabase in background
-  syncFromSupabase();
-  // Init push
-  initPush();
-}
-
-async function syncFromSupabase(){
-  try{
-    const [sbv,sma,se]=await Promise.all([sbGet("bv"),sbGet("ma"),sbGet("entries")]);
-    let changed=false;
-    if(sbv&&sbv.length){BV=sbv;try{localStorage.setItem("aslan_v3_bv",JSON.stringify(BV));}catch(e){} changed=true;}
-    if(sma&&sma.length){MA=sma;try{localStorage.setItem("aslan_v3_ma",JSON.stringify(MA));}catch(e){} changed=true;}
-    if(se&&se.length){entries=se;try{localStorage.setItem("aslan_v3_entries",JSON.stringify(entries));}catch(e){} changed=true;}
-    if(changed){updateStats();renderWarn();}
-    setSyn("ok","Synchronisiert ✓");
-  }catch(e){setSyn("err","Offline – lokal gespeichert");}
-}
-
-function setSyn(s,l){
-  const d=document.getElementById("sdot"),lb=document.getElementById("slbl");
+// ═══ SYNC STATUS ═══
+function syn(s,l){
+  const d=document.getElementById("sd"),lb=document.getElementById("sl");
   if(!d)return;
-  d.className="sdot"+(s==="warn"?" warn":s==="err"?" err":"");
+  d.className="sd"+(s==="w"?" w":s==="e"?" e":"");
   if(lb)lb.textContent=l;
 }
 
-// ═══ PUSH NOTIFICATIONS ═══
-let pushTimer=null;
-
-function initPush(){
-  const on=localStorage.getItem("aslan_push")==="1";
-  const t=document.getElementById("push-toggle");
-  if(t)t.className="toggle"+(on?" on":"");
-  updatePushSub();
-  if(on) schedulePushCheck();
-}
-
-async function togglePush(){
-  const t=document.getElementById("push-toggle");
-  const isOn=t.classList.contains("on");
-  if(!isOn){
-    if(!("Notification" in window)){alert("Dein Browser unterstützt keine Benachrichtigungen.");return;}
-    const perm=await Notification.requestPermission();
-    if(perm!=="granted"){alert("Benachrichtigungen wurden nicht erlaubt. Bitte in den Browser-Einstellungen aktivieren.");return;}
-    t.classList.add("on");
-    localStorage.setItem("aslan_push","1");
-    schedulePushCheck();
-    updatePushSub();
-    alert("✅ Erinnerung aktiviert! Du bekommst jeden Abend um 18:00 Uhr eine Nachricht wenn Stunden fehlen.");
+// ═══ LOGIN ═══
+function login(){
+  if(document.getElementById("pw").value.trim()===CODE){
+    document.getElementById("pwerr").style.display="none";
+    boot();
   }else{
-    t.classList.remove("on");
-    localStorage.setItem("aslan_push","0");
-    if(pushTimer)clearTimeout(pushTimer);
-    updatePushSub();
+    document.getElementById("pwerr").style.display="block";
+    document.getElementById("pw").value="";
   }
 }
+document.getElementById("pw").addEventListener("keydown",e=>{if(e.key==="Enter")login();});
 
-function updatePushSub(){
-  const on=document.getElementById("push-toggle")?.classList.contains("on");
-  const sub=document.getElementById("push-sub");
-  if(sub)sub.textContent=on?"Aktiv – täglich 18:00 Uhr":"Benachrichtigung wenn Stunden fehlen";
+async function boot(){
+  // Load from localStorage first
+  BV=lsGet("bv",[]); MA=lsGet("ma",[]); EN=lsGet("en",[]);
+  go("pg-home"); sd0(); ustats(); rwarn();
+  // Fetch from Supabase
+  syncDown();
+  initPush();
 }
 
-function schedulePushCheck(){
-  if(pushTimer)clearTimeout(pushTimer);
-  const now=new Date();
-  const target=new Date();
-  target.setHours(18,0,0,0);
-  if(now>=target)target.setDate(target.getDate()+1);
-  const ms=target-now;
-  pushTimer=setTimeout(()=>{
-    checkAndNotify();
-    // Reschedule for next day
-    pushTimer=setTimeout(function repeat(){
-      checkAndNotify();
-      pushTimer=setTimeout(repeat,86400000);
-    },86400000);
-  },ms);
-}
-
-function checkAndNotify(){
-  if(localStorage.getItem("aslan_push")!=="1")return;
-  if(Notification.permission!=="granted")return;
-  const td=today();
-  const hasToday=entries.some(e=>e.datum===td&&Object.values(e.stunden||{}).some(h=>h>0));
-  if(!hasToday){
-    new Notification("⏰ ASLAN Stundenerfassung",{
-      body:"Stunden für heute noch nicht eingetragen! Bitte nachtragen.",
-      icon:"data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAA",
-      badge:"data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAA",
-      tag:"aslan-daily"
+async function syncDown(){
+  syn("w","Synchronisiere…");
+  const [rbv,rma,ren]=await Promise.all([
+    sbSel("bv","&order=nr.asc"),
+    sbSel("ma","&order=name.asc"),
+    sbSel("en","&order=datum.asc")
+  ]);
+  
+  let changed=false;
+  
+  if(rbv){ BV=rbv; lsSet("bv",BV); changed=true; }
+  
+  if(rma){ 
+    // Erzeuge UI-Felder (Kürzel, Farbe), da diese im SQL-Schema fehlen
+    MA=rma.map((m,i)=>{
+      let k = m.name.split(" ").map(w=>w[0]||"").join("").toUpperCase().slice(0,2)||"XX";
+      let c = CLRS[i % CLRS.length];
+      return {...m, k, bg:c.bg, tc:c.tc, sort_order:i};
     });
+    lsSet("ma",MA); changed=true; 
   }
+
+  if(ren){
+    // Relatione Tabelle in das Dokumenten-Format für die UI umwandeln
+    let localEN = [];
+    let enMap = {};
+    ren.forEach(row => {
+      let b = BV.find(x => x.id === row.bv_id);
+      let m = MA.find(x => x.id === row.ma_id);
+      if(!b || !m) return;
+      let key = row.datum + "_" + b.nr;
+      if(!enMap[key]) {
+        enMap[key] = { id: key, datum: row.datum, bv_nr: b.nr, bv_name: b.name, stunden: {} };
+        localEN.push(enMap[key]);
+      }
+      enMap[key].stunden[m.name] = parseFloat(row.stunden);
+    });
+    EN = localEN; lsSet("en",EN); changed=true;
+  }
+
+  if(changed){ustats();rwarn();}
+  syn("","✓ Synchronisiert");
+  toast("✓ Daten aktualisiert");
 }
 
-// ═══ WARN FEHLENDE TAGE ═══
-function getMissing(){
-  const r=[];
-  for(let i=1;i<=14&&r.length<3;i++){
-    const d=new Date();d.setDate(d.getDate()-i);
-    const dow=d.getDay();
-    if(dow===0||dow===6)continue;
-    const ds=d.toISOString().split("T")[0];
-    if(!entries.some(e=>e.datum===ds&&Object.values(e.stunden||{}).some(h=>h>0)))r.push(ds);
+async function pushEntry(entry){
+  syn("w","Speichern…");
+  const bv = BV.find(b => b.nr === entry.bv_nr);
+  if(!bv || !bv.id) return;
+  
+  // 1. Alle existierenden relationalen Einträge für diesen Tag & BV löschen
+  await sbFetch(`en?datum=eq.${entry.datum}&bv_id=eq.${bv.id}`, { method: "DELETE" });
+
+  // 2. Einzelne Zeilen pro Mitarbeiter vorbereiten und neu einfügen
+  const rowsToInsert = [];
+  for (const maName of Object.keys(entry.stunden)) {
+    const h = entry.stunden[maName];
+    if (h > 0) {
+      const m = MA.find(x => x.name === maName);
+      if (m && m.id) {
+        rowsToInsert.push({ datum: entry.datum, bv_id: bv.id, ma_id: m.id, stunden: h });
+      }
+    }
   }
-  return r;
-}
-function renderWarn(){
-  const s=document.getElementById("warn-sec");
-  const m=getMissing();
-  if(!m.length){s.style.display="none";return;}
-  const days=["So","Mo","Di","Mi","Do","Fr","Sa"];
-  s.style.display="block";
-  s.innerHTML=`<div class="wb"><div class="wh"><span style="font-size:20px">⚠️</span><div class="wht">${m.length} Tag${m.length>1?"e":""} ohne Stunden!</div></div>
-    <div class="wbody">${m.map(ds=>{const d=new Date(ds+"T00:00:00");return`<div class="wd"><div class="wdd"></div>${days[d.getDay()]}, ${fmtD(ds)}</div>`}).join("")}
-    <button class="wfb" onclick="goFill('${m[m.length-1]}')">Jetzt nachtragen →</button></div></div>`;
-}
-function goFill(dt){
-  document.getElementById("inp-datum").value=dt;
-  curDate=dt;selBV=null;
-  document.getElementById("bv-next").disabled=true;
-  document.getElementById("nbv-nr").value="";
-  document.getElementById("nbv-name").value="";
-  document.getElementById("bv-hint").style.display="none";
-  document.getElementById("bv-sub").textContent=fmtD(dt);
-  renderBV();go("pg-bv");
+  
+  if(rowsToInsert.length > 0) {
+    await sbFetch("en", { method: "POST", headers: {...SBH, Prefer: "return=minimal"}, body: JSON.stringify(rowsToInsert) });
+  }
+  syn("","✓ Gespeichert");
 }
 
 // ═══ ROUTING ═══
 function go(id){
-  const cur=pageStack[pageStack.length-1];
+  const cur=pstack[pstack.length-1];
   if(cur===id)return;
-  document.getElementById(cur)?.classList.remove("active");
-  document.getElementById(cur)?.classList.add("prev");
-  pageStack.push(id);
+  document.getElementById(cur)?.classList.remove("on");
+  document.getElementById(cur)?.classList.add("bk");
+  pstack.push(id);
   const el=document.getElementById(id);
-  el.classList.remove("prev");el.classList.add("active");
-  if(id==="pg-home"){updateStats();renderWarn();}
-  if(id==="pg-verlauf")renderVerlauf();
-  if(id==="pg-bv-manage")renderBVMgmt();
-  if(id==="pg-ma-manage")renderMAMgmt();
-  if(id==="pg-woche"){wocheOffset=0;renderWoche();}
-  setTimeout(()=>document.getElementById(cur)?.classList.remove("prev"),340);
+  el.classList.remove("bk");el.classList.add("on");
+  if(id==="pg-home"){ustats();rwarn();}
+  if(id==="pg-verl")rverl();
+  if(id==="pg-bvm")rbvm();
+  if(id==="pg-ma")rmam();
+  if(id==="pg-woche"){woff=0;rw();}
+  setTimeout(()=>document.getElementById(cur)?.classList.remove("bk"),340);
 }
-function back(to){
-  const cur=pageStack[pageStack.length-1];
-  document.getElementById(cur)?.classList.remove("active");
-  pageStack=pageStack.filter(p=>p!==cur);
+function bk(to){
+  const cur=pstack[pstack.length-1];
+  document.getElementById(cur)?.classList.remove("on");
+  pstack=pstack.filter(p=>p!==cur);
   const prev=document.getElementById(to);
-  prev.classList.remove("prev");prev.classList.add("active");
-  if(to==="pg-home"){updateStats();renderWarn();}
-  if(to==="pg-verlauf")renderVerlauf();
-  if(to==="pg-bv-manage")renderBVMgmt();
-  if(to==="pg-ma-manage")renderMAMgmt();
-  if(to==="pg-woche")renderWoche();
+  prev.classList.remove("bk");prev.classList.add("on");
+  if(to==="pg-home"){ustats();rwarn();}
+  if(to==="pg-verl")rverl();
+  if(to==="pg-bvm")rbvm();
+  if(to==="pg-ma")rmam();
+  if(to==="pg-woche")rw();
 }
 
 // ═══ HELPERS ═══
-function fmtD(d){if(!d)return"";const[y,m,day]=d.split("-");return`${day}.${m}.${y}`;}
-function today(){return new Date().toISOString().split("T")[0];}
-function setToday(){const e=document.getElementById("inp-datum");if(e)e.value=today();}
-function setYest(){const d=new Date();d.setDate(d.getDate()-1);const e=document.getElementById("inp-datum");if(e)e.value=d.toISOString().split("T")[0];}
-function getKW(d){const dt=new Date(d);const day=dt.getDay()||7;dt.setDate(dt.getDate()+4-day);const y=dt.getFullYear();const kw=Math.ceil(((dt-new Date(y,0,1))/86400000+1)/7);return{kw,y};}
+function fd(d){if(!d)return"";const[y,m,day]=d.split("-");return`${day}.${m}.${y}`;}
+function td(){return new Date().toISOString().split("T")[0];}
+function sd0(){const e=document.getElementById("inp-d");if(e)e.value=td();}
+function sd1(){const d=new Date();d.setDate(d.getDate()-1);const e=document.getElementById("inp-d");if(e)e.value=d.toISOString().split("T")[0];}
+function gst(e){return e.stunden || {};}
+function gkw(ds){const d=new Date(ds+"T00:00:00");const day=d.getDay()||7;d.setDate(d.getDate()+4-day);const y=d.getFullYear();return Math.ceil(((d-new Date(y,0,1))/864e5+1)/7);}
+
+// ═══ WARN ═══
+function getMiss(){
+  const r=[];const dow=["So","Mo","Di","Mi","Do","Fr","Sa"];
+  for(let i=1;i<=21&&r.length<3;i++){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const dow2=d.getDay();if(dow2===0||dow2===6)continue;
+    const ds=d.toISOString().split("T")[0];
+    if(!EN.some(e=>e.datum===ds&&Object.values(gst(e)).some(h=>h>0)))r.push({ds,lbl:dow[dow2]+", "+fd(ds)});
+    if(r.length>=3)break;
+  }
+  return r;
+}
+function rwarn(){
+  const s=document.getElementById("warn");const m=getMiss();
+  if(!m.length){s.style.display="none";return;}
+  s.style.display="block";
+  s.innerHTML=`<div class="wb"><div class="wh"><span style="font-size:19px">⚠️</span><div class="wht">${m.length} Tag${m.length>1?"e":""} ohne Stunden!</div></div>
+    <div class="wbd">${m.map(x=>`<div class="wdi"><div class="wdd"></div>${x.lbl}</div>`).join("")}
+    <button class="wfb" onclick="gofill('${m[m.length-1].ds}')">Jetzt nachtragen →</button></div></div>`;
+}
+function gofill(dt){
+  document.getElementById("inp-d").value=dt;cD=dt;sBV=null;
+  document.getElementById("bvnx").disabled=true;
+  document.getElementById("nb-nr").value="";document.getElementById("nb-nm").value="";
+  document.getElementById("bvhint").style.display="none";
+  document.getElementById("bvsub").textContent=fd(dt);
+  rbvg();go("pg-bv");
+}
+
+// ═══ PUSH ═══
+let ptimer=null;
+function initPush(){
+  const on=localStorage.getItem("apush")==="1";
+  const t=document.getElementById("ptgl");
+  if(t)t.className="tgl"+(on?" on":"");
+  if(on)schPush();
+}
+async function togglePush(){
+  const t=document.getElementById("ptgl");const isOn=t.classList.contains("on");
+  if(!isOn){
+    if(!("Notification"in window)){alert("Dein Browser unterstützt keine Benachrichtigungen.");return;}
+    const p=await Notification.requestPermission();
+    if(p!=="granted"){alert("Bitte Benachrichtigungen erlauben.");return;}
+    t.classList.add("on");localStorage.setItem("apush","1");
+    schPush();toast("🔔 Erinnerung aktiviert – täglich 18:00 Uhr");
+  }else{
+    t.classList.remove("on");localStorage.setItem("apush","0");
+    if(ptimer)clearTimeout(ptimer);toast("🔕 Erinnerung deaktiviert");
+  }
+}
+function schPush(){
+  if(ptimer)clearTimeout(ptimer);
+  const now=new Date(),tgt=new Date();
+  tgt.setHours(18,0,0,0);
+  if(now>=tgt)tgt.setDate(tgt.getDate()+1);
+  ptimer=setTimeout(()=>{doNotify();ptimer=setInterval(doNotify,86400000);},tgt-now);
+}
+function doNotify(){
+  if(localStorage.getItem("apush")!=="1"||Notification.permission!=="granted")return;
+  const has=EN.some(e=>e.datum===td()&&Object.values(gst(e)).some(h=>h>0));
+  if(!has)new Notification("⏰ ASLAN Stundenerfassung",{body:"Stunden für heute noch nicht eingetragen!",tag:"aslan"});
+}
 
 // ═══ BV ═══
-function chkBV(){
-  const nr=document.getElementById("nbv-nr").value.trim();
-  const h=document.getElementById("bv-hint");
-  const ex=BV.find(b=>b.nr===nr);
+function chkbv(){
+  const nr=document.getElementById("nb-nr").value.trim(),h=document.getElementById("bvhint"),ex=BV.find(b=>b.nr===nr);
   if(ex){h.style.display="block";h.textContent=`⚡ BV ${nr} vorhanden: „${ex.name}" – wird ausgewählt.`;}
   else h.style.display="none";
 }
-function nextToBV(){
-  const d=document.getElementById("inp-datum").value;
-  if(!d){alert("Bitte zuerst ein Datum wählen!");return;}
-  curDate=d;
-  document.getElementById("bv-sub").textContent=fmtD(d);
-  selBV=null;document.getElementById("bv-next").disabled=true;
-  document.getElementById("nbv-nr").value="";document.getElementById("nbv-name").value="";
-  document.getElementById("bv-hint").style.display="none";
-  renderBV();go("pg-bv");
+function n2bv(){
+  const d=document.getElementById("inp-d").value;
+  if(!d){alert("Bitte Datum wählen!");return;}
+  cD=d;document.getElementById("bvsub").textContent=fd(d);
+  sBV=null;document.getElementById("bvnx").disabled=true;
+  document.getElementById("nb-nr").value="";document.getElementById("nb-nm").value="";
+  document.getElementById("bvhint").style.display="none";
+  rbvg();go("pg-bv");
 }
-function renderBV(){
-  document.getElementById("bv-grid").innerHTML=[...BV].sort((a,b)=>a.nr.localeCompare(b.nr)).map(b=>`
-    <button class="bvb ${selBV&&selBV.nr===b.nr?"sel":""}" onclick="pickBV('${b.nr}')">
-      <div class="bv-nr">BV ${b.nr}</div><div class="bv-nm">${b.name}</div></button>`).join("");
+function rbvg(){
+  document.getElementById("bvg").innerHTML=[...BV].sort((a,b)=>a.nr.localeCompare(b.nr)).map(b=>`
+    <button class="bvb ${sBV&&sBV.nr===b.nr?"sl":""}" onclick="pkBV('${b.nr}')">
+      <div class="bvnr">BV ${b.nr}</div><div class="bvnm">${b.name}</div></button>`).join("");
 }
-function pickBV(nr){selBV=BV.find(b=>b.nr===nr);document.getElementById("bv-next").disabled=false;renderBV();}
+function pkBV(nr){sBV=BV.find(b=>b.nr===nr);document.getElementById("bvnx").disabled=false;rbvg();}
+
 async function addBV(){
-  const nr=document.getElementById("nbv-nr").value.trim();
-  const nm=document.getElementById("nbv-name").value.trim();
+  const nr=document.getElementById("nb-nr").value.trim(),nm=document.getElementById("nb-nm").value.trim();
   if(!nr){alert("BV-Nummer eingeben!");return;}
   const ex=BV.find(b=>b.nr===nr);
-  if(ex){pickBV(nr);document.getElementById("nbv-nr").value="";document.getElementById("nbv-name").value="";document.getElementById("bv-hint").style.display="none";return;}
-  const row={id:nr,nr,name:nm||"—"};
-  BV.push(row);BV.sort((a,b)=>a.nr.localeCompare(b.nr));
-  try{localStorage.setItem("aslan_v3_bv",JSON.stringify(BV));}catch(e){}
-  sbUpsert("bv",[row]);
-  document.getElementById("nbv-nr").value="";document.getElementById("nbv-name").value="";
-  document.getElementById("bv-hint").style.display="none";
-  pickBV(nr);
+  if(ex){pkBV(nr);document.getElementById("nb-nr").value="";document.getElementById("nb-nm").value="";document.getElementById("bvhint").style.display="none";return;}
+  
+  syn("w", "Erstelle BV...");
+  const row={nr, name:nm||"—"};
+  // UUID von Supabase erzeugen lassen
+  const res = await sbFetch("bv", { method: "POST", headers: {...SBH, Prefer: "return=representation"}, body: JSON.stringify([row])});
+  
+  if(res && res.length){
+    BV.push(res[0]); BV.sort((a,b)=>a.nr.localeCompare(b.nr)); lsSet("bv",BV);
+    document.getElementById("nb-nr").value="";document.getElementById("nb-nm").value="";
+    document.getElementById("bvhint").style.display="none"; pkBV(nr);
+    syn("","✓ Gespeichert");
+  } else { alert("Fehler beim Erstellen der Baustelle!"); }
 }
 
-// ═══ STUNDEN ═══
-function nextToSt(){
-  if(!selBV)return;
-  document.getElementById("st-sub").textContent=`${fmtD(curDate)} · BV ${selBV.nr}`;
-  document.getElementById("ma-list").innerHTML=MA.map(ma=>`
-    <div class="ma-row">
-      <div class="av" style="background:${ma.bg};color:${ma.tc}">${ma.k}</div>
-      <div class="ma-n">${ma.name}</div>
-      <input type="number" class="h-in" id="h-${ma.k}" value="0" min="0" max="24" step="0.5" inputmode="decimal">
-      <div class="h-u">h</div></div>`).join("");
-  go("pg-stunden");
+// ═══ STUNDEN EINGABE ═══
+function n2st(){
+  if(!sBV)return;
+  document.getElementById("stsub").textContent=`${fd(cD)} · BV ${sBV.nr}`;
+  document.getElementById("mal").innerHTML=MA.map(m=>`
+    <div class="mr"><div class="av" style="background:${m.bg};color:${m.tc}">${m.k}</div>
+    <div class="mn">${m.name}</div>
+    <input type="number" class="hi" id="h-${m.k}" value="0" min="0" max="24" step="0.5" inputmode="decimal">
+    <div class="hu">h</div></div>`).join("");
+  go("pg-st");
 }
-async function saveEntry(){
-  const id=`${curDate}_${selBV.nr}_${Date.now()}`;
-  const st={};
-  MA.forEach(ma=>{st[ma.name]=parseFloat(document.getElementById("h-"+ma.k)?.value)||0;});
-  const entry={id,datum:curDate,bv_nr:selBV.nr,bv_name:selBV.name,stunden:JSON.stringify(st)};
-  entries.push({...entry,stunden:st});
-  try{localStorage.setItem("aslan_v3_entries",JSON.stringify(entries));}catch(e){}
-  sbUpsert("entries",[entry]);
-  setSyn("ok","Gespeichert ✓");
-  const aktive=MA.filter(ma=>st[ma.name]>0).map(ma=>`${ma.name.split(" ")[0]}: ${st[ma.name]}h`);
-  const total=Object.values(st).reduce((a,b)=>a+b,0);
-  document.getElementById("succ-d").textContent=`BV ${selBV.nr} · ${fmtD(curDate)}
-${aktive.join(", ")||"—"} · ${total}h`;
-  go("pg-success");
+async function save(){
+  const st={}; MA.forEach(m=>{st[m.name]=parseFloat(document.getElementById("h-"+m.k)?.value)||0;});
+  const entry={ datum:cD, bv_nr:sBV.nr, bv_name:sBV.name, stunden:st };
+  
+  // Update lokales Array
+  const existingIdx = EN.findIndex(e => e.datum === cD && e.bv_nr === sBV.nr);
+  if (existingIdx >= 0) EN[existingIdx] = entry; else EN.push(entry);
+  lsSet("en",EN);
+  
+  await pushEntry(entry);
+  
+  const ak=MA.filter(m=>st[m.name]>0).map(m=>`${m.name.split(" ")[0]}: ${st[m.name]}h`);
+  const tot=Object.values(st).reduce((a,b)=>a+b,0);
+  document.getElementById("okd").textContent=`BV ${sBV.nr} · ${fd(cD)}\n${ak.join(", ")||"—"} · ${tot}h`;
+  go("pg-ok");
 }
-function resetIn(){selBV=null;document.getElementById("bv-next").disabled=true;}
+function rsi(){sBV=null;document.getElementById("bvnx").disabled=true;}
 
-function getStunden(e){return typeof e.stunden==="string"?JSON.parse(e.stunden):e.stunden||{};}
-
-function updateStats(){
-  const td=today();
-  const dw=new Date();dw.setDate(dw.getDate()-dw.getDay()+1);const ws=dw.toISOString().split("T")[0];
+// ═══ STATS ═══
+function ustats(){
+  const t=td(),dw=new Date();dw.setDate(dw.getDate()-dw.getDay()+1);const ws=dw.toISOString().split("T")[0];
   let hH=0,hW=0;
-  entries.forEach(e=>{const s=getStunden(e);const t=Object.values(s).reduce((a,b)=>a+b,0);if(e.datum===td)hH+=t;if(e.datum>=ws)hW+=t;});
-  document.getElementById("st-h").textContent=hH;
-  document.getElementById("st-w").textContent=hW;
-  document.getElementById("st-e").textContent=entries.length;
+  EN.forEach(e=>{const s=gst(e);const tot=Object.values(s).reduce((a,b)=>a+b,0);if(e.datum===t)hH+=tot;if(e.datum>=ws)hW+=tot;});
+  document.getElementById("s-h").textContent=hH;
+  document.getElementById("s-w").textContent=hW;
+  document.getElementById("s-e").textContent=EN.length;
 }
 
-// ═══ WOCHENÜBERSICHT ═══
-function getWeekRange(offset){
-  const d=new Date();
-  const dow=d.getDay()||7;
-  d.setDate(d.getDate()-dow+1+offset*7);
+// ═══ WOCHE ═══
+function rw(){
+  const d=new Date();const dow=d.getDay()||7;d.setDate(d.getDate()-dow+1+woff*7);
   const mon=d.toISOString().split("T")[0];
-  const fri=new Date(d);fri.setDate(fri.getDate()+4);
-  const fri_s=fri.toISOString().split("T")[0];
-  return{mon,fri:fri_s,kw:getKW(mon).kw,y:getKW(mon).y};
-}
-function wocheShift(dir){wocheOffset+=dir;renderWoche();}
-
-function renderWoche(){
-  const{mon,fri,kw,y}=getWeekRange(wocheOffset);
-  document.getElementById("kw-lbl").textContent=`KW ${kw} / ${y}`;
-  document.getElementById("woche-sub").textContent=`${fmtD(mon)} – ${fmtD(fri)}`;
-
-  const week=entries.filter(e=>e.datum>=mon&&e.datum<=fri);
-
-  // Per MA summary
-  const maTotals={};
-  MA.forEach(ma=>{maTotals[ma.name]=0;});
-  const bvMap={};
-
+  const fri=new Date(d);fri.setDate(fri.getDate()+4);const fris=fri.toISOString().split("T")[0];
+  const kw=gkw(mon);
+  document.getElementById("kwl").textContent=`KW ${kw}`;
+  document.getElementById("whs").textContent=`${fd(mon)} – ${fd(fris)}`;
+  const week=EN.filter(e=>e.datum>=mon&&e.datum<=fris);
+  const wb=document.getElementById("wbody");
+  if(!week.length){wb.innerHTML=`<div class="emp"><div class="eic">📊</div>Keine Stunden in KW ${kw}.</div>`;return;}
+  const mt={};MA.forEach(m=>{mt[m.name]=0;});
+  const bmap={};
   week.forEach(e=>{
-    const st=getStunden(e);
-    const bk=`${e.bv_nr}|${e.bv_name}`;
-    if(!bvMap[bk])bvMap[bk]={nr:e.bv_nr,name:e.bv_name,ma:{}};
-    MA.forEach(ma=>{
-      const h=st[ma.name]||0;
-      maTotals[ma.name]=(maTotals[ma.name]||0)+h;
-      bvMap[bk].ma[ma.name]=(bvMap[bk].ma[ma.name]||0)+h;
-    });
+    const st=gst(e);const bk=e.bv_nr;
+    if(!bmap[bk])bmap[bk]={nr:e.bv_nr,name:e.bv_name,ma:{}};
+    MA.forEach(m=>{const h=st[m.name]||0;mt[m.name]+=h;bmap[bk].ma[m.name]=(bmap[bk].ma[m.name]||0)+h;});
   });
-
-  const totalAll=Object.values(maTotals).reduce((a,b)=>a+b,0);
-
-  let html=`<div style="padding:12px 16px 0">`;
-
-  if(!week.length){
-    html+=`<div class="emp"><div class="eic">📊</div>Keine Stunden in dieser Woche.</div>`;
-  } else {
-    // MA Summary card
-    html+=`<div class="lbl" style="margin:6px 0 8px">Mitarbeiter gesamt</div>
-      <div class="crd" style="overflow:visible">
-      <table class="woche-table" style="width:100%">
-        <tr><th>Mitarbeiter</th><th style="text-align:right">Stunden</th></tr>
-        ${MA.map(ma=>{
-          const h=maTotals[ma.name]||0;
-          const cls=h===0?"zero":h<30?"low":"ok";
-          return`<tr><td><span style="display:inline-flex;align-items:center;gap:7px"><span style="width:8px;height:8px;border-radius:50%;background:${ma.tc};flex-shrink:0;display:inline-block"></span>${ma.name}</span></td>
-            <td><span class="h-badge ${cls}">${h}h</span></td></tr>`;
-        }).join("")}
-        <tr><td><strong>Gesamt</strong></td><td><span class="h-badge ok">${totalAll}h</span></td></tr>
-      </table></div>`;
-
-    // Per BV table
-    if(Object.keys(bvMap).length){
-      html+=`<div class="lbl" style="margin-top:18px;margin-bottom:8px">Nach Baustelle</div>`;
-      Object.values(bvMap).forEach(bv=>{
-        const bvTotal=Object.values(bv.ma).reduce((a,b)=>a+b,0);
-        html+=`<div class="crd" style="margin-bottom:10px;overflow:visible">
-          <div style="padding:10px 14px;background:var(--green-l);font-size:13px;font-weight:700;color:var(--green-d)">
-            BV ${bv.nr} · ${bv.name} <span style="float:right">${bvTotal}h</span></div>
-          <table class="woche-table" style="width:100%">
-            ${MA.map(ma=>{const h=bv.ma[ma.name]||0;if(h===0)return"";
-              return`<tr><td>${ma.name.split(" ")[0]}</td><td><span class="h-badge ok">${h}h</span></td></tr>`;
-            }).join("")}
-          </table></div>`;
-      });
-    }
-
-    // Tagesdetails
-    html+=`<div class="lbl" style="margin-top:18px;margin-bottom:8px">Tagesdetails</div>
-      <div class="crd" style="margin-bottom:16px">`;
-    const days=["So","Mo","Di","Mi","Do","Fr","Sa"];
-    for(let i=0;i<5;i++){
-      const d=new Date(mon+"T00:00:00");d.setDate(d.getDate()+i);
-      const ds=d.toISOString().split("T")[0];
-      const de=entries.filter(e=>e.datum===ds);
-      const dTotal=de.reduce((s,e)=>s+Object.values(getStunden(e)).reduce((a,b)=>a+b,0),0);
-      html+=`<div style="padding:10px 14px;border-bottom:.5px solid var(--bdr);display:flex;justify-content:space-between;align-items:center">
-        <div><div style="font-size:13px;font-weight:700">${days[d.getDay()]}, ${fmtD(ds)}</div>
-        ${de.length?de.map(e=>`<div style="font-size:11px;color:var(--sub)">BV ${e.bv_nr}</div>`).join(""):`<div style="font-size:11px;color:var(--sub);opacity:.5">Kein Eintrag</div>`}
-        </div><span class="h-badge ${dTotal===0?"zero":dTotal<20?"low":"ok"}">${dTotal}h</span></div>`;
-    }
-    html+=`</div>`;
+  const tot=Object.values(mt).reduce((a,b)=>a+b,0);
+  const dnames=["So","Mo","Di","Mi","Do","Fr","Sa"];
+  let h=`<div style="padding:12px 16px 0">`;
+  h+=`<div class="lbl" style="margin:6px 0 8px">Mitarbeiter gesamt</div>
+  <div class="crd" style="overflow:visible"><table class="wt">
+    <tr><th>Mitarbeiter</th><th>Stunden</th></tr>
+    ${MA.map(m=>{const v=mt[m.name]||0;const cls=v===0?"z":v<30?"l":"k";
+      return`<tr><td><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${m.tc};display:inline-block"></span>${m.name}</span></td><td><span class="hb ${cls}">${v}h</span></td></tr>`;
+    }).join("")}
+    <tr><td><strong>Gesamt</strong></td><td><span class="hb k">${tot}h</span></td></tr>
+  </table></div>`;
+  if(Object.keys(bmap).length){
+    h+=`<div class="lbl" style="margin-top:18px;margin-bottom:8px">Nach Baustelle</div>`;
+    Object.values(bmap).forEach(bv=>{
+      const bt=Object.values(bv.ma).reduce((a,b)=>a+b,0);
+      h+=`<div class="crd" style="margin-bottom:10px;overflow:visible">
+        <div style="padding:9px 14px;background:var(--gl);font-size:13px;font-weight:700;color:var(--gd);display:flex;justify-content:space-between">
+          <span>BV ${bv.nr} · ${bv.name}</span><span>${bt}h</span></div>
+        <table class="wt">${MA.map(m=>{const v=bv.ma[m.name]||0;if(!v)return"";
+          return`<tr><td>${m.name.split(" ")[0]}</td><td><span class="hb k">${v}h</span></td></tr>`;
+        }).join("")}</table></div>`;
+    });
   }
-
-  html+=`</div>`;
-  document.getElementById("woche-body").innerHTML=html;
+  h+=`<div class="lbl" style="margin-top:18px;margin-bottom:8px">Tagesdetails</div><div class="crd" style="margin-bottom:16px">`;
+  for(let i=0;i<5;i++){
+    const dd=new Date(mon+"T00:00:00");dd.setDate(dd.getDate()+i);
+    const ds=dd.toISOString().split("T")[0];
+    const de=EN.filter(e=>e.datum===ds);
+    const dt=de.reduce((s,e)=>s+Object.values(gst(e)).reduce((a,b)=>a+b,0),0);
+    const cls=dt===0?"z":dt<20?"l":"k";
+    h+=`<div style="padding:10px 14px;border-bottom:.5px solid var(--b);display:flex;justify-content:space-between;align-items:center">
+      <div><div style="font-size:13px;font-weight:700">${dnames[dd.getDay()]}, ${fd(ds)}</div>
+      ${de.length?de.map(e=>`<div style="font-size:11px;color:var(--s)">BV ${e.bv_nr}</div>`).join(""):`<div style="font-size:11px;color:var(--s);opacity:.45">Kein Eintrag</div>`}</div>
+      <span class="hb ${cls}">${dt}h</span></div>`;
+  }
+  h+=`</div></div>`;
+  wb.innerHTML=h;
 }
 
 // ═══ VERLAUF ═══
-function renderVerlauf(){
-  const c=document.getElementById("verl-body");
-  if(!entries.length){c.innerHTML=`<div class="emp"><div class="eic">📋</div>Noch keine Einträge.</div>`;return;}
-  const sorted=[...entries].sort((a,b)=>a.datum.localeCompare(b.datum));
-  c.innerHTML=`<div class="crd" style="margin:12px 16px">${
-    sorted.map(e=>{
-      const idx=entries.indexOf(e);const st=getStunden(e);
-      const pills=MA.filter(ma=>(st[ma.name]||0)>0).map(ma=>`<span class="pill">${ma.name.split(" ")[0]}: ${st[ma.name]}h</span>`).join("");
-      return`<div class="li"><div class="li-i"><div class="li-d">${fmtD(e.datum)}</div>
-        <div class="li-b">BV ${e.bv_nr} · ${e.bv_name}</div>
-        <div class="pills">${pills||`<span class="pill" style="opacity:.5">Keine Stunden</span>`}</div></div>
-        <button class="eb" onclick="openEd(${idx})">✏️</button></div>`;
-    }).join("")
-  }</div><div style="height:24px"></div>`;
+function rverl(){
+  const c=document.getElementById("vbody");
+  if(!EN.length){c.innerHTML=`<div class="emp"><div class="eic">📋</div>Noch keine Einträge.</div>`;return;}
+  const s=[...EN].sort((a,b)=>a.datum.localeCompare(b.datum));
+  c.innerHTML=`<div class="crd" style="margin:12px 16px">${s.map(e=>{
+    const idx=EN.indexOf(e),st=gst(e);
+    const pills=MA.filter(m=>(st[m.name]||0)>0).map(m=>`<span class="pill">${m.name.split(" ")[0]}: ${st[m.name]}h</span>`).join("");
+    return`<div class="li"><div class="lii"><div class="lid">${fd(e.datum)}</div>
+      <div class="lib">BV ${e.bv_nr} · ${e.bv_name}</div>
+      <div class="pills">${pills||`<span class="pill" style="opacity:.5">Keine Stunden</span>`}</div></div>
+      <button class="eb" onclick="oped(${idx})">✏️</button></div>`;
+  }).join("")}</div><div style="height:24px"></div>`;
 }
 
 // ═══ EDIT ENTRY ═══
-function openEd(idx){
-  editIdx=idx;const e=entries[idx];const st=getStunden(e);
-  document.getElementById("ed-title").textContent=`BV ${e.bv_nr} · ${fmtD(e.datum)}`;
-  document.getElementById("ed-ma").innerHTML=MA.map(ma=>`
-    <div class="ma-row" style="padding:10px 0;border-bottom:.5px solid var(--bdr)">
-      <div class="av" style="background:${ma.bg};color:${ma.tc};width:36px;height:36px;font-size:12px">${ma.k}</div>
-      <div class="ma-n" style="font-size:14px">${ma.name}</div>
-      <input type="number" class="h-in" id="ed-${ma.k}" value="${st[ma.name]||0}" min="0" max="24" step="0.5" inputmode="decimal">
-      <div class="h-u">h</div></div>`).join("");
-  openOv("ov-entry");
+function oped(idx){
+  eI=idx;const e=EN[idx],st=gst(e);
+  document.getElementById("et").textContent=`BV ${e.bv_nr} · ${fd(e.datum)}`;
+  document.getElementById("ema").innerHTML=MA.map(m=>`
+    <div class="mr" style="padding:10px 0;border-bottom:.5px solid var(--b)">
+      <div class="av" style="background:${m.bg};color:${m.tc};width:36px;height:36px;font-size:12px">${m.k}</div>
+      <div class="mn" style="font-size:14px">${m.name}</div>
+      <input type="number" class="hi" id="ed-${m.k}" value="${st[m.name]||0}" min="0" max="24" step="0.5" inputmode="decimal">
+      <div class="hu">h</div></div>`).join("");
+  opov("ov-e");
 }
-async function saveEdit(){
-  if(editIdx<0)return;
-  const st={};MA.forEach(ma=>{st[ma.name]=parseFloat(document.getElementById("ed-"+ma.k)?.value)||0;});
-  entries[editIdx].stunden=st;
-  try{localStorage.setItem("aslan_v3_entries",JSON.stringify(entries));}catch(e){}
-  sbUpsert("entries",[{...entries[editIdx],stunden:JSON.stringify(st)}]);
-  closeSheet("ov-entry");renderVerlauf();updateStats();renderWarn();
+async function svedit(){
+  if(eI<0)return;
+  const st={};MA.forEach(m=>{st[m.name]=parseFloat(document.getElementById("ed-"+m.k)?.value)||0;});
+  EN[eI].stunden=st;lsSet("en",EN);
+  await pushEntry(EN[eI]);
+  cls("ov-e");rverl();ustats();rwarn();
 }
 
 // ═══ BV MANAGE ═══
-function renderBVMgmt(){
-  document.getElementById("bv-mgmt-list").innerHTML=[...BV].sort((a,b)=>a.nr.localeCompare(b.nr)).map(b=>`
-    <div class="bm-r"><div class="bm-i"><div class="bm-nr">BV ${b.nr}</div><div class="bm-nm">${b.name}</div></div>
-    <button class="eb" onclick="openBVEd('${b.nr}')">✏️</button></div>`).join("");
+function rbvm(){
+  document.getElementById("bvml").innerHTML=[...BV].sort((a,b)=>a.nr.localeCompare(b.nr)).map(b=>`
+    <div class="bmr"><div style="flex:1"><div style="font-size:12px;color:var(--s);font-weight:600">BV ${b.nr}</div><div style="font-size:15px">${b.name}</div></div>
+    <button class="eb" onclick="opbv('${b.nr}')">✏️</button></div>`).join("");
 }
-function openBVEd(nr){
-  editBVNr=nr;const bv=BV.find(b=>b.nr===nr);
-  document.getElementById("bved-title").textContent=`BV ${nr} bearbeiten`;
-  document.getElementById("bved-nr").value=nr;
-  document.getElementById("bved-name").value=bv?.name||"";
-  openOv("ov-bv");
+function opbv(nr){
+  eBV=nr;const bv=BV.find(b=>b.nr===nr);
+  document.getElementById("bvt").textContent=`BV ${nr} bearbeiten`;
+  document.getElementById("bven").value=nr;
+  document.getElementById("bvea").value=bv?.name||"";
+  opov("ov-bv");
 }
-async function saveBVEdit(){
-  if(!editBVNr)return;
-  const idx=BV.findIndex(b=>b.nr===editBVNr);
-  if(idx>=0){BV[idx].name=document.getElementById("bved-name").value.trim()||"—";}
-  try{localStorage.setItem("aslan_v3_bv",JSON.stringify(BV));}catch(e){}
-  sbUpsert("bv",[BV[idx]]);
-  closeSheet("ov-bv");renderBVMgmt();
+async function svbv(){
+  if(!eBV)return;
+  const idx=BV.findIndex(b=>b.nr===eBV);
+  if(idx>=0){
+    BV[idx].name=document.getElementById("bvea").value.trim()||"—";
+    lsSet("bv",BV);
+    syn("w", "Speichere...");
+    await sbFetch(`bv?id=eq.${BV[idx].id}`, { method: "PATCH", body: JSON.stringify({name: BV[idx].name}) });
+    syn("", "✓");
+  }
+  cls("ov-bv");rbvm();
 }
-async function addBVMgmt(){
-  const nr=document.getElementById("mgmt-bv-nr").value.trim();
-  const nm=document.getElementById("mgmt-bv-name").value.trim();
-  if(!nr){alert("Bitte BV-Nummer eingeben!");return;}
+async function addBVM(){
+  const nr=document.getElementById("mb-nr").value.trim(),nm=document.getElementById("mb-nm").value.trim();
+  if(!nr){alert("BV-Nummer eingeben!");return;}
   if(BV.find(b=>b.nr===nr)){alert("BV bereits vorhanden!");return;}
-  const row={id:nr,nr,name:nm||"—"};
-  BV.push(row);BV.sort((a,b)=>a.nr.localeCompare(b.nr));
-  try{localStorage.setItem("aslan_v3_bv",JSON.stringify(BV));}catch(e){}
-  sbUpsert("bv",[row]);
-  document.getElementById("mgmt-bv-nr").value="";document.getElementById("mgmt-bv-name").value="";
-  renderBVMgmt();
+  
+  syn("w", "Erstelle BV...");
+  const row={nr, name:nm||"—"};
+  const res = await sbFetch("bv", { method: "POST", headers: {...SBH, Prefer: "return=representation"}, body: JSON.stringify([row])});
+  if(res && res.length){
+    BV.push(res[0]); BV.sort((a,b)=>a.nr.localeCompare(b.nr)); lsSet("bv",BV);
+    document.getElementById("mb-nr").value="";document.getElementById("mb-nm").value="";rbvm();
+    syn("","✓");
+  } else { alert("Fehler beim Erstellen!"); }
 }
 
 // ═══ MA MANAGE ═══
-function renderMAMgmt(){
-  document.getElementById("ma-manage-list").innerHTML=MA.map((ma,i)=>`
-    <div class="mm-r">
-      <div class="av" style="background:${ma.bg};color:${ma.tc};width:42px;height:42px">${ma.k}</div>
-      <div class="mm-info"><div class="mm-name">${ma.name}</div><div class="mm-k">Kürzel: ${ma.k}</div></div>
-      <button class="eb" onclick="openMAEd(${i})">✏️</button></div>`).join("");
+function rmam(){
+  document.getElementById("maml").innerHTML=MA.map((m,i)=>`
+    <div class="mmr"><div class="av" style="background:${m.bg};color:${m.tc};width:42px;height:42px">${m.k}</div>
+    <div style="flex:1"><div style="font-size:16px;font-weight:600">${m.name}</div><div style="font-size:12px;color:var(--s)">Kürzel: ${m.k}</div></div>
+    <button class="eb" onclick="opma(${i})">✏️</button></div>`).join("");
 }
-function openMAEd(i){
-  editMAIdx=i;const ma=MA[i];
-  document.getElementById("maed-title").textContent=`${ma.name} bearbeiten`;
-  document.getElementById("maed-name").value=ma.name;
-  document.getElementById("maed-k").value=ma.k;
-  document.getElementById("ma-colors").innerHTML=MA_COLORS.map((c,ci)=>`
-    <div onclick="selMAColor(${ci})" style="width:30px;height:30px;border-radius:50%;background:${c.bg};border:3px solid ${ma.bg===c.bg?"var(--green)":"transparent"};cursor:pointer;display:flex;align-items:center;justify-content:center" id="mc-${ci}">
+function opma(i){
+  eMA=i;const m=MA[i];
+  document.getElementById("mat").textContent=`${m.name} bearbeiten`;
+  document.getElementById("man").value=m.name;
+  document.getElementById("mak").value=m.k;
+  selC=-1;
+  document.getElementById("cpick").innerHTML=CLRS.map((c,ci)=>`
+    <div class="cpc ${m.bg===c.bg?"sel":""}" id="cp${ci}" onclick="pkc(${ci})" style="background:${c.bg}">
       <div style="width:10px;height:10px;border-radius:50%;background:${c.tc}"></div></div>`).join("");
-  openOv("ov-ma");
+  opov("ov-ma");
 }
-let selColorIdx=-1;
-function selMAColor(ci){
-  selColorIdx=ci;
-  document.querySelectorAll("[id^='mc-']").forEach(el=>el.style.border="3px solid transparent");
-  document.getElementById("mc-"+ci).style.border="3px solid var(--green)";
-}
-async function saveMAEdit(){
-  if(editMAIdx<0)return;
-  const name=document.getElementById("maed-name").value.trim();
-  const k=document.getElementById("maed-k").value.trim().toUpperCase().slice(0,2);
+function pkc(ci){selC=ci;document.querySelectorAll(".cpc").forEach((el,i)=>el.classList.toggle("sel",i===ci));}
+
+async function svma(){
+  if(eMA<0)return;
+  const name=document.getElementById("man").value.trim(),k=document.getElementById("mak").value.trim().toUpperCase().slice(0,2);
   if(!name||!k){alert("Name und Kürzel ausfüllen!");return;}
-  const oldName=MA[editMAIdx].name;
-  const color=selColorIdx>=0?MA_COLORS[selColorIdx]:{bg:MA[editMAIdx].bg,tc:MA[editMAIdx].tc};
-  MA[editMAIdx]={...MA[editMAIdx],name,k,...color,id:MA[editMAIdx].id||k};
-  // Update name in entries
-  entries.forEach(e=>{
-    const st=getStunden(e);
-    if(oldName!==name&&st[oldName]!==undefined){st[name]=st[oldName];delete st[oldName];e.stunden=st;}
-  });
-  try{localStorage.setItem("aslan_v3_ma",JSON.stringify(MA));localStorage.setItem("aslan_v3_entries",JSON.stringify(entries));}catch(e){}
-  sbUpsert("ma",MA);
-  closeSheet("ov-ma");renderMAMgmt();selColorIdx=-1;
+  const old=MA[eMA].name;
+  const c=selC>=0?CLRS[selC]:{bg:MA[eMA].bg,tc:MA[eMA].tc};
+  MA[eMA]={...MA[eMA],name,k,...c};
+  
+  if(old!==name){
+    EN.forEach(e=>{const st=gst(e);if(st[old]!==undefined){st[name]=st[old];delete st[old];e.stunden=st;}});
+  }
+  lsSet("ma",MA);lsSet("en",EN);
+  
+  syn("w", "Speichere Mitarbeiter...");
+  await sbFetch(`ma?id=eq.${MA[eMA].id}`, { method: "PATCH", body: JSON.stringify({name: name}) });
+  syn("","✓");
+
+  cls("ov-ma");rmam();selC=-1;
 }
+
 async function addMA(){
-  const name=document.getElementById("new-ma-name").value.trim();
+  const name=document.getElementById("nm-n").value.trim();
   if(!name){alert("Name eingeben!");return;}
-  const k=name.split(" ").map(w=>w[0]).join("").toUpperCase().slice(0,2)||"XX";
-  const color=MA_COLORS[MA.length%MA_COLORS.length];
-  const row={id:`ma_${Date.now()}`,name,k,...color};
-  MA.push(row);
-  try{localStorage.setItem("aslan_v3_ma",JSON.stringify(MA));}catch(e){}
-  sbUpsert("ma",MA);
-  document.getElementById("new-ma-name").value="";
-  renderMAMgmt();
+  const k=name.split(" ").map(w=>w[0]||"").join("").toUpperCase().slice(0,2)||"XX";
+  const c=CLRS[MA.length%CLRS.length];
+  
+  syn("w", "Erstelle Mitarbeiter...");
+  const res = await sbFetch("ma", { method: "POST", headers: {...SBH, Prefer: "return=representation"}, body: JSON.stringify([{name: name}])});
+  
+  if(res && res.length){
+    const row = { id: res[0].id, name, k, ...c, sort_order: MA.length };
+    MA.push(row); lsSet("ma",MA);
+    document.getElementById("nm-n").value="";rmam();toast(`✅ ${name} hinzugefügt`);
+    syn("","✓");
+  } else { alert("Fehler beim Erstellen!"); }
 }
 
 // ═══ DELETE ═══
-function confDelEntry(){
-  const e=entries[editIdx];
-  showConf(`Eintrag löschen?`,`BV ${e?.bv_nr} · ${fmtD(e?.datum)} wird dauerhaft gelöscht.`,async()=>{
-    const id=entries[editIdx]?.id;
-    entries.splice(editIdx,1);
-    try{localStorage.setItem("aslan_v3_entries",JSON.stringify(entries));}catch(e){}
-    if(id)await sbDelete("entries","id",id);
-    closeCov();closeSheet("ov-entry");renderVerlauf();updateStats();renderWarn();
+function cDE(){
+  const e=EN[eI];
+  conf(`Eintrag löschen?`,`BV ${e?.bv_nr} · ${fd(e?.datum)} wird dauerhaft gelöscht.`,async()=>{
+    const bv = BV.find(b => b.nr === e.bv_nr);
+    if(bv) {
+      syn("w", "Lösche...");
+      await sbFetch(`en?datum=eq.${e.datum}&bv_id=eq.${bv.id}`, { method: "DELETE" });
+      syn("","✓");
+    }
+    EN.splice(eI,1); lsSet("en",EN);
+    clco();cls("ov-e");rverl();ustats();rwarn();toast("🗑 Gelöscht");
   });
 }
-function confDelAll(){
-  showConf("Alle Einträge löschen?",`Alle ${entries.length} Einträge werden dauerhaft gelöscht!`,async()=>{
-    for(const e of entries){if(e.id)await sbDelete("entries","id",e.id);}
-    entries=[];
-    try{localStorage.setItem("aslan_v3_entries","[]");}catch(e){}
-    closeCov();renderVerlauf();updateStats();renderWarn();
+function cDA(){
+  conf("Alle Einträge löschen?",`Alle ${EN.length} Einträge werden dauerhaft gelöscht!`,async()=>{
+    syn("w", "Lösche alle...");
+    // Ein kleiner Trick, um alle zu löschen: Bedingung, die auf alles zutrifft
+    await sbFetch("en?datum=not.is.null", { method: "DELETE" });
+    syn("","✓");
+    EN=[];lsSet("en",[]);clco();rverl();ustats();rwarn();toast("🗑 Alle gelöscht");
   });
 }
-function confDelMA(){
-  const ma=MA[editMAIdx];
-  showConf(`${ma?.name} löschen?`,`Dieser Mitarbeiter wird aus der Liste entfernt.`,async()=>{
-    MA.splice(editMAIdx,1);
-    try{localStorage.setItem("aslan_v3_ma",JSON.stringify(MA));}catch(e){}
-    sbUpsert("ma",MA);
-    closeCov();closeSheet("ov-ma");renderMAMgmt();
+function cDM(){
+  const m=MA[eMA];
+  conf(`${m?.name} löschen?`,"Dieser Mitarbeiter wird aus der Liste entfernt.",async()=>{
+    syn("w", "Lösche Mitarbeiter...");
+    await sbFetch(`ma?id=eq.${m.id}`, { method: "DELETE" });
+    syn("","✓");
+    MA.splice(eMA,1);lsSet("ma",MA);clco();cls("ov-ma");rmam();
   });
 }
 
 // ═══ OVERLAYS ═══
-function openOv(id){document.getElementById(id).classList.add("open");}
-function closeOv(id,ev){if(ev&&ev.target!==document.getElementById(id))return;closeSheet(id);}
-function closeSheet(id){document.getElementById(id).classList.remove("open");editIdx=-1;editBVNr=null;editMAIdx=-1;selColorIdx=-1;}
-function showConf(t,m,cb){
-  document.getElementById("cf-t").textContent=t;
-  document.getElementById("cf-m").textContent=m;
-  document.getElementById("cf-ok").onclick=cb;
-  document.getElementById("cov").classList.add("open");
+function opov(id){document.getElementById(id).classList.add("on");}
+function clov(id,ev){if(ev&&ev.target!==document.getElementById(id))return;cls(id);}
+function cls(id){document.getElementById(id).classList.remove("on");eI=-1;eBV=null;eMA=-1;selC=-1;}
+function conf(t,m,cb){
+  document.getElementById("cft").textContent=t;document.getElementById("cfm").textContent=m;
+  document.getElementById("cfok").onclick=cb;document.getElementById("cof").classList.add("on");
 }
-function closeCov(){document.getElementById("cov").classList.remove("open");}
+function clco(){document.getElementById("cof").classList.remove("on");}
 
 // ═══ EXPORT ═══
-function doExport(){
-  const von=document.getElementById("exp-von").value;
-  const bis=document.getElementById("exp-bis").value;
-  let data=entries.filter(e=>{if(von&&e.datum<von)return false;if(bis&&e.datum>bis)return false;return true;});
-  if(!data.length){document.getElementById("exp-st").textContent="⚠️ Keine Einträge.";return;}
-  document.getElementById("exp-st").textContent="⏳ Excel wird erstellt…";
+function xls(){
+  const von=document.getElementById("ev").value,bis=document.getElementById("eb").value;
+  let data=EN.filter(e=>{if(von&&e.datum<von)return false;if(bis&&e.datum>bis)return false;return true;});
+  if(!data.length){document.getElementById("xst").textContent="⚠️ Keine Einträge.";return;}
+  document.getElementById("xst").textContent="⏳ Excel wird erstellt…";
   if(typeof XLSX==="undefined"){
     const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
-    s.onload=()=>buildXlsx(data,von,bis);document.head.appendChild(s);
-  }else buildXlsx(data,von,bis);
+    s.onload=()=>bxls(data,von,bis);document.head.appendChild(s);
+  }else bxls(data,von,bis);
 }
-function buildXlsx(data,von,bis){
+function bxls(data,von,bis){
   try{
     const wb=XLSX.utils.book_new();
     const sorted=[...data].sort((a,b)=>a.datum.localeCompare(b.datum));
     const r1=[["Datum","BV_NUMMER","Name Mitarbeiter","Stunden"]];
-    sorted.forEach(e=>{const st=getStunden(e);MA.forEach(ma=>{const h=st[ma.name]||0;if(h>0)r1.push([fmtD(e.datum),e.bv_nr,ma.name,h]);});});
+    sorted.forEach(e=>{const st=gst(e);MA.forEach(m=>{const h=st[m.name]||0;if(h>0)r1.push([fd(e.datum),e.bv_nr,m.name,h]);});});
     const ws1=XLSX.utils.aoa_to_sheet(r1);ws1["!cols"]=[{wch:12},{wch:12},{wch:22},{wch:10}];
     XLSX.utils.book_append_sheet(wb,ws1,"Seith_Stunden");
     const r2=[["BV-Nummer","Adresse / Beschreibung"]];
@@ -1142,8 +1075,8 @@ function buildXlsx(data,von,bis){
     XLSX.utils.book_append_sheet(wb,ws2,"Seith_BV-Adresse");
     const lbl=(von||bis)?`_${von||""}bis${bis||""}`:"_alle";
     XLSX.writeFile(wb,`ASLAN_Stunden${lbl}.xlsx`);
-    document.getElementById("exp-st").textContent="✅ Datei heruntergeladen!";
-  }catch(err){document.getElementById("exp-st").textContent="❌ Fehler: "+err.message;}
+    document.getElementById("xst").textContent="✅ Datei heruntergeladen!";
+  }catch(err){document.getElementById("xst").textContent="❌ Fehler: "+err.message;}
 }
 </script>
 </body>
