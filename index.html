@@ -484,7 +484,7 @@ async function syncDown(){
   const [rbv,rma,ren]=await Promise.all([
     sbSel("bv","&order=nr.asc"),
     sbSel("ma","&order=sort_order.asc"),
-    sbSel("entries","&order=datum.asc")
+    sbSel("en","&order=datum.asc")
   ]);
   let changed=false;
   if(rbv&&rbv.length){BV=rbv;lsSet("bv",BV);changed=true;}
@@ -654,13 +654,48 @@ function n2st(){
   go("pg-st");
 }
 async function save(){
-  const st={};MA.forEach(m=>{st[m.name]=parseFloat(document.getElementById("h-"+m.k)?.value)||0;});
-  const entry={id:`${cD}_${sBV.nr}_${Date.now()}`,datum:cD,bv_nr:sBV.nr,bv_name:sBV.name,stunden:st};
-  EN.push(entry);lsSet("en",EN);
-  pushEntry(entry);
-  const ak=MA.filter(m=>st[m.name]>0).map(m=>`${m.name.split(" ")[0]}: ${st[m.name]}h`);
-  const tot=Object.values(st).reduce((a,b)=>a+b,0);
-  document.getElementById("okd").textContent=`BV ${sBV.nr} · ${fd(cD)}\n${ak.join(", ")||"—"} · ${tot}h`;
+  const rows = [];
+  const localEntries = [];
+
+  MA.forEach(m=>{
+    const h = parseFloat(document.getElementById("h-"+m.k)?.value) || 0;
+    if(h > 0){
+      rows.push({
+        datum: cD,
+        bv_id: sBV.id,
+        ma_id: m.id,
+        stunden: h
+      });
+
+      localEntries.push({
+        datum: cD,
+        bv_id: sBV.id,
+        ma_id: m.id,
+        stunden: h
+      });
+    }
+  });
+
+  if(!rows.length){
+    alert("Bitte mindestens bei einem Mitarbeiter Stunden eintragen.");
+    return;
+  }
+
+  const saved = await sbUps("en", rows);
+
+  // neu laden statt lokal selbst rumzubauen
+  await syncDown();
+
+  const ak = localEntries.map(e=>{
+    const ma = MA.find(m=>m.id===e.ma_id);
+    return `${ma?.name?.split(" ")[0] || "?"}: ${e.stunden}h`;
+  });
+
+  const tot = localEntries.reduce((a,b)=>a+b.stunden,0);
+
+  document.getElementById("okd").textContent =
+    `BV ${sBV.nr} · ${fd(cD)}\n${ak.join(", ")} · ${tot}h`;
+
   go("pg-ok");
 }
 function rsi(){sBV=null;document.getElementById("bvnx").disabled=true;}
