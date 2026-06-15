@@ -371,82 +371,122 @@ input:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,58,.15);}
 </div>
 <script>
 // ═══ CONSTANTS ═══
-const CODE="ASLAN1973";
+const CODE="ASLAN2024";
 const SBU="https://orluvjqjkngjdmajtwvp.supabase.co";
 const SBK="syxGy4-jyqbyn-wujfan";
 const LS="a3_";
 
 const CLRS=[
-  {bg:"#dbeafe",tc:"#1e3a8a"},{bg:"#d1fae5",tc:"#064e3b"},{bg:"#fef3c7",tc:"#78350f"},
-  {bg:"#ffe4e6",tc:"#881337"},{bg:"#f3e8ff",tc:"#4c1d95"},{bg:"#fce7f3",tc:"#831843"},
-  {bg:"#ecfdf5",tc:"#065f46"},{bg:"#fff7ed",tc:"#7c2d12"},{bg:"#f0fdf4",tc:"#14532d"},
+  {bg:"#dbeafe",tc:"#1e3a8a"},
+  {bg:"#d1fae5",tc:"#064e3b"},
+  {bg:"#fef3c7",tc:"#78350f"},
+  {bg:"#ffe4e6",tc:"#881337"},
+  {bg:"#f3e8ff",tc:"#4c1d95"},
+  {bg:"#fce7f3",tc:"#831843"},
+  {bg:"#ecfdf5",tc:"#065f46"},
+  {bg:"#fff7ed",tc:"#7c2d12"},
+  {bg:"#f0fdf4",tc:"#14532d"},
   {bg:"#eff6ff",tc:"#1e40af"}
 ];
+
 const DBV=[
-  {nr:"65410",name:"Bietigheim, Rheinstraße, K3737"},
-  {nr:"65539",name:"Karlsruhe, Litzelaustraße"},
+  {nr:"65410",name:"Bietigheim, Rheinstr. K3737"},
   {nr:"65586",name:"Weingarten, GWG Sandfeld"},
-  {nr:"65605",name:"KIT Campus Nord, Hermann-von-Helmholtz-Platz"},
-  {nr:"65608",name:"Rastatt-Rauental, Hauptstraße"},
-  {nr:"65646",name:"Ettlingen, Dorf-/Marktplatzsanierung"},
+  {nr:"65605",name:"KIT Campus Nord"},
+  {nr:"65646",name:"Ettlingen, Dorf-/Marktplatz"},
   {nr:"65667",name:"Ettlingen, Bismarckstr."},
-  {nr:"65711",name:"Leimen/St. Ilgen, Siedlerstr."},
-  {nr:"65892",name:"Rastatt, Rosen-/Planetenstraße Dücker"},
-  {nr:"66014",name:"Pforst"},
   {nr:"66044",name:"Linkenheim, Rheinstr. 83"},
-  {nr:"66051",name:"Philippsburg, RFL-Kasernengelände"},
+  {nr:"66051",name:"Philippsburg, RFL-Kaserne"},
   {nr:"66182",name:"Kuppenheim, Baustrom VEGA"},
-  {nr:"66188",name:"Speyer"},
   {nr:"66206",name:"Dettenheim, L602 Radweg"},
-  {nr:"66264",name:"Linkenheim, Karlsruher Str. 29"},
-  {nr:"66275",name:"Linkenheim, Rathausplatz 1-3"},
-  {nr:"66282",name:"Linkenheim, Bahnhofstr."},
-  {nr:"66298",name:"Neundorf, Ettlinger Str. 4"},
-  {nr:"66300",name:"Neundorf, Ulmenstr. 6"},
-  {nr:"66301",name:"Neundorf, Mannheimer Str. 127"}
+  {nr:"66264",name:"Linkenheim, Karlsruher Str."},
+  {nr:"66275",name:"Linkenheim, Rathausplatz"},
+  {nr:"66282",name:"Linkenheim, Bahnhofstr."}
 ];
+
 const DMA=[
-  {id:"ma_SA",name:"Sayim Aslan",k:"SA",bg:"#dbeafe",tc:"#1e3a8a",sort_order:0},
-  {id:"ma_AK",name:"Ali Kantar",k:"AK",bg:"#d1fae5",tc:"#064e3b",sort_order:1},
-  {id:"ma_NE",name:"Nesim",k:"NE",bg:"#fef3c7",tc:"#78350f",sort_order:2},
-  {id:"ma_IL",name:"Ilyaz",k:"IL",bg:"#ffe4e6",tc:"#881337",sort_order:3},
-  {id:"ma_YA",name:"Yordan Atanasor",k:"YA",bg:"#f3e8ff",tc:"#4c1d95",sort_order:4}
+  {name:"Sayim Aslan",k:"SA",bg:"#dbeafe",tc:"#1e3a8a",sort_order:0},
+  {name:"Ali Kantar",k:"AK",bg:"#d1fae5",tc:"#064e3b",sort_order:1},
+  {name:"Nesim",k:"NE",bg:"#fef3c7",tc:"#78350f",sort_order:2},
+  {name:"Ilyaz",k:"IL",bg:"#ffe4e6",tc:"#881337",sort_order:3},
+  {name:"Yordan Atanasor",k:"YA",bg:"#f3e8ff",tc:"#4c1d95",sort_order:4}
 ];
 
 // ═══ STATE ═══
-let BV=[],MA=[],EN=[];
-let sBV=null,cD="",eI=-1,eBV=null,eMA=-1,selC=-1,woff=0;
+let BV=[], MA=[], EN=[];
+let sBV=null, cD="", eGroupKey="", eBV=null, eMA=-1, selC=-1, woff=0;
 let pstack=["pg-login"];
-let syncing=false;
+let toastT=null;
+let ptimer=null;
 
 // ═══ SUPABASE ═══
-const SBH={"apikey":SBK,"Authorization":"Bearer "+SBK,"Content-Type":"application/json","Prefer":"return=representation"};
+const SBH={
+  "apikey":SBK,
+  "Authorization":"Bearer "+SBK,
+  "Content-Type":"application/json"
+};
 
 async function sbFetch(path,opts={}){
   try{
     const r=await fetch(SBU+"/rest/v1/"+path,{headers:SBH,...opts});
-    if(r.status===200||r.status===201){const t=await r.text();return t?JSON.parse(t):[];}
-    if(r.status===204)return[];
-    console.warn("SB",r.status,path);return null;
-  }catch(e){console.warn("SB err",e);return null;}
+    if(r.status===200||r.status===201){
+      const t=await r.text();
+      return t?JSON.parse(t):[];
+    }
+    if(r.status===204)return [];
+    console.warn("SB",r.status,path);
+    return null;
+  }catch(e){
+    console.warn("SB err",e);
+    return null;
+  }
 }
-async function sbSel(t,q=""){return sbFetch(`${t}?select=*${q}`);}
-async function sbUps(t,rows){
-  if(!rows||!rows.length)return;
-  return sbFetch(t,{method:"POST",headers:{...SBH,Prefer:"resolution=merge-duplicates"},body:JSON.stringify(rows)});
-}
-async function sbDel(t,id){return sbFetch(`${t}?id=eq.${encodeURIComponent(id)}`,{method:"DELETE"});}
+async function sbSel(t,q=""){ return sbFetch(`${t}?select=*${q}`); }
 
-// local cache
-function lsGet(k,def){try{const v=localStorage.getItem(LS+k);return v?JSON.parse(v):def;}catch(e){return def;}}
-function lsSet(k,v){try{localStorage.setItem(LS+k,JSON.stringify(v));}catch(e){}}
+async function sbIns(t,rows){
+  if(!rows?.length)return [];
+  return sbFetch(t,{
+    method:"POST",
+    headers:{...SBH,Prefer:"return=representation,resolution=merge-duplicates"},
+    body:JSON.stringify(rows)
+  });
+}
+
+async function sbUpd(t,id,row){
+  return sbFetch(`${t}?id=eq.${encodeURIComponent(id)}`,{
+    method:"PATCH",
+    headers:{...SBH,Prefer:"return=representation"},
+    body:JSON.stringify(row)
+  });
+}
+
+async function sbDel(t,id){
+  return sbFetch(`${t}?id=eq.${encodeURIComponent(id)}`,{method:"DELETE"});
+}
+
+async function sbDelWhere(t,query){
+  return sbFetch(`${t}?${query}`,{method:"DELETE"});
+}
+
+// ═══ LOCAL CACHE ═══
+function lsGet(k,def){
+  try{
+    const v=localStorage.getItem(LS+k);
+    return v?JSON.parse(v):def;
+  }catch(e){ return def; }
+}
+function lsSet(k,v){
+  try{ localStorage.setItem(LS+k,JSON.stringify(v)); }catch(e){}
+}
 
 // ═══ TOAST ═══
-let toastT;
 function toast(msg,dur=2000){
   const el=document.getElementById("toast");
-  el.textContent=msg;el.classList.add("show");
-  clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove("show"),dur);
+  if(!el)return;
+  el.textContent=msg;
+  el.classList.add("show");
+  clearTimeout(toastT);
+  toastT=setTimeout(()=>el.classList.remove("show"),dur);
 }
 
 // ═══ SYNC STATUS ═══
@@ -469,45 +509,61 @@ function login(){
 }
 document.getElementById("pw").addEventListener("keydown",e=>{if(e.key==="Enter")login();});
 
+// ═══ BOOT ═══
 async function boot(){
-  // Load from localStorage first → instant UI
-  BV=lsGet("bv",DBV); MA=lsGet("ma",DMA); EN=lsGet("en",[]);
-  EN.forEach(e=>{if(typeof e.stunden==="string")try{e.stunden=JSON.parse(e.stunden);}catch(x){}});
-  go("pg-home"); sd0(); ustats(); rwarn();
-  // Then fetch from Supabase in background → overwrite if newer/more data
-  syncDown();
+  BV=lsGet("bv",[]);
+  MA=lsGet("ma",[]);
+  EN=lsGet("en",[]);
+  go("pg-home");
+  sd0();
+  ustats();
+  rwarn();
+  await syncDown(true);
   initPush();
 }
 
-async function syncDown(){
+async function seedIfEmpty(){
+  const rbv=await sbSel("bv","&order=nr.asc");
+  if(rbv && rbv.length===0){
+    await sbIns("bv",DBV);
+  }
+  const rma=await sbSel("ma","&order=sort_order.asc");
+  if(rma && rma.length===0){
+    await sbIns("ma",DMA);
+  }
+}
+
+async function syncDown(first=false){
   syn("w","Synchronisiere…");
+
+  await seedIfEmpty();
+
   const [rbv,rma,ren]=await Promise.all([
     sbSel("bv","&order=nr.asc"),
     sbSel("ma","&order=sort_order.asc"),
     sbSel("en","&order=datum.asc")
   ]);
-  let changed=false;
-  if(rbv&&rbv.length){BV=rbv;lsSet("bv",BV);changed=true;}
-  else if(!lsGet("bv",null)){BV=DBV;await sbUps("bv",DBV);lsSet("bv",BV);}
-  if(rma&&rma.length){MA=rma;lsSet("ma",MA);changed=true;}
-  else if(!lsGet("ma",null)){MA=DMA;await sbUps("ma",DMA);lsSet("ma",MA);}
-  if(ren){
-    ren.forEach(e=>{if(typeof e.stunden==="string")try{e.stunden=JSON.parse(e.stunden);}catch(x){} });
-    EN=ren;lsSet("en",EN);changed=true;
-  }
-  if(changed){ustats();rwarn();}
-  syn("","✓ Synchronisiert");
-  toast("✓ Daten aktualisiert");
-}
 
-async function pushEntry(entry){
-  syn("w","Speichern…");
-  const row={...entry,stunden:typeof entry.stunden==="string"?entry.stunden:JSON.stringify(entry.stunden)};
-  await sbUps("entries",[row]);
-  syn("","✓ Gespeichert");
+  if(rbv) BV=rbv;
+  if(rma) MA=rma;
+  if(ren) EN=ren;
+
+  lsSet("bv",BV);
+  lsSet("ma",MA);
+  lsSet("en",EN);
+
+  ustats();
+  rwarn();
+
+  if(document.getElementById("pg-bv")?.classList.contains("on")) rbvg();
+  if(document.getElementById("pg-verl")?.classList.contains("on")) rverl();
+  if(document.getElementById("pg-bvm")?.classList.contains("on")) rbvm();
+  if(document.getElementById("pg-ma")?.classList.contains("on")) rmam();
+  if(document.getElementById("pg-woche")?.classList.contains("on")) rw();
+
+  syn("","✓ Synchronisiert");
+  if(!first) toast("✓ Daten aktualisiert");
 }
-async function pushBV(bv){await sbUps("bv",[bv]);}
-async function pushMA(){await sbUps("ma",MA.map((m,i)=>({...m,sort_order:i})));}
 
 // ═══ ROUTING ═══
 function go(id){
@@ -517,7 +573,9 @@ function go(id){
   document.getElementById(cur)?.classList.add("bk");
   pstack.push(id);
   const el=document.getElementById(id);
-  el.classList.remove("bk");el.classList.add("on");
+  el.classList.remove("bk");
+  el.classList.add("on");
+
   if(id==="pg-home"){ustats();rwarn();}
   if(id==="pg-verl")rverl();
   if(id==="pg-bvm")rbvm();
@@ -530,7 +588,9 @@ function bk(to){
   document.getElementById(cur)?.classList.remove("on");
   pstack=pstack.filter(p=>p!==cur);
   const prev=document.getElementById(to);
-  prev.classList.remove("bk");prev.classList.add("on");
+  prev.classList.remove("bk");
+  prev.classList.add("on");
+
   if(to==="pg-home"){ustats();rwarn();}
   if(to==="pg-verl")rverl();
   if(to==="pg-bvm")rbvm();
@@ -539,27 +599,55 @@ function bk(to){
 }
 
 // ═══ HELPERS ═══
-function fd(d){if(!d)return"";const[y,m,day]=d.split("-");return`${day}.${m}.${y}`;}
-function td(){return new Date().toISOString().split("T")[0];}
-function sd0(){const e=document.getElementById("inp-d");if(e)e.value=td();}
-function sd1(){const d=new Date();d.setDate(d.getDate()-1);const e=document.getElementById("inp-d");if(e)e.value=d.toISOString().split("T")[0];}
-function gst(e){return typeof e.stunden==="string"?JSON.parse(e.stunden):e.stunden||{};}
-function gkw(ds){const d=new Date(ds+"T00:00:00");const day=d.getDay()||7;d.setDate(d.getDate()+4-day);const y=d.getFullYear();return Math.ceil(((d-new Date(y,0,1))/864e5+1)/7);}
+function fd(d){
+  if(!d)return"";
+  const[y,m,day]=d.split("-");
+  return `${day}.${m}.${y}`;
+}
+function td(){ return new Date().toISOString().split("T")[0]; }
+function sd0(){ const e=document.getElementById("inp-d"); if(e)e.value=td(); }
+function sd1(){ const d=new Date(); d.setDate(d.getDate()-1); const e=document.getElementById("inp-d"); if(e)e.value=d.toISOString().split("T")[0]; }
+
+function gkw(ds){
+  const d=new Date(ds+"T00:00:00");
+  const day=d.getDay()||7;
+  d.setDate(d.getDate()+4-day);
+  const y=d.getFullYear();
+  return Math.ceil(((d-new Date(y,0,1))/864e5+1)/7);
+}
+
+function bvById(id){ return BV.find(b=>b.id===id); }
+function maById(id){ return MA.find(m=>m.id===id); }
+
+function groupedEntries(){
+  const map={};
+  EN.forEach(e=>{
+    const key=`${e.datum}_${e.bv_id}`;
+    if(!map[key]) map[key]={ key, datum:e.datum, bv_id:e.bv_id, rows:[] };
+    map[key].rows.push(e);
+  });
+  return Object.values(map).sort((a,b)=>a.datum.localeCompare(b.datum));
+}
 
 // ═══ WARN ═══
 function getMiss(){
-  const r=[];const dow=["So","Mo","Di","Mi","Do","Fr","Sa"];
+  const r=[];
+  const dow=["So","Mo","Di","Mi","Do","Fr","Sa"];
   for(let i=1;i<=21&&r.length<3;i++){
-    const d=new Date();d.setDate(d.getDate()-i);
-    const dow2=d.getDay();if(dow2===0||dow2===6)continue;
+    const d=new Date();
+    d.setDate(d.getDate()-i);
+    const dw=d.getDay();
+    if(dw===0||dw===6)continue;
     const ds=d.toISOString().split("T")[0];
-    if(!EN.some(e=>e.datum===ds&&Object.values(gst(e)).some(h=>h>0)))r.push({ds,lbl:dow[dow2]+", "+fd(ds)});
-    if(r.length>=3)break;
+    if(!EN.some(e=>e.datum===ds && Number(e.stunden)>0)){
+      r.push({ds,lbl:dow[dw]+", "+fd(ds)});
+    }
   }
   return r;
 }
 function rwarn(){
-  const s=document.getElementById("warn");const m=getMiss();
+  const s=document.getElementById("warn"),m=getMiss();
+  if(!s)return;
   if(!m.length){s.style.display="none";return;}
   s.style.display="block";
   s.innerHTML=`<div class="wb"><div class="wh"><span style="font-size:19px">⚠️</span><div class="wht">${m.length} Tag${m.length>1?"e":""} ohne Stunden!</div></div>
@@ -567,16 +655,19 @@ function rwarn(){
     <button class="wfb" onclick="gofill('${m[m.length-1].ds}')">Jetzt nachtragen →</button></div></div>`;
 }
 function gofill(dt){
-  document.getElementById("inp-d").value=dt;cD=dt;sBV=null;
+  document.getElementById("inp-d").value=dt;
+  cD=dt;
+  sBV=null;
   document.getElementById("bvnx").disabled=true;
-  document.getElementById("nb-nr").value="";document.getElementById("nb-nm").value="";
+  document.getElementById("nb-nr").value="";
+  document.getElementById("nb-nm").value="";
   document.getElementById("bvhint").style.display="none";
   document.getElementById("bvsub").textContent=fd(dt);
-  rbvg();go("pg-bv");
+  rbvg();
+  go("pg-bv");
 }
 
-// ═══ PUSH ═══
-let ptimer=null;
+// ═══ PUSH REMINDER ═══
 function initPush(){
   const on=localStorage.getItem("apush")==="1";
   const t=document.getElementById("ptgl");
@@ -584,16 +675,21 @@ function initPush(){
   if(on)schPush();
 }
 async function togglePush(){
-  const t=document.getElementById("ptgl");const isOn=t.classList.contains("on");
+  const t=document.getElementById("ptgl");
+  const isOn=t.classList.contains("on");
   if(!isOn){
-    if(!("Notification"in window)){alert("Dein Browser unterstützt keine Benachrichtigungen.");return;}
+    if(!("Notification" in window)){ alert("Dein Browser unterstützt keine Benachrichtigungen."); return; }
     const p=await Notification.requestPermission();
-    if(p!=="granted"){alert("Bitte Benachrichtigungen in den Browser-Einstellungen erlauben.");return;}
-    t.classList.add("on");localStorage.setItem("apush","1");
-    schPush();toast("🔔 Erinnerung aktiviert – täglich 18:00 Uhr");
+    if(p!=="granted"){ alert("Bitte Benachrichtigungen erlauben."); return; }
+    t.classList.add("on");
+    localStorage.setItem("apush","1");
+    schPush();
+    toast("🔔 Erinnerung aktiviert – täglich 18:00 Uhr");
   }else{
-    t.classList.remove("on");localStorage.setItem("apush","0");
-    if(ptimer)clearTimeout(ptimer);toast("🔕 Erinnerung deaktiviert");
+    t.classList.remove("on");
+    localStorage.setItem("apush","0");
+    if(ptimer)clearTimeout(ptimer);
+    toast("🔕 Erinnerung deaktiviert");
   }
 }
 function schPush(){
@@ -605,41 +701,65 @@ function schPush(){
 }
 function doNotify(){
   if(localStorage.getItem("apush")!=="1"||Notification.permission!=="granted")return;
-  const has=EN.some(e=>e.datum===td()&&Object.values(gst(e)).some(h=>h>0));
+  const has=EN.some(e=>e.datum===td()&&Number(e.stunden)>0);
   if(!has)new Notification("⏰ ASLAN Stundenerfassung",{body:"Stunden für heute noch nicht eingetragen!",tag:"aslan"});
 }
 
-// ═══ BV ═══
+// ═══ BAUSTELLEN ═══
 function chkbv(){
-  const nr=document.getElementById("nb-nr").value.trim(),h=document.getElementById("bvhint"),ex=BV.find(b=>b.nr===nr);
-  if(ex){h.style.display="block";h.textContent=`⚡ BV ${nr} vorhanden: „${ex.name}" – wird ausgewählt.`;}
-  else h.style.display="none";
+  const nr=document.getElementById("nb-nr").value.trim();
+  const h=document.getElementById("bvhint");
+  const ex=BV.find(b=>b.nr===nr);
+  if(ex){
+    h.style.display="block";
+    h.textContent=`⚡ BV ${nr} vorhanden: „${ex.name}“ – wird ausgewählt.`;
+  }else h.style.display="none";
 }
+
 function n2bv(){
   const d=document.getElementById("inp-d").value;
   if(!d){alert("Bitte Datum wählen!");return;}
-  cD=d;document.getElementById("bvsub").textContent=fd(d);
-  sBV=null;document.getElementById("bvnx").disabled=true;
-  document.getElementById("nb-nr").value="";document.getElementById("nb-nm").value="";
+  cD=d;
+  document.getElementById("bvsub").textContent=fd(d);
+  sBV=null;
+  document.getElementById("bvnx").disabled=true;
+  document.getElementById("nb-nr").value="";
+  document.getElementById("nb-nm").value="";
   document.getElementById("bvhint").style.display="none";
-  rbvg();go("pg-bv");
+  rbvg();
+  go("pg-bv");
 }
+
 function rbvg(){
   document.getElementById("bvg").innerHTML=[...BV].sort((a,b)=>a.nr.localeCompare(b.nr)).map(b=>`
-    <button class="bvb ${sBV&&sBV.nr===b.nr?"sl":""}" onclick="pkBV('${b.nr}')">
+    <button class="bvb ${sBV&&sBV.nr===b.nr?"sl":""}" onclick="pkBV('${b.id}')">
       <div class="bvnr">BV ${b.nr}</div><div class="bvnm">${b.name}</div></button>`).join("");
 }
-function pkBV(nr){sBV=BV.find(b=>b.nr===nr);document.getElementById("bvnx").disabled=false;rbvg();}
+function pkBV(id){
+  sBV=BV.find(b=>b.id===id);
+  document.getElementById("bvnx").disabled=false;
+  rbvg();
+}
+
 async function addBV(){
-  const nr=document.getElementById("nb-nr").value.trim(),nm=document.getElementById("nb-nm").value.trim();
+  const nr=document.getElementById("nb-nr").value.trim();
+  const nm=document.getElementById("nb-nm").value.trim();
   if(!nr){alert("BV-Nummer eingeben!");return;}
   const ex=BV.find(b=>b.nr===nr);
-  if(ex){pkBV(nr);document.getElementById("nb-nr").value="";document.getElementById("nb-nm").value="";document.getElementById("bvhint").style.display="none";return;}
-  const row={id:nr,nr,name:nm||"—"};
-  BV.push(row);BV.sort((a,b)=>a.nr.localeCompare(b.nr));
-  lsSet("bv",BV);pushBV(row);
-  document.getElementById("nb-nr").value="";document.getElementById("nb-nm").value="";
-  document.getElementById("bvhint").style.display="none";pkBV(nr);
+  if(ex){
+    pkBV(ex.id);
+    document.getElementById("nb-nr").value="";
+    document.getElementById("nb-nm").value="";
+    document.getElementById("bvhint").style.display="none";
+    return;
+  }
+  await sbIns("bv",[{nr,name:nm||"—"}]);
+  await syncDown();
+  const neu=BV.find(b=>b.nr===nr);
+  if(neu)pkBV(neu.id);
+  document.getElementById("nb-nr").value="";
+  document.getElementById("nb-nm").value="";
+  document.getElementById("bvhint").style.display="none";
 }
 
 // ═══ STUNDEN EINGABE ═══
@@ -647,32 +767,27 @@ function n2st(){
   if(!sBV)return;
   document.getElementById("stsub").textContent=`${fd(cD)} · BV ${sBV.nr}`;
   document.getElementById("mal").innerHTML=MA.map(m=>`
-    <div class="mr"><div class="av" style="background:${m.bg};color:${m.tc}">${m.k}</div>
+    <div class="mr"><div class="av" style="background:${m.bg};color:${m.tc}">${m.k||"?"}</div>
     <div class="mn">${m.name}</div>
-    <input type="number" class="hi" id="h-${m.k}" value="0" min="0" max="24" step="0.5" inputmode="decimal">
+    <input type="number" class="hi" id="h-${m.id}" value="0" min="0" max="24" step="0.5" inputmode="decimal">
     <div class="hu">h</div></div>`).join("");
   go("pg-st");
 }
+
 async function save(){
-  const rows = [];
-  const localEntries = [];
+  const rows=[];
+  const preview=[];
 
   MA.forEach(m=>{
-    const h = parseFloat(document.getElementById("h-"+m.k)?.value) || 0;
-    if(h > 0){
+    const h=parseFloat(document.getElementById("h-"+m.id)?.value)||0;
+    if(h>0){
       rows.push({
-        datum: cD,
-        bv_id: sBV.id,
-        ma_id: m.id,
-        stunden: h
+        datum:cD,
+        bv_id:sBV.id,
+        ma_id:m.id,
+        stunden:h
       });
-
-      localEntries.push({
-        datum: cD,
-        bv_id: sBV.id,
-        ma_id: m.id,
-        stunden: h
-      });
+      preview.push({ma:m.name,stunden:h});
     }
   });
 
@@ -681,30 +796,34 @@ async function save(){
     return;
   }
 
-  const saved = await sbUps("en", rows);
-
-  // neu laden statt lokal selbst rumzubauen
+  syn("w","Speichern…");
+  await sbIns("en",rows);
   await syncDown();
+  syn("","✓ Gespeichert");
 
-  const ak = localEntries.map(e=>{
-    const ma = MA.find(m=>m.id===e.ma_id);
-    return `${ma?.name?.split(" ")[0] || "?"}: ${e.stunden}h`;
-  });
+  const txt=preview.map(x=>`${x.ma.split(" ")[0]}: ${x.stunden}h`);
+  const tot=preview.reduce((a,b)=>a+b.stunden,0);
 
-  const tot = localEntries.reduce((a,b)=>a+b.stunden,0);
-
-  document.getElementById("okd").textContent =
-    `BV ${sBV.nr} · ${fd(cD)}\n${ak.join(", ")} · ${tot}h`;
-
+  document.getElementById("okd").textContent=`BV ${sBV.nr} · ${fd(cD)}\n${txt.join(", ")} · ${tot}h`;
   go("pg-ok");
 }
-function rsi(){sBV=null;document.getElementById("bvnx").disabled=true;}
+function rsi(){ sBV=null; document.getElementById("bvnx").disabled=true; }
 
 // ═══ STATS ═══
 function ustats(){
-  const t=td(),dw=new Date();dw.setDate(dw.getDate()-dw.getDay()+1);const ws=dw.toISOString().split("T")[0];
+  const t=td();
+  const dw=new Date();
+  const day=dw.getDay()||7;
+  dw.setDate(dw.getDate()-day+1);
+  const ws=dw.toISOString().split("T")[0];
+
   let hH=0,hW=0;
-  EN.forEach(e=>{const s=gst(e);const tot=Object.values(s).reduce((a,b)=>a+b,0);if(e.datum===t)hH+=tot;if(e.datum>=ws)hW+=tot;});
+  EN.forEach(e=>{
+    const h=Number(e.stunden)||0;
+    if(e.datum===t)hH+=h;
+    if(e.datum>=ws)hW+=h;
+  });
+
   document.getElementById("s-h").textContent=hH;
   document.getElementById("s-w").textContent=hW;
   document.getElementById("s-e").textContent=EN.length;
@@ -712,60 +831,86 @@ function ustats(){
 
 // ═══ WOCHE ═══
 function rw(){
-  const d=new Date();const dow=d.getDay()||7;d.setDate(d.getDate()-dow+1+woff*7);
+  const d=new Date();
+  const dow=d.getDay()||7;
+  d.setDate(d.getDate()-dow+1+woff*7);
   const mon=d.toISOString().split("T")[0];
-  const fri=new Date(d);fri.setDate(fri.getDate()+4);const fris=fri.toISOString().split("T")[0];
+  const fri=new Date(d); fri.setDate(fri.getDate()+4);
+  const fris=fri.toISOString().split("T")[0];
   const kw=gkw(mon);
+
   document.getElementById("kwl").textContent=`KW ${kw}`;
   document.getElementById("whs").textContent=`${fd(mon)} – ${fd(fris)}`;
+
   const week=EN.filter(e=>e.datum>=mon&&e.datum<=fris);
   const wb=document.getElementById("wbody");
-  if(!week.length){wb.innerHTML=`<div class="emp"><div class="eic">📊</div>Keine Stunden in KW ${kw}.</div>`;return;}
-  // MA totals
-  const mt={};MA.forEach(m=>{mt[m.name]=0;});
+
+  if(!week.length){
+    wb.innerHTML=`<div class="emp"><div class="eic">📊</div>Keine Stunden in KW ${kw}.</div>`;
+    return;
+  }
+
+  const mt={}; MA.forEach(m=>mt[m.id]=0);
   const bmap={};
+
   week.forEach(e=>{
-    const st=gst(e);const bk=e.bv_nr;
-    if(!bmap[bk])bmap[bk]={nr:e.bv_nr,name:e.bv_name,ma:{}};
-    MA.forEach(m=>{const h=st[m.name]||0;mt[m.name]+=h;bmap[bk].ma[m.name]=(bmap[bk].ma[m.name]||0)+h;});
+    const h=Number(e.stunden)||0;
+    mt[e.ma_id]=(mt[e.ma_id]||0)+h;
+    if(!bmap[e.bv_id]) bmap[e.bv_id]={bv_id:e.bv_id, ma:{}};
+    bmap[e.bv_id].ma[e.ma_id]=(bmap[e.bv_id].ma[e.ma_id]||0)+h;
   });
+
   const tot=Object.values(mt).reduce((a,b)=>a+b,0);
   const dnames=["So","Mo","Di","Mi","Do","Fr","Sa"];
+
   let h=`<div style="padding:12px 16px 0">`;
-  // MA table
+
   h+=`<div class="lbl" style="margin:6px 0 8px">Mitarbeiter gesamt</div>
   <div class="crd" style="overflow:visible"><table class="wt">
     <tr><th>Mitarbeiter</th><th>Stunden</th></tr>
-    ${MA.map(m=>{const v=mt[m.name]||0;const cls=v===0?"z":v<30?"l":"k";
-      return`<tr><td><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${m.tc};display:inline-block"></span>${m.name}</span></td><td><span class="hb ${cls}">${v}h</span></td></tr>`;
+    ${MA.map(m=>{
+      const v=mt[m.id]||0;
+      const cls=v===0?"z":v<30?"l":"k";
+      return `<tr><td><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${m.tc};display:inline-block"></span>${m.name}</span></td><td><span class="hb ${cls}">${v}h</span></td></tr>`;
     }).join("")}
     <tr><td><strong>Gesamt</strong></td><td><span class="hb k">${tot}h</span></td></tr>
   </table></div>`;
-  // BV table
+
   if(Object.keys(bmap).length){
     h+=`<div class="lbl" style="margin-top:18px;margin-bottom:8px">Nach Baustelle</div>`;
-    Object.values(bmap).forEach(bv=>{
-      const bt=Object.values(bv.ma).reduce((a,b)=>a+b,0);
+    Object.values(bmap).forEach(x=>{
+      const bv=bvById(x.bv_id);
+      const bt=Object.values(x.ma).reduce((a,b)=>a+b,0);
       h+=`<div class="crd" style="margin-bottom:10px;overflow:visible">
         <div style="padding:9px 14px;background:var(--gl);font-size:13px;font-weight:700;color:var(--gd);display:flex;justify-content:space-between">
-          <span>BV ${bv.nr} · ${bv.name}</span><span>${bt}h</span></div>
-        <table class="wt">${MA.map(m=>{const v=bv.ma[m.name]||0;if(!v)return"";
-          return`<tr><td>${m.name.split(" ")[0]}</td><td><span class="hb k">${v}h</span></td></tr>`;
-        }).join("")}</table></div>`;
+          <span>BV ${bv?.nr||"?"} · ${bv?.name||"—"}</span><span>${bt}h</span></div>
+        <table class="wt">${
+          MA.map(m=>{
+            const v=x.ma[m.id]||0;
+            if(!v)return"";
+            return `<tr><td>${m.name.split(" ")[0]}</td><td><span class="hb k">${v}h</span></td></tr>`;
+          }).join("")
+        }</table></div>`;
     });
   }
-  // Day details
+
   h+=`<div class="lbl" style="margin-top:18px;margin-bottom:8px">Tagesdetails</div><div class="crd" style="margin-bottom:16px">`;
   for(let i=0;i<5;i++){
-    const dd=new Date(mon+"T00:00:00");dd.setDate(dd.getDate()+i);
+    const dd=new Date(mon+"T00:00:00");
+    dd.setDate(dd.getDate()+i);
     const ds=dd.toISOString().split("T")[0];
-    const de=EN.filter(e=>e.datum===ds);
-    const dt=de.reduce((s,e)=>s+Object.values(gst(e)).reduce((a,b)=>a+b,0),0);
+    const de=week.filter(e=>e.datum===ds);
+    const dt=de.reduce((s,e)=>s+(Number(e.stunden)||0),0);
     const cls=dt===0?"z":dt<20?"l":"k";
+
+    const bvs=[...new Set(de.map(e=>e.bv_id))].map(id=>{
+      const bv=bvById(id);
+      return `<div style="font-size:11px;color:var(--s)">BV ${bv?.nr||"?"}</div>`;
+    }).join("");
+
     h+=`<div style="padding:10px 14px;border-bottom:.5px solid var(--b);display:flex;justify-content:space-between;align-items:center">
       <div><div style="font-size:13px;font-weight:700">${dnames[dd.getDay()]}, ${fd(ds)}</div>
-      ${de.length?de.map(e=>`<div style="font-size:11px;color:var(--s)">BV ${e.bv_nr}</div>`).join(""):
-      `<div style="font-size:11px;color:var(--s);opacity:.45">Kein Eintrag</div>`}</div>
+      ${de.length?bvs:`<div style="font-size:11px;color:var(--s);opacity:.45">Kein Eintrag</div>`}</div>
       <span class="hb ${cls}">${dt}h</span></div>`;
   }
   h+=`</div></div>`;
@@ -775,168 +920,277 @@ function rw(){
 // ═══ VERLAUF ═══
 function rverl(){
   const c=document.getElementById("vbody");
-  if(!EN.length){c.innerHTML=`<div class="emp"><div class="eic">📋</div>Noch keine Einträge.</div>`;return;}
-  const s=[...EN].sort((a,b)=>a.datum.localeCompare(b.datum));
-  c.innerHTML=`<div class="crd" style="margin:12px 16px">${s.map(e=>{
-    const idx=EN.indexOf(e),st=gst(e);
-    const pills=MA.filter(m=>(st[m.name]||0)>0).map(m=>`<span class="pill">${m.name.split(" ")[0]}: ${st[m.name]}h</span>`).join("");
-    return`<div class="li"><div class="lii"><div class="lid">${fd(e.datum)}</div>
-      <div class="lib">BV ${e.bv_nr} · ${e.bv_name}</div>
-      <div class="pills">${pills||`<span class="pill" style="opacity:.5">Keine Stunden</span>`}</div></div>
-      <button class="eb" onclick="oped(${idx})">✏️</button></div>`;
-  }).join("")}</div><div style="height:24px"></div>`;
+  if(!EN.length){
+    c.innerHTML=`<div class="emp"><div class="eic">📋</div>Noch keine Einträge.</div>`;
+    return;
+  }
+
+  const groups=groupedEntries();
+
+  c.innerHTML=`<div class="crd" style="margin:12px 16px">${
+    groups.map(g=>{
+      const bv=bvById(g.bv_id);
+      const pills=g.rows.map(r=>{
+        const ma=maById(r.ma_id);
+        return `<span class="pill">${ma?.name?.split(" ")[0]||"?"}: ${r.stunden}h</span>`;
+      }).join("");
+
+      return `<div class="li">
+        <div class="lii">
+          <div class="lid">${fd(g.datum)}</div>
+          <div class="lib">BV ${bv?.nr||"?"} · ${bv?.name||"—"}</div>
+          <div class="pills">${pills||`<span class="pill" style="opacity:.5">Keine Stunden</span>`}</div>
+        </div>
+        <button class="eb" onclick="oped('${g.key}')">✏️</button>
+      </div>`;
+    }).join("")
+  }</div><div style="height:24px"></div>`;
 }
 
-// ═══ EDIT ENTRY ═══
-function oped(idx){
-  eI=idx;const e=EN[idx],st=gst(e);
-  document.getElementById("et").textContent=`BV ${e.bv_nr} · ${fd(e.datum)}`;
-  document.getElementById("ema").innerHTML=MA.map(m=>`
-    <div class="mr" style="padding:10px 0;border-bottom:.5px solid var(--b)">
-      <div class="av" style="background:${m.bg};color:${m.tc};width:36px;height:36px;font-size:12px">${m.k}</div>
+// ═══ EDIT ENTRY GROUP ═══
+function oped(groupKey){
+  eGroupKey=groupKey;
+  const g=groupedEntries().find(x=>x.key===groupKey);
+  if(!g)return;
+
+  const bv=bvById(g.bv_id);
+  document.getElementById("et").textContent=`BV ${bv?.nr||"?"} · ${fd(g.datum)}`;
+
+  const map={};
+  g.rows.forEach(r=>map[r.ma_id]=r);
+
+  document.getElementById("ema").innerHTML=MA.map(m=>{
+    const val=map[m.id]?map[m.id].stunden:0;
+    return `<div class="mr" style="padding:10px 0;border-bottom:.5px solid var(--b)">
+      <div class="av" style="background:${m.bg};color:${m.tc};width:36px;height:36px;font-size:12px">${m.k||"?"}</div>
       <div class="mn" style="font-size:14px">${m.name}</div>
-      <input type="number" class="hi" id="ed-${m.k}" value="${st[m.name]||0}" min="0" max="24" step="0.5" inputmode="decimal">
-      <div class="hu">h</div></div>`).join("");
+      <input type="number" class="hi" id="ed-${m.id}" value="${val}" min="0" max="24" step="0.5" inputmode="decimal">
+      <div class="hu">h</div></div>`;
+  }).join("");
+
   opov("ov-e");
 }
+
 async function svedit(){
-  if(eI<0)return;
-  const st={};MA.forEach(m=>{st[m.name]=parseFloat(document.getElementById("ed-"+m.k)?.value)||0;});
-  EN[eI].stunden=st;lsSet("en",EN);
-  pushEntry(EN[eI]);
-  cls("ov-e");rverl();ustats();rwarn();
+  const g=groupedEntries().find(x=>x.key===eGroupKey);
+  if(!g)return;
+
+  // alte Gruppe löschen
+  for(const r of g.rows){
+    await sbDel("en",r.id);
+  }
+
+  // neue Werte speichern
+  const rows=[];
+  MA.forEach(m=>{
+    const h=parseFloat(document.getElementById("ed-"+m.id)?.value)||0;
+    if(h>0){
+      rows.push({
+        datum:g.datum,
+        bv_id:g.bv_id,
+        ma_id:m.id,
+        stunden:h
+      });
+    }
+  });
+
+  if(rows.length) await sbIns("en",rows);
+
+  await syncDown();
+  cls("ov-e");
+  rverl();
+  ustats();
+  rwarn();
+  toast("✅ Aktualisiert");
 }
 
 // ═══ BV MANAGE ═══
 function rbvm(){
   document.getElementById("bvml").innerHTML=[...BV].sort((a,b)=>a.nr.localeCompare(b.nr)).map(b=>`
     <div class="bmr"><div style="flex:1"><div style="font-size:12px;color:var(--s);font-weight:600">BV ${b.nr}</div><div style="font-size:15px">${b.name}</div></div>
-    <button class="eb" onclick="opbv('${b.nr}')">✏️</button></div>`).join("");
+    <button class="eb" onclick="opbv('${b.id}')">✏️</button></div>`).join("");
 }
-function opbv(nr){
-  eBV=nr;const bv=BV.find(b=>b.nr===nr);
-  document.getElementById("bvt").textContent=`BV ${nr} bearbeiten`;
-  document.getElementById("bven").value=nr;
+
+function opbv(id){
+  eBV=id;
+  const bv=BV.find(b=>b.id===id);
+  document.getElementById("bvt").textContent=`BV ${bv?.nr||"?"} bearbeiten`;
+  document.getElementById("bven").value=bv?.nr||"";
   document.getElementById("bvea").value=bv?.name||"";
   opov("ov-bv");
 }
+
 async function svbv(){
   if(!eBV)return;
-  const idx=BV.findIndex(b=>b.nr===eBV);
-  if(idx>=0){BV[idx].name=document.getElementById("bvea").value.trim()||"—";lsSet("bv",BV);pushBV(BV[idx]);}
-  cls("ov-bv");rbvm();
+  const name=document.getElementById("bvea").value.trim()||"—";
+  await sbUpd("bv",eBV,{name});
+  await syncDown();
+  cls("ov-bv");
+  rbvm();
 }
+
 async function addBVM(){
-  const nr=document.getElementById("mb-nr").value.trim(),nm=document.getElementById("mb-nm").value.trim();
+  const nr=document.getElementById("mb-nr").value.trim();
+  const nm=document.getElementById("mb-nm").value.trim();
   if(!nr){alert("BV-Nummer eingeben!");return;}
   if(BV.find(b=>b.nr===nr)){alert("BV bereits vorhanden!");return;}
-  const row={id:nr,nr,name:nm||"—"};
-  BV.push(row);BV.sort((a,b)=>a.nr.localeCompare(b.nr));lsSet("bv",BV);pushBV(row);
-  document.getElementById("mb-nr").value="";document.getElementById("mb-nm").value="";rbvm();
+  await sbIns("bv",[{nr,name:nm||"—"}]);
+  await syncDown();
+  document.getElementById("mb-nr").value="";
+  document.getElementById("mb-nm").value="";
+  rbvm();
 }
 
 // ═══ MA MANAGE ═══
 function rmam(){
   document.getElementById("maml").innerHTML=MA.map((m,i)=>`
-    <div class="mmr"><div class="av" style="background:${m.bg};color:${m.tc};width:42px;height:42px">${m.k}</div>
-    <div style="flex:1"><div style="font-size:16px;font-weight:600">${m.name}</div><div style="font-size:12px;color:var(--s)">Kürzel: ${m.k}</div></div>
+    <div class="mmr"><div class="av" style="background:${m.bg};color:${m.tc};width:42px;height:42px">${m.k||"?"}</div>
+    <div style="flex:1"><div style="font-size:16px;font-weight:600">${m.name}</div><div style="font-size:12px;color:var(--s)">Kürzel: ${m.k||"—"}</div></div>
     <button class="eb" onclick="opma(${i})">✏️</button></div>`).join("");
 }
+
 function opma(i){
-  eMA=i;const m=MA[i];
+  eMA=i;
+  const m=MA[i];
   document.getElementById("mat").textContent=`${m.name} bearbeiten`;
-  document.getElementById("man").value=m.name;
-  document.getElementById("mak").value=m.k;
+  document.getElementById("man").value=m.name||"";
+  document.getElementById("mak").value=m.k||"";
   selC=-1;
   document.getElementById("cpick").innerHTML=CLRS.map((c,ci)=>`
     <div class="cpc ${m.bg===c.bg?"sel":""}" id="cp${ci}" onclick="pkc(${ci})" style="background:${c.bg}">
       <div style="width:10px;height:10px;border-radius:50%;background:${c.tc}"></div></div>`).join("");
   opov("ov-ma");
 }
-function pkc(ci){selC=ci;document.querySelectorAll(".cpc").forEach((el,i)=>el.classList.toggle("sel",i===ci));}
+function pkc(ci){
+  selC=ci;
+  document.querySelectorAll(".cpc").forEach((el,i)=>el.classList.toggle("sel",i===ci));
+}
+
 async function svma(){
   if(eMA<0)return;
-  const name=document.getElementById("man").value.trim(),k=document.getElementById("mak").value.trim().toUpperCase().slice(0,2);
+  const m=MA[eMA];
+  const name=document.getElementById("man").value.trim();
+  const k=document.getElementById("mak").value.trim().toUpperCase().slice(0,2);
   if(!name||!k){alert("Name und Kürzel ausfüllen!");return;}
-  const old=MA[eMA].name;
-  const c=selC>=0?CLRS[selC]:{bg:MA[eMA].bg,tc:MA[eMA].tc};
-  MA[eMA]={...MA[eMA],name,k,...c};
-  if(old!==name){EN.forEach(e=>{const st=gst(e);if(st[old]!==undefined){st[name]=st[old];delete st[old];e.stunden=st;}});}
-  lsSet("ma",MA);lsSet("en",EN);
-  await pushMA();
-  // also update entries that changed
-  if(old!==name)for(const e of EN)await pushEntry(e);
-  cls("ov-ma");rmam();selC=-1;
+  const c=selC>=0?CLRS[selC]:{bg:m.bg,tc:m.tc};
+
+  await sbUpd("ma",m.id,{
+    name,k,bg:c.bg,tc:c.tc,sort_order:eMA
+  });
+
+  await syncDown();
+  cls("ov-ma");
+  rmam();
+  selC=-1;
 }
+
 async function addMA(){
   const name=document.getElementById("nm-n").value.trim();
   if(!name){alert("Name eingeben!");return;}
   const k=name.split(" ").map(w=>w[0]||"").join("").toUpperCase().slice(0,2)||"XX";
   const c=CLRS[MA.length%CLRS.length];
-  const row={id:`ma_${Date.now()}`,name,k,...c,sort_order:MA.length};
-  MA.push(row);lsSet("ma",MA);pushMA();
-  document.getElementById("nm-n").value="";rmam();toast(`✅ ${name} hinzugefügt`);
+
+  await sbIns("ma",[{
+    name,k,bg:c.bg,tc:c.tc,sort_order:MA.length
+  }]);
+
+  await syncDown();
+  document.getElementById("nm-n").value="";
+  rmam();
+  toast(`✅ ${name} hinzugefügt`);
 }
 
 // ═══ DELETE ═══
 function cDE(){
-  const e=EN[eI];
-  conf(`Eintrag löschen?`,`BV ${e?.bv_nr} · ${fd(e?.datum)} wird dauerhaft gelöscht.`,async()=>{
-    const id=EN[eI]?.id;EN.splice(eI,1);lsSet("en",EN);
-    if(id)await sbDel("entries",id);
-    clco();cls("ov-e");rverl();ustats();rwarn();toast("🗑 Gelöscht");
+  const g=groupedEntries().find(x=>x.key===eGroupKey);
+  const bv=bvById(g?.bv_id);
+  conf("Eintrag löschen?",`BV ${bv?.nr||"?"} · ${fd(g?.datum)} wird dauerhaft gelöscht.`,async()=>{
+    if(g){
+      for(const r of g.rows) await sbDel("en",r.id);
+    }
+    await syncDown();
+    clco(); cls("ov-e"); rverl(); ustats(); rwarn(); toast("🗑 Gelöscht");
   });
 }
+
 function cDA(){
   conf("Alle Einträge löschen?",`Alle ${EN.length} Einträge werden dauerhaft gelöscht!`,async()=>{
-    for(const e of EN)if(e.id)await sbDel("entries",e.id);
-    EN=[];lsSet("en",[]);clco();rverl();ustats();rwarn();toast("🗑 Alle gelöscht");
+    for(const e of EN) if(e.id) await sbDel("en",e.id);
+    await syncDown();
+    clco(); rverl(); ustats(); rwarn(); toast("🗑 Alle gelöscht");
   });
 }
+
 function cDM(){
   const m=MA[eMA];
   conf(`${m?.name} löschen?`,"Dieser Mitarbeiter wird aus der Liste entfernt.",async()=>{
-    MA.splice(eMA,1);lsSet("ma",MA);await pushMA();clco();cls("ov-ma");rmam();
+    await sbDel("ma",m.id);
+    await syncDown();
+    clco(); cls("ov-ma"); rmam();
   });
 }
 
 // ═══ OVERLAYS ═══
-function opov(id){document.getElementById(id).classList.add("on");}
-function clov(id,ev){if(ev&&ev.target!==document.getElementById(id))return;cls(id);}
-function cls(id){document.getElementById(id).classList.remove("on");eI=-1;eBV=null;eMA=-1;selC=-1;}
+function opov(id){ document.getElementById(id).classList.add("on"); }
+function clov(id,ev){ if(ev&&ev.target!==document.getElementById(id))return; cls(id); }
+function cls(id){ document.getElementById(id).classList.remove("on"); eGroupKey=""; eBV=null; eMA=-1; selC=-1; }
 function conf(t,m,cb){
-  document.getElementById("cft").textContent=t;document.getElementById("cfm").textContent=m;
-  document.getElementById("cfok").onclick=cb;document.getElementById("cof").classList.add("on");
+  document.getElementById("cft").textContent=t;
+  document.getElementById("cfm").textContent=m;
+  document.getElementById("cfok").onclick=cb;
+  document.getElementById("cof").classList.add("on");
 }
-function clco(){document.getElementById("cof").classList.remove("on");}
+function clco(){ document.getElementById("cof").classList.remove("on"); }
 
 // ═══ EXPORT ═══
 function xls(){
   const von=document.getElementById("ev").value,bis=document.getElementById("eb").value;
-  let data=EN.filter(e=>{if(von&&e.datum<von)return false;if(bis&&e.datum>bis)return false;return true;});
-  if(!data.length){document.getElementById("xst").textContent="⚠️ Keine Einträge.";return;}
+  let data=EN.filter(e=>{
+    if(von&&e.datum<von)return false;
+    if(bis&&e.datum>bis)return false;
+    return true;
+  });
+  if(!data.length){
+    document.getElementById("xst").textContent="⚠️ Keine Einträge.";
+    return;
+  }
   document.getElementById("xst").textContent="⏳ Excel wird erstellt…";
   if(typeof XLSX==="undefined"){
-    const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
-    s.onload=()=>bxls(data,von,bis);document.head.appendChild(s);
+    const s=document.createElement("script");
+    s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+    s.onload=()=>bxls(data,von,bis);
+    document.head.appendChild(s);
   }else bxls(data,von,bis);
 }
+
 function bxls(data,von,bis){
   try{
     const wb=XLSX.utils.book_new();
+
     const sorted=[...data].sort((a,b)=>a.datum.localeCompare(b.datum));
-    const r1=[["Datum","BV_NUMMER","Name Mitarbeiter","Stunden"]];
-    sorted.forEach(e=>{const st=gst(e);MA.forEach(m=>{const h=st[m.name]||0;if(h>0)r1.push([fd(e.datum),e.bv_nr,m.name,h]);});});
-    const ws1=XLSX.utils.aoa_to_sheet(r1);ws1["!cols"]=[{wch:12},{wch:12},{wch:22},{wch:10}];
+    const r1=[["Datum","BV_NUMMER","Baustelle","Name Mitarbeiter","Stunden"]];
+    sorted.forEach(e=>{
+      const bv=bvById(e.bv_id);
+      const ma=maById(e.ma_id);
+      r1.push([fd(e.datum),bv?.nr||"",bv?.name||"",ma?.name||"",Number(e.stunden)||0]);
+    });
+
+    const ws1=XLSX.utils.aoa_to_sheet(r1);
+    ws1["!cols"]=[{wch:12},{wch:12},{wch:35},{wch:22},{wch:10}];
     XLSX.utils.book_append_sheet(wb,ws1,"Seith_Stunden");
+
     const r2=[["BV-Nummer","Adresse / Beschreibung"]];
     [...BV].sort((a,b)=>a.nr.localeCompare(b.nr)).forEach(b=>r2.push([b.nr,b.name]));
-    const ws2=XLSX.utils.aoa_to_sheet(r2);ws2["!cols"]=[{wch:12},{wch:45}];
+    const ws2=XLSX.utils.aoa_to_sheet(r2);
+    ws2["!cols"]=[{wch:12},{wch:45}];
     XLSX.utils.book_append_sheet(wb,ws2,"Seith_BV-Adresse");
+
     const lbl=(von||bis)?`_${von||""}bis${bis||""}`:"_alle";
     XLSX.writeFile(wb,`ASLAN_Stunden${lbl}.xlsx`);
     document.getElementById("xst").textContent="✅ Datei heruntergeladen!";
-  }catch(err){document.getElementById("xst").textContent="❌ Fehler: "+err.message;}
+  }catch(err){
+    document.getElementById("xst").textContent="❌ Fehler: "+err.message;
+  }
 }
 </script>
 </body>
