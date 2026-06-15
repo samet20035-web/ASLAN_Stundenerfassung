@@ -373,7 +373,7 @@ input:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,58,.15);}
 // ═══ CONSTANTS ═══
 const CODE="ASLAN73";
 const SBU="https://orluvjqjkngjdmajtwvp.supabase.co";
-const SBK="sb_publishable_AlEyw-PnmQBCRnvcACUWjQ_gtW_9cEr";
+const SBK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ybHV2anFqa25namRtYWp0d3ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0NDkyNDYsImV4cCI6MjA5NzAyNTI0Nn0.DsNorH_TZlT4rMC0IBYXipiMEAybZia_KMM-tTiAsgk";
 const LS="a3_";
 
 const CLRS=[
@@ -428,16 +428,28 @@ const SBH={
 
 async function sbFetch(path,opts={}){
   try{
-    const r=await fetch(SBU+"/rest/v1/"+path,{headers:SBH,...opts});
+    const r=await fetch(SBU+"/rest/v1/"+path,{
+      headers:SBH,
+      ...opts
+    });
+
+    const txt=await r.text();
+    console.log("SUPABASE PATH:", path);
+    console.log("SUPABASE STATUS:", r.status);
+    console.log("SUPABASE RESPONSE:", txt);
+
     if(r.status===200||r.status===201){
-      const t=await r.text();
-      return t?JSON.parse(t):[];
+      return txt ? JSON.parse(txt) : [];
     }
-    if(r.status===204)return [];
-    console.warn("SB",r.status,path);
+    if(r.status===204){
+      return [];
+    }
+
+    alert("Supabase Fehler " + r.status + "\n" + path + "\n" + txt);
     return null;
   }catch(e){
-    console.warn("SB err",e);
+    console.error("SUPABASE FETCH ERROR:", e);
+    alert("Netzwerkfehler / Fetch-Fehler:\n" + e.message);
     return null;
   }
 }
@@ -796,15 +808,28 @@ async function save(){
     return;
   }
 
+  console.log("SAVE ROWS", rows);
+
   syn("w","Speichern…");
-  await sbIns("en",rows);
+
+  const res = await sbIns("en", rows);
+  console.log("SAVE RESPONSE", res);
+
+  if(!res){
+    syn("e","✗ Fehler beim Speichern");
+    alert("Speichern fehlgeschlagen. Bitte Konsole / Alert beachten.");
+    return;
+  }
+
   await syncDown();
   syn("","✓ Gespeichert");
 
   const txt=preview.map(x=>`${x.ma.split(" ")[0]}: ${x.stunden}h`);
   const tot=preview.reduce((a,b)=>a+b.stunden,0);
 
-  document.getElementById("okd").textContent=`BV ${sBV.nr} · ${fd(cD)}\n${txt.join(", ")} · ${tot}h`;
+  document.getElementById("okd").textContent=
+    `BV ${sBV.nr} · ${fd(cD)}\n${txt.join(", ")} · ${tot}h`;
+
   go("pg-ok");
 }
 function rsi(){ sBV=null; document.getElementById("bvnx").disabled=true; }
