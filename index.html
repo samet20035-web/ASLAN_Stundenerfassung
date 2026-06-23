@@ -188,7 +188,7 @@ input:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,58,.15);}
 </div>
 
 <!-- HOME -->
-<div class="pg on" id="pg-home">
+<div class="pg" id="pg-home">
   <div class="sc">
     <div class="hhdr">
       <div class="lbar">
@@ -714,7 +714,7 @@ function applyTranslations() {
 // ═══ STATE ═══
 let BV=[], MA=[], EN=[];
 let sBV=null, cD="", eGroupKey="", eBV=null, eMA=-1, selC=-1, woff=0;
-let pstack=["pg-home"];
+let pstack=["pg-login"];
 let toastT=null;
 let ptimer=null;
 
@@ -1468,7 +1468,6 @@ function bxls(data,von,bis){
 document.addEventListener("DOMContentLoaded", () => {
   applyTranslations();
 });
-window.addEventListener("DOMContentLoaded", boot);
 </script>
 </body>
 </html>
