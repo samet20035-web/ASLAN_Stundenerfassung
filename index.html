@@ -49,9 +49,9 @@ input:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,58,.15);}
 .hhdr{background:var(--c);padding:0 0 0;border-bottom:.5px solid var(--b);padding-top:var(--st);}
 .lbar{display:flex;align-items:center;justify-content:center;padding:16px 20px 8px;}
 .lbar img{height:70px;object-fit:contain;}
-.sts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;padding:12px 16px 0;}
+.sts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:12px 16px 0;}
 .stc{background:var(--c);border-radius:var(--rs);padding:12px 8px;border:.5px solid var(--b);text-align:center;}
-.stn{font-size:22px;font-weight:800;}
+.stn{font-size:22px;font-weight:800;}.stn.money{font-size:20px;white-space:nowrap;}
 .stl{font-size:11px;color:var(--s);margin-top:1px;font-weight:600;}
 .syn{display:flex;align-items:center;gap:6px;padding:5px 16px;font-size:12px;font-weight:600;justify-content:center;}
 .sd{width:7px;height:7px;border-radius:50%;background:var(--g);}
@@ -185,6 +185,7 @@ input:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,58,.15);}
         <div class="stc"><div class="stn" id="s-h">0</div><div class="stl" data-i18n="stat_today">Heute h</div></div>
         <div class="stc"><div class="stn" id="s-w">0</div><div class="stl" data-i18n="stat_week">Woche h</div></div>
         <div class="stc"><div class="stn" id="s-e">0</div><div class="stl" data-i18n="stat_entries">Einträge</div></div>
+        <div class="stc"><div class="stn money" id="s-u">0 €</div><div class="stl" data-i18n="stat_revenue">Umsatz Woche</div></div>
       </div>
       <div class="syn"><div class="sd" id="sd"></div><span id="sl">—</span></div>
     </div>
@@ -470,6 +471,7 @@ const I18N = {
     stat_today: "Heute h",
     stat_week: "Woche h",
     stat_entries: "Einträge",
+    stat_revenue: "Umsatz Woche",
 
     step1_title: "Schritt 1 – Datum",
     step1_sub: "Welcher Tag?",
@@ -573,6 +575,7 @@ const I18N = {
     stat_today: "Bugün s",
     stat_week: "Hafta s",
     stat_entries: "Kayıt",
+    stat_revenue: "Hafta ciro",
 
     step1_title: "Adım 1 – Tarih",
     step1_sub: "Hangi gün?",
@@ -890,12 +893,27 @@ function getMiss(){
   const r=[];
   const dow=["So","Mo","Di","Mi","Do","Fr","Sa"];
   const dowTr=["Paz","Pzt","Sal","Çar","Per","Cum","Cts"];
-  for(let i=1;i<=21&&r.length<3;i++){
-    const d=new Date();
-    d.setDate(d.getDate()-i);
+  const ymd=d=>{
+    const y=d.getFullYear();
+    const m=String(d.getMonth()+1).padStart(2,"0");
+    const day=String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${day}`;
+  };
+  const today=new Date();
+  today.setHours(0,0,0,0);
+  const weekDay=today.getDay()||7;
+  const monday=new Date(today);
+  monday.setDate(today.getDate()-weekDay+1);
+  const friday=new Date(monday);
+  friday.setDate(monday.getDate()+4);
+  let end=new Date(today);
+  end.setDate(today.getDate()-1);
+  if(end>friday)end=new Date(friday);
+  if(end<monday)return r;
+  for(let d=new Date(end);d>=monday;d.setDate(d.getDate()-1)){
     const dw=d.getDay();
     if(dw===0||dw===6)continue;
-    const ds=d.toISOString().split("T")[0];
+    const ds=ymd(d);
     if(!EN.some(e=>e.datum===ds && Number(e.stunden)>0)){
       r.push({ds,lbl:(LANG==="tr"?dowTr[dw]:dow[dw])+", "+fd(ds)});
     }
@@ -1072,23 +1090,38 @@ async function save(){
 function rsi(){ sBV=null; document.getElementById("bvnx").disabled=true; }
 
 // ═══ STATS ═══
+function maRate(id){
+  const ma=maById(id);
+  return (ma?.name||"").trim().toLowerCase()==="sayim aslan" ? 37 : 35;
+}
+function fmtEUR(v){
+  const n=Math.round((Number(v)||0)*100)/100;
+  return n.toLocaleString("de-DE",{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2})+" €";
+}
 function ustats(){
   const t=td();
   const dw=new Date();
   const day=dw.getDay()||7;
   dw.setDate(dw.getDate()-day+1);
   const ws=dw.toISOString().split("T")[0];
+  const weDate=new Date(dw);
+  weDate.setDate(dw.getDate()+4);
+  const we=weDate.toISOString().split("T")[0];
 
-  let hH=0,hW=0;
+  let hH=0,hW=0,uW=0;
   EN.forEach(e=>{
     const h=Number(e.stunden)||0;
     if(e.datum===t)hH+=h;
-    if(e.datum>=ws)hW+=h;
+    if(e.datum>=ws&&e.datum<=we){
+      hW+=h;
+      uW+=h*maRate(e.ma_id);
+    }
   });
 
   document.getElementById("s-h").textContent=hH;
   document.getElementById("s-w").textContent=hW;
   document.getElementById("s-e").textContent=EN.length;
+  document.getElementById("s-u").textContent=fmtEUR(uW);
 }
 
 // ═══ WOCHE ═══
