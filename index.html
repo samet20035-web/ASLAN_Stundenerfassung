@@ -172,8 +172,6 @@ input:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,58,.15);}
 <div class="app">
 <div class="toast" id="toast"></div>
 
-<div class="pg on" id="pg-home"> </div>
-
 <!-- LOGIN -->
 <div class="pg on" id="pg-login">
   <div class="lw">
@@ -421,6 +419,7 @@ input:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,58,.15);}
 
 <script>
 // ═══ CONSTANTS ═══
+const CODE="Galatasaray1905";
 const SBU="https://orluvjqjkngjdmajtwvp.supabase.co";
 const SBK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ybHV2anFqa25namRtYWp0d3ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0NDkyNDYsImV4cCI6MjA5NzAyNTI0Nn0.DsNorH_TZlT4rMC0IBYXipiMEAybZia_KMM-tTiAsgk";
 const LS="a3_";
@@ -791,6 +790,19 @@ function syn(s,l){
   d.className="sd"+(s==="w"?" w":s==="e"?" e":"");
   if(lb)lb.textContent=l;
 }
+
+// ═══ LOGIN ═══
+function login(){
+  if(document.getElementById("pw").value.trim()===CODE){
+    document.getElementById("pwerr").style.display="none";
+    boot();
+  }else{
+    document.getElementById("pwerr").style.display="block";
+    document.getElementById("pwerr").textContent = tr("login_err");
+    document.getElementById("pw").value="";
+  }
+}
+document.getElementById("pw").addEventListener("keydown",e=>{if(e.key==="Enter")login();});
 
 // ═══ BOOT ═══
 async function boot(){
