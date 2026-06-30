@@ -652,8 +652,8 @@ const I18N = {
     step2_title: "Schritt 2 – Baustelle",
     new_bv: "Neue Baustelle",
     bv_nr: "BV-Nr.",
-    bv_nr_invalid: "Hinweis: Diese BV-Nummer entspricht nicht dem Schema (5-stellig, beginnt mit 65 oder 66).",
-    bv_nr_invalid_confirm: "Diese BV-Nummer entspricht nicht dem üblichen Schema (5-stellig, beginnt mit 65 oder 66). Trotzdem anlegen?",
+    bv_nr_invalid: "Hinweis: Diese BV-Nummer entspricht nicht dem Schema (5-stellig, beginnt mit 64, 65 oder 66).",
+    bv_nr_invalid_confirm: "Diese BV-Nummer entspricht nicht dem üblichen Schema (5-stellig, beginnt mit 64, 65 oder 66). Trotzdem anlegen?",
     bv_nr_invalid_short: "Ungültige BV-Nummer",
     bv_addr: "Adresse / Beschreibung",
     tap_bv: "Baustelle antippen",
@@ -819,8 +819,8 @@ const I18N = {
     step2_title: "Adım 2 – Şantiye",
     new_bv: "Yeni şantiye",
     bv_nr: "Şantiye No.",
-    bv_nr_invalid: "Not: Bu BV numarası standart şemaya uymuyor (5 haneli, 65 veya 66 ile başlar).",
-    bv_nr_invalid_confirm: "Bu BV numarası standart şemaya uymuyor (5 haneli, 65 veya 66 ile başlar). Yine de eklensin mi?",
+    bv_nr_invalid: "Not: Bu BV numarası standart şemaya uymuyor (5 haneli, 64, 65 veya 66 ile başlar).",
+    bv_nr_invalid_confirm: "Bu BV numarası standart şemaya uymuyor (5 haneli, 64, 65 veya 66 ile başlar). Yine de eklensin mi?",
     bv_nr_invalid_short: "Geçersiz BV numarası",
     bv_addr: "Adres / Açıklama",
     tap_bv: "Şantiyeye dokun",
@@ -1189,7 +1189,7 @@ function gkw(ds){
 function bvById(id){ return BV.find(b=>b.id===id); }
 function maById(id){ return MA.find(m=>m.id===id); }
 function blById(id){ return BL.find(b=>b.id===id); }
-function validBVNr(nr){ return /^6[56]\d{3}$/.test(String(nr||"").trim()); }
+function validBVNr(nr){ return /^6[456]\d{3}$/.test(String(nr||"").trim()); }
 function bvNrBadge(nr){ return validBVNr(nr) ? "" : ` <span title="${tr("bv_nr_invalid_short")}" style="color:#c0392b;font-weight:bold;">⚠️</span>`; }
 
 function groupedEntries(){
