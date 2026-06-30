@@ -324,8 +324,8 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     <div id="time-common">
       <div class="lbl" data-i18n="times_label">Arbeitszeit</div>
       <div class="timegrid">
-        <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="start_time">Anfang</div><input type="text" id="t-start" placeholder="07:00" inputmode="numeric"></div>
-        <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="end_time">Ende</div><input type="text" id="t-end" placeholder="16:00" inputmode="numeric"></div>
+        <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="start_time">Anfang</div><input type="text" id="t-start" placeholder="07:00" inputmode="numeric" maxlength="5" oninput="autoTimeFmt(this);checkStValid()"></div>
+        <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="end_time">Ende</div><input type="text" id="t-end" placeholder="16:00" inputmode="numeric" maxlength="5" oninput="autoTimeFmt(this);checkStValid()"></div>
       </div>
       <div class="lbl" data-i18n="pause_label">Pause</div>
       <div class="pauseg">
@@ -897,7 +897,7 @@ let toastT=null;
 let ptimer=null;
 let teamSel=new Set();
 let sameTime=true;
-let curPause=0;
+let curPause=30;
 let pinInput="";
 let edBVid=null;
 
@@ -1311,14 +1311,14 @@ function n2st(){
   document.getElementById("stsub").textContent=`${fd(cD)} · BV ${sBV.nr}`;
   teamSel=new Set(MA.map(m=>m.id)); // standardmäßig alle ausgewählt
   sameTime=true;
-  curPause=0;
+  curPause=30;
   indivPause={};
   indivStart={};
   indivEnd={};
   document.getElementById("t-start").value="";
   document.getElementById("t-end").value="";
-  document.getElementById("p-0").classList.add("sl");
-  document.getElementById("p-30").classList.remove("sl");
+  document.getElementById("p-0").classList.remove("sl");
+  document.getElementById("p-30").classList.add("sl");
   document.getElementById("p-45").classList.remove("sl");
   document.getElementById("calc-common").style.display="none";
   document.getElementById("tgl-same").classList.add("on");
@@ -1360,7 +1360,7 @@ function rTimeMode(){
     common.style.display="none";
     indiv.style.display="";
     const sel=MA.filter(m=>teamSel.has(m.id));
-    sel.forEach(m=>{ if(indivPause[m.id]==null) indivPause[m.id]=0; });
+    sel.forEach(m=>{ if(indivPause[m.id]==null) indivPause[m.id]=30; });
     indiv.innerHTML=sel.map(m=>{
       const sv=indivStart[m.id]||"", ev=indivEnd[m.id]||"";
       return `
@@ -1368,8 +1368,8 @@ function rTimeMode(){
         <div class="av" style="background:${m.bg};color:${m.tc};width:24px;height:24px;font-size:10px">${m.k||"?"}</div>${m.name}
       </div>
       <div class="timegrid" style="margin-bottom:8px">
-        <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="start_time">Anfang</div><input type="text" id="ti-start-${m.id}" placeholder="07:00" inputmode="numeric" value="${sv}" oninput="indivStart['${m.id}']=this.value;calcIndiv('${m.id}');checkStValid()"></div>
-        <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="end_time">Ende</div><input type="text" id="ti-end-${m.id}" placeholder="16:00" inputmode="numeric" value="${ev}" oninput="indivEnd['${m.id}']=this.value;calcIndiv('${m.id}');checkStValid()"></div>
+        <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="start_time">Anfang</div><input type="text" id="ti-start-${m.id}" placeholder="07:00" inputmode="numeric" maxlength="5" value="${sv}" oninput="autoTimeFmt(this);indivStart['${m.id}']=this.value;calcIndiv('${m.id}');checkStValid()"></div>
+        <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="end_time">Ende</div><input type="text" id="ti-end-${m.id}" placeholder="16:00" inputmode="numeric" maxlength="5" value="${ev}" oninput="autoTimeFmt(this);indivEnd['${m.id}']=this.value;calcIndiv('${m.id}');checkStValid()"></div>
       </div>
       <div class="pauseg" style="margin-bottom:10px">
         <button class="pausebtn ${indivPause[m.id]===0?"sl":""}" id="ti-p0-${m.id}" onclick="pickPauseIndiv('${m.id}',0)">${tr("pause_none")}</button>
@@ -1393,6 +1393,16 @@ function pickPauseIndiv(id,min){
   ["0","30","45"].forEach(v=>document.getElementById(`ti-p${v}-${id}`).classList.toggle("sl",Number(v)===min));
   calcIndiv(id);
   checkStValid();
+}
+
+// Formatiert Zifferneingabe automatisch zu HH:MM (z.B. "1630" -> "16:30")
+function autoTimeFmt(el){
+  let digits=el.value.replace(/\D/g,"").slice(0,4);
+  let formatted=digits;
+  if(digits.length>=3){
+    formatted=digits.slice(0,digits.length-2)+":"+digits.slice(-2);
+  }
+  el.value=formatted;
 }
 
 function parseTime(v){
