@@ -119,6 +119,15 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 .pindot.f{background:var(--g);border-color:var(--g);}
 .toggle-row{display:flex;align-items:center;gap:11px;padding:13px 0;}
 .toggle-row .lbl2{flex:1;font-size:14px;}
+.repsec{margin-bottom:18px;}
+.repsec-h{font-size:12px;font-weight:700;color:var(--s);text-transform:uppercase;letter-spacing:.06em;padding:0 16px;margin-bottom:6px;}
+.repfld{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:.5px solid var(--b);background:var(--c);}
+.repfld:last-child{border-bottom:none;}
+.repfld-main{flex:1;min-width:0;}
+.repfld-lbl{font-size:11px;color:var(--s);margin-bottom:2px;}
+.repfld-val{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.repcpy{flex-shrink:0;padding:9px 14px;border-radius:var(--rs);border:.5px solid var(--g);background:var(--gl);color:var(--gd);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.repcpy.done{background:var(--g);color:#fff;border-color:var(--g);}
 .lid{font-size:12px;color:var(--s);margin-bottom:2px;font-weight:600;}
 .lib{font-size:15px;font-weight:700;}
 .pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;}
@@ -251,6 +260,12 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     <button class="ba" onclick="go('pg-bvm')">
       <div class="ai">🏗️</div>
       <div><div class="at" data-i18n="home_bv_title">Baustellen verwalten</div><div class="as" data-i18n="home_bv_sub">BV-Adressen bearbeiten</div></div>
+      <div class="ar">›</div>
+    </button>
+
+    <button class="ba" onclick="go('pg-rep-date')">
+      <div class="ai">📝</div>
+      <div><div class="at" data-i18n="report_link">📋 Tagesbericht</div><div class="as" data-i18n="report_sub">Rapport-Daten zum Kopieren</div></div>
       <div class="ar">›</div>
     </button>
 
@@ -412,6 +427,31 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
   </div>
 </div>
 
+<div class="pg" id="pg-rep-date">
+  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="report_title">Tagesbericht</div><div class="hs" data-i18n="report_pick_date">Datum wählen</div></div></div>
+  <div class="sc"><div style="padding:16px">
+    <input type="date" id="rep-d" style="font-size:19px;padding:15px">
+    <div class="qb"><button class="qbtn" onclick="repD0()" data-i18n="today_btn">📅 Heute</button><button class="qbtn" onclick="repD1()" data-i18n="yesterday_btn">◀ Gestern</button></div>
+  </div></div>
+  <div class="nav"><button class="btn" onclick="n2RepBv()" data-i18n="to_bv_btn">Zur Baustelle →</button></div>
+</div>
+
+<div class="pg" id="pg-rep-bv">
+  <div class="hdr"><button class="bck" onclick="bk('pg-rep-date')">‹</button><div><div class="ht" data-i18n="report_title">Tagesbericht</div><div class="hs" id="repbvsub" data-i18n="report_pick_bv">Baustelle wählen</div></div></div>
+  <div class="sc">
+    <div class="bvg" id="repbvg"></div>
+    <div style="height:24px"></div>
+  </div>
+</div>
+
+<div class="pg" id="pg-rep-view">
+  <div class="hdr"><button class="bck" onclick="bk('pg-rep-bv')">‹</button><div><div class="ht" id="repviewt">Rapport</div><div class="hs" data-i18n="report_title">Tagesbericht</div></div></div>
+  <div class="sc" id="repviewcnt">
+    <div style="height:24px"></div>
+  </div>
+</div>
+
+
 <div class="pg" id="pg-pin">
   <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="editor_pin_title">Editor-Modus</div><div class="hs" data-i18n="editor_pin_sub">PIN eingeben</div></div></div>
   <div class="sc">
@@ -460,6 +500,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       </div>
     </div>
     <button class="btn" onclick="svEdBv()" data-i18n="save_changes">✅ Speichern</button>
+    <button class="bto" id="edbv-del" onclick="delEdBv()" style="color:#c0392b" data-i18n="editor_bv_delete">🗑️ Baustelle löschen</button>
     <button class="bto" onclick="cls('ov-edbv')" data-i18n="cancel_btn">Abbrechen</button>
   </div>
 </div>
@@ -642,6 +683,26 @@ const I18N = {
     editor_bv_edit: "bearbeiten",
     editor_warn_off: "Warnung \"Fehlende Angaben\" für diese Baustelle deaktivieren",
     editor_warn_is_off: "Warnung deaktiviert",
+    editor_bv_delete: "🗑️ Baustelle löschen",
+    editor_bv_in_use: "Diese Baustelle hat bereits Einträge und kann nicht gelöscht werden.",
+    editor_bv_delete_title: "Baustelle löschen",
+    editor_bv_delete_msg: "BV {nr} wirklich endgültig löschen? Dies kann nicht rückgängig gemacht werden.",
+
+    report_title: "Tagesbericht",
+    report_sub: "Rapport-Daten zum Kopieren",
+    report_link: "📋 Tagesbericht",
+    report_pick_date: "Datum wählen",
+    report_pick_bv: "Baustelle wählen",
+    report_no_entries: "Für diesen Tag und diese Baustelle liegen keine Einträge vor.",
+    report_field_datum: "Datum",
+    report_field_addr: "Adresse",
+    report_field_bvnr: "BV-Nummer",
+    report_field_start: "Anfang",
+    report_field_end: "Ende",
+    report_field_pause: "Pause",
+    report_field_duration: "Arbeitsdauer",
+    copy_btn: "Kopieren",
+    copied_toast: "Kopiert!",
 
     saved_title: "Gespeichert!",
     more_bv_btn: "Weitere Baustelle",
@@ -782,6 +843,26 @@ const I18N = {
     editor_bv_edit: "düzenle",
     editor_warn_off: "Bu şantiye için \"Eksik Bilgiler\" uyarısını kapat",
     editor_warn_is_off: "Uyarı kapalı",
+    editor_bv_delete: "🗑️ Şantiyeyi sil",
+    editor_bv_in_use: "Bu şantiyenin kayıtları var, silinemez.",
+    editor_bv_delete_title: "Şantiyeyi sil",
+    editor_bv_delete_msg: "BV {nr} kalıcı olarak silinsin mi? Bu işlem geri alınamaz.",
+
+    report_title: "Günlük rapor",
+    report_sub: "Kopyalanacak rapor verileri",
+    report_link: "📋 Günlük rapor",
+    report_pick_date: "Tarih seç",
+    report_pick_bv: "Şantiye seç",
+    report_no_entries: "Bu tarih ve şantiye için kayıt yok.",
+    report_field_datum: "Tarih",
+    report_field_addr: "Adres",
+    report_field_bvnr: "BV numarası",
+    report_field_start: "Başlangıç",
+    report_field_end: "Bitiş",
+    report_field_pause: "Mola",
+    report_field_duration: "Çalışma süresi",
+    copy_btn: "Kopyala",
+    copied_toast: "Kopyalandı!",
 
     saved_title: "Kaydedildi!",
     more_bv_btn: "Başka şantiye",
@@ -1958,10 +2039,141 @@ function opEdBv(id){
   document.getElementById("edbv-nr").value=bv?.nr||"";
   document.getElementById("edbv-name").value=bv?.name||"";
   document.getElementById("edbv-warn-tgl").classList.toggle("on",!!bv?.warn_disabled);
+  const inUse=EN.some(e=>e.bv_id===id);
+  const delBtn=document.getElementById("edbv-del");
+  delBtn.style.display = inUse ? "none" : "";
   opov("ov-edbv");
 }
 function toggleEdWarn(){
   document.getElementById("edbv-warn-tgl").classList.toggle("on");
+}
+
+async function delEdBv(){
+  if(!edBVid)return;
+  const bv=BV.find(b=>b.id===edBVid);
+  if(EN.some(e=>e.bv_id===edBVid)){
+    alert(tr("editor_bv_in_use"));
+    return;
+  }
+  conf(tr("editor_bv_delete_title"), tr("editor_bv_delete_msg",{nr:bv?.nr||"?"}), async()=>{
+    clco();
+    const res=await sbDel("bv", edBVid);
+    if(!res){
+      alert("Löschen fehlgeschlagen.");
+      return;
+    }
+    await syncDown();
+    cls("ov-edbv");
+    rEditor();
+    toast(tr("toast_deleted"));
+  });
+}
+
+// ═══ TAGESBERICHT / RAPPORT ═══
+let repD="", repBV=null;
+
+function repD0(){ document.getElementById("rep-d").value=td(); }
+function repD1(){
+  const d=new Date(); d.setDate(d.getDate()-1);
+  document.getElementById("rep-d").value=d.toISOString().slice(0,10);
+}
+
+function n2RepBv(){
+  const d=document.getElementById("rep-d").value;
+  if(!d){ alert("Bitte Datum wählen!"); return; }
+  repD=d;
+  repBV=null;
+  rRepBvg();
+  go("pg-rep-bv");
+}
+
+function rRepBvg(){
+  // Nur Baustellen anzeigen, für die es an diesem Tag Einträge gibt
+  const bvIdsToday=new Set(EN.filter(e=>e.datum===repD).map(e=>e.bv_id));
+  const list=[...BV].filter(b=>bvIdsToday.has(b.id)).sort((a,b)=>a.nr.localeCompare(b.nr));
+  if(!list.length){
+    document.getElementById("repbvg").innerHTML=`<div style="padding:16px;color:var(--s);font-size:14px;grid-column:1/3">${tr("report_no_entries")}</div>`;
+    return;
+  }
+  document.getElementById("repbvg").innerHTML=list.map(b=>`
+    <button class="bvb" onclick="opRepView('${b.id}')">
+      <div class="bvnr">BV ${b.nr}</div><div class="bvnm">${b.name}</div></button>`).join("");
+}
+
+function opRepView(bvId){
+  repBV=BV.find(b=>b.id===bvId);
+  if(!repBV)return;
+  const entries=EN.filter(e=>e.datum===repD && e.bv_id===bvId);
+  const dParts=repD.split("-"); // YYYY-MM-DD
+  const fnameDate=`${dParts[0].slice(2)}-${dParts[1]}-${dParts[2]}`;
+  const fname=`Rapport_${fnameDate}_BV-${repBV.nr}`;
+  document.getElementById("repviewt").textContent=fname;
+
+  let html=`<div class="repsec">
+    <div class="repsec-h">${tr("report_title")}</div>
+    <div class="crd">
+      ${repFieldRow(tr("report_field_datum"), fd(repD), fd(repD))}
+      ${repFieldRow(tr("report_field_addr"), repBV.name, repBV.name)}
+      ${repFieldRow(tr("report_field_bvnr"), repBV.nr, repBV.nr)}
+    </div>
+  </div>`;
+
+  entries.forEach((e,idx)=>{
+    const ma=maById(e.ma_id);
+    html+=`<div class="repsec">
+      <div class="repsec-h">${ma?.name||"?"}</div>
+      <div class="crd">
+        ${repFieldRow(tr("report_field_start"), e.beginn||"—", e.beginn||"")}
+        ${repFieldRow(tr("report_field_end"), e.ende||"—", e.ende||"")}
+        ${repFieldRow(tr("report_field_pause"), e.pause_min!=null?fmtPauseH(e.pause_min):"—", e.pause_min!=null?fmtPauseH(e.pause_min):"")}
+        ${repFieldRow(tr("report_field_duration"), fmtH(Number(e.stunden)||0), fmtH(Number(e.stunden)||0))}
+      </div>
+    </div>`;
+  });
+
+  document.getElementById("repviewcnt").innerHTML=html+`<div style="height:24px"></div>`;
+  go("pg-rep-view");
+}
+
+function fmtPauseH(min){
+  return fmtH(Math.round((min/60)*100)/100);
+}
+
+let repCpyCounter=0;
+function repFieldRow(label,display,copyVal){
+  const cid="repcpy-"+(repCpyCounter++);
+  const esc=String(copyVal).replace(/'/g,"\\'");
+  return `<div class="repfld">
+    <div class="repfld-main"><div class="repfld-lbl">${label}</div><div class="repfld-val">${display}</div></div>
+    <button class="repcpy" id="${cid}" onclick="repCopy('${cid}','${esc}')">${tr("copy_btn")}</button>
+  </div>`;
+}
+
+function repCopy(btnId,val){
+  const btn=document.getElementById(btnId);
+  const doneTxt="✓ "+tr("copied_toast");
+  const origTxt=btn.textContent;
+  const finish=()=>{
+    btn.textContent=doneTxt;
+    btn.classList.add("done");
+    setTimeout(()=>{ btn.textContent=origTxt; btn.classList.remove("done"); },1200);
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(val).then(finish).catch(()=>{ repCopyFallback(val); finish(); });
+  }else{
+    repCopyFallback(val);
+    finish();
+  }
+}
+function repCopyFallback(val){
+  const ta=document.createElement("textarea");
+  ta.value=val;
+  ta.style.position="fixed";
+  ta.style.opacity="0";
+  document.body.appendChild(ta);
+  ta.select();
+  try{ document.execCommand("copy"); }catch(e){}
+  document.body.removeChild(ta);
 }
 
 async function svEdBv(){
