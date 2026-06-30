@@ -98,6 +98,27 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 .li{padding:13px 16px;border-bottom:.5px solid var(--b);display:flex;align-items:flex-start;gap:10px;}
 .li:last-child{border-bottom:none;}
 .lii{flex:1;}
+.tmr{display:flex;align-items:center;gap:11px;padding:13px 15px;border-bottom:.5px solid var(--b);}
+.tmr:last-child{border-bottom:none;}
+.tmcb{width:24px;height:24px;border-radius:7px;border:2px solid var(--bs);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff;cursor:pointer;}
+.tmcb.on{background:var(--g);border-color:var(--g);}
+.timegrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px;}
+.timefld{margin-bottom:6px;}
+.timefld .lbl{margin:0 0 6px;}
+.pauseg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px;}
+.pausebtn{padding:13px 8px;border:.5px solid var(--bs);border-radius:var(--rs);background:var(--c);color:var(--t);font-size:14px;font-weight:600;cursor:pointer;text-align:center;font-family:inherit;}
+.pausebtn.sl{border:2px solid var(--g);background:var(--gl);color:var(--gd);}
+.calcbox{margin:14px 16px 0;padding:14px;background:var(--gl);border-radius:var(--r);border:.5px solid var(--gm);text-align:center;}
+.calctot{font-size:28px;font-weight:800;color:var(--gd);}
+.calclbl{font-size:12px;color:var(--gd);opacity:.8;margin-top:2px;}
+.pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 16px;max-width:280px;margin:0 auto;}
+.pinbtn{padding:16px;font-size:20px;font-weight:700;background:var(--c);border:.5px solid var(--bs);border-radius:var(--rs);cursor:pointer;color:var(--t);font-family:inherit;}
+.pinbtn:active{background:var(--bg);}
+.pindots{display:flex;gap:12px;justify-content:center;padding:18px 0;}
+.pindot{width:14px;height:14px;border-radius:50%;border:2px solid var(--bs);}
+.pindot.f{background:var(--g);border-color:var(--g);}
+.toggle-row{display:flex;align-items:center;gap:11px;padding:13px 0;}
+.toggle-row .lbl2{flex:1;font-size:14px;}
 .lid{font-size:12px;color:var(--s);margin-bottom:2px;font-weight:600;}
 .lib{font-size:15px;font-weight:700;}
 .pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;}
@@ -248,6 +269,10 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       <button class="tgl" id="ptgl" onclick="togglePush()"></button>
     </div>
 
+    <div style="text-align:center;padding:18px 0 4px">
+      <span onclick="go('pg-pin')" style="font-size:12px;color:var(--s);opacity:.55;cursor:pointer;letter-spacing:.02em" data-i18n="editor_link">🔒 Editor-Modus</span>
+    </div>
+
     <div style="height:24px"></div>
   </div>
 </div>
@@ -286,8 +311,39 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 <div class="pg" id="pg-st">
   <div class="hdr"><button class="bck" onclick="bk('pg-bv')">‹</button><div><div class="ht" data-i18n="step3_title">Schritt 3 – Stunden</div><div class="hs" id="stsub">—</div></div></div>
   <div class="stp"><div class="sp dn"></div><div class="sp dn"></div><div class="sp on"></div></div>
-  <div class="sc"><div class="lbl" data-i18n="hours_label">Stunden eintragen (0 = nicht dabei)</div><div class="crd" id="mal" style="margin-bottom:16px"></div></div>
-  <div class="nav"><button class="btn" onclick="save()" data-i18n="save_btn">💾 Speichern</button></div>
+  <div class="sc">
+    <div class="lbl" data-i18n="team_label">Wer hat mitgearbeitet?</div>
+    <div class="crd" id="tml" style="margin-bottom:8px"></div>
+    <div style="padding:0 16px;margin-bottom:18px">
+      <div class="toggle-row">
+        <div class="lbl2" data-i18n="team_same_time">Alle haben den ganzen Tag zusammen gearbeitet (gleiche Zeiten)</div>
+        <button class="tgl" id="tgl-same" onclick="toggleSameTime()"></button>
+      </div>
+    </div>
+
+    <div id="time-common">
+      <div class="lbl" data-i18n="times_label">Arbeitszeit</div>
+      <div class="timegrid">
+        <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="start_time">Anfang</div><input type="text" id="t-start" placeholder="07:00" inputmode="numeric"></div>
+        <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="end_time">Ende</div><input type="text" id="t-end" placeholder="16:00" inputmode="numeric"></div>
+      </div>
+      <div class="lbl" data-i18n="pause_label">Pause</div>
+      <div class="pauseg">
+        <button class="pausebtn" id="p-0" onclick="pickPause(0)" data-i18n="pause_none">Keine</button>
+        <button class="pausebtn" id="p-30" onclick="pickPause(30)" data-i18n="pause_30">30 Min</button>
+        <button class="pausebtn" id="p-45" onclick="pickPause(45)" data-i18n="pause_45">45 Min</button>
+      </div>
+      <div class="calcbox" id="calc-common" style="display:none">
+        <div class="calctot" id="calc-tot">0</div>
+        <div class="calclbl" id="calc-confirm-lbl" data-i18n="hours_confirm_lbl">Stunden gearbeitet, richtig?</div>
+      </div>
+    </div>
+
+    <div id="time-indiv" style="display:none"></div>
+
+    <div style="height:24px"></div>
+  </div>
+  <div class="nav"><button class="btn" id="stnx" onclick="confirmAndSave()" disabled data-i18n="save_btn">💾 Speichern</button></div>
 </div>
 
 <div class="pg" id="pg-ok">
@@ -353,6 +409,58 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     </div>
     <div class="lbl" data-i18n="all_bv">Alle Baustellen</div>
     <div class="crd" id="bvml" style="margin-bottom:16px"></div>
+  </div>
+</div>
+
+<div class="pg" id="pg-pin">
+  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="editor_pin_title">Editor-Modus</div><div class="hs" data-i18n="editor_pin_sub">PIN eingeben</div></div></div>
+  <div class="sc">
+    <div style="padding:20px 16px 0;text-align:center">
+      <div style="font-size:42px;margin-bottom:6px">🔒</div>
+      <div class="pindots" id="pindots">
+        <div class="pindot" id="pd0"></div><div class="pindot" id="pd1"></div><div class="pindot" id="pd2"></div><div class="pindot" id="pd3"></div>
+      </div>
+      <div id="pinerr" style="color:#c0392b;font-size:13px;height:18px;margin-bottom:6px"></div>
+    </div>
+    <div class="pinpad">
+      <button class="pinbtn" onclick="pinPress('1')">1</button>
+      <button class="pinbtn" onclick="pinPress('2')">2</button>
+      <button class="pinbtn" onclick="pinPress('3')">3</button>
+      <button class="pinbtn" onclick="pinPress('4')">4</button>
+      <button class="pinbtn" onclick="pinPress('5')">5</button>
+      <button class="pinbtn" onclick="pinPress('6')">6</button>
+      <button class="pinbtn" onclick="pinPress('7')">7</button>
+      <button class="pinbtn" onclick="pinPress('8')">8</button>
+      <button class="pinbtn" onclick="pinPress('9')">9</button>
+      <div></div>
+      <button class="pinbtn" onclick="pinPress('0')">0</button>
+      <button class="pinbtn" onclick="pinBack()">⌫</button>
+    </div>
+  </div>
+</div>
+
+<div class="pg" id="pg-editor">
+  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="editor_title">Editor-Modus</div><div class="hs" data-i18n="editor_sub">Baustellen-Einstellungen</div></div></div>
+  <div class="sc">
+    <div class="lbl" data-i18n="editor_bv_list">Baustellen</div>
+    <div class="crd" id="edbvl" style="margin-bottom:16px"></div>
+    <div style="height:24px"></div>
+  </div>
+</div>
+
+<div class="ov" id="ov-edbv" onclick="clov('ov-edbv',event)">
+  <div class="sh" onclick="event.stopPropagation()">
+    <div class="shh"></div><div class="sht" id="edbvt" data-i18n="editor_bv_edit">Baustelle bearbeiten</div>
+    <div style="margin-bottom:12px"><div class="lbl" style="margin:0 0 6px" data-i18n="bv_nr">BV-Nr.</div><input type="text" id="edbv-nr" inputmode="numeric" maxlength="6"></div>
+    <div style="margin-bottom:12px"><div class="lbl" style="margin:0 0 6px" data-i18n="bv_addr">Adresse</div><input type="text" id="edbv-name"></div>
+    <div style="margin-bottom:14px">
+      <div class="toggle-row">
+        <div class="lbl2" data-i18n="editor_warn_off">Warnung "Fehlende Angaben" für diese Baustelle deaktivieren</div>
+        <button class="tgl" id="edbv-warn-tgl" onclick="toggleEdWarn()"></button>
+      </div>
+    </div>
+    <button class="btn" onclick="svEdBv()" data-i18n="save_changes">✅ Speichern</button>
+    <button class="bto" onclick="cls('ov-edbv')" data-i18n="cancel_btn">Abbrechen</button>
   </div>
 </div>
 
@@ -436,6 +544,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 const SBU="https://orluvjqjkngjdmajtwvp.supabase.co";
 const SBK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ybHV2anFqa25namRtYWp0d3ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0NDkyNDYsImV4cCI6MjA5NzAyNTI0Nn0.DsNorH_TZlT4rMC0IBYXipiMEAybZia_KMM-tTiAsgk";
 const LS="a3_";
+const EDITOR_PIN="0705";
 
 const CLRS=[
   {bg:"#dbeafe",tc:"#1e3a8a"},
@@ -507,6 +616,32 @@ const I18N = {
     step3_title: "Schritt 3 – Stunden",
     hours_label: "Stunden eintragen (0 = nicht dabei)",
     save_btn: "💾 Speichern",
+
+    team_label: "Wer hat mitgearbeitet?",
+    team_same_time: "Alle haben den ganzen Tag zusammen gearbeitet (gleiche Zeiten)",
+    times_label: "Arbeitszeit",
+    start_time: "Anfang",
+    end_time: "Ende",
+    pause_label: "Pause",
+    pause_none: "Keine",
+    pause_30: "30 Min",
+    pause_45: "45 Min",
+    hours_confirm_lbl: "Stunden gearbeitet, richtig?",
+    confirm_hours_title: "Stunden bestätigen",
+    confirm_hours_msg: "{hours} Stunden gearbeitet, richtig? ({names})",
+    confirm_hours_msg_multi: "Zeiten für {names} übernehmen?",
+    warn_no_team_or_time: "Bitte Mitarbeiter auswählen und gültige Zeiten eingeben.",
+
+    editor_link: "🔒 Editor-Modus",
+    editor_pin_title: "Editor-Modus",
+    editor_pin_sub: "PIN eingeben",
+    editor_pin_wrong: "Falscher PIN",
+    editor_title: "Editor-Modus",
+    editor_sub: "Baustellen-Einstellungen",
+    editor_bv_list: "Baustellen",
+    editor_bv_edit: "bearbeiten",
+    editor_warn_off: "Warnung \"Fehlende Angaben\" für diese Baustelle deaktivieren",
+    editor_warn_is_off: "Warnung deaktiviert",
 
     saved_title: "Gespeichert!",
     more_bv_btn: "Weitere Baustelle",
@@ -622,6 +757,32 @@ const I18N = {
     hours_label: "Saat girin (0 = yoktu)",
     save_btn: "💾 Kaydet",
 
+    team_label: "Kimler birlikte çalıştı?",
+    team_same_time: "Herkes bütün gün birlikte çalıştı (aynı saatler)",
+    times_label: "Çalışma saati",
+    start_time: "Başlangıç",
+    end_time: "Bitiş",
+    pause_label: "Mola",
+    pause_none: "Yok",
+    pause_30: "30 Dk",
+    pause_45: "45 Dk",
+    hours_confirm_lbl: "saat çalışıldı, doğru mu?",
+    confirm_hours_title: "Saatleri onayla",
+    confirm_hours_msg: "{hours} saat çalışıldı, doğru mu? ({names})",
+    confirm_hours_msg_multi: "{names} için saatler kaydedilsin mi?",
+    warn_no_team_or_time: "Lütfen çalışan seçin ve geçerli saat girin.",
+
+    editor_link: "🔒 Editör modu",
+    editor_pin_title: "Editör modu",
+    editor_pin_sub: "PIN girin",
+    editor_pin_wrong: "Yanlış PIN",
+    editor_title: "Editör modu",
+    editor_sub: "Şantiye ayarları",
+    editor_bv_list: "Şantiyeler",
+    editor_bv_edit: "düzenle",
+    editor_warn_off: "Bu şantiye için \"Eksik Bilgiler\" uyarısını kapat",
+    editor_warn_is_off: "Uyarı kapalı",
+
     saved_title: "Kaydedildi!",
     more_bv_btn: "Başka şantiye",
     home_btn: "Ana sayfaya dön",
@@ -734,6 +895,11 @@ let sBV=null, cD="", eGroupKey="", eBV=null, eMA=-1, eBL=-1, selC=-1, woff=0;
 let pstack=["pg-home"];
 let toastT=null;
 let ptimer=null;
+let teamSel=new Set();
+let sameTime=true;
+let curPause=0;
+let pinInput="";
+let edBVid=null;
 
 // ═══ SUPABASE ═══
 const SBH={
@@ -896,6 +1062,7 @@ function bk(to){
   prev.classList.remove("bk");
   prev.classList.add("on");
 
+  if(cur==="pg-pin"){ pinInput=""; rPinDots(); document.getElementById("pinerr").textContent=""; }
   if(to==="pg-home"){ustats();rwarn();rmissing();}
   if(to==="pg-verl")rverl();
   if(to==="pg-bvm")rbvm();
@@ -951,7 +1118,7 @@ function rmissing() {
   const list = document.getElementById("miss-info-list");
   if(!container || !list) return;
 
-  const missing = BV.filter(b => !b.name || b.name === "—" || b.name.trim() === "" || !b.bl_id);
+  const missing = BV.filter(b => !b.warn_disabled && (!b.name || b.name === "—" || b.name.trim() === "" || !b.bl_id));
   
   if (missing.length === 0) {
     container.style.display = "none";
@@ -1142,30 +1309,192 @@ async function handleAddBV(nrId, nmId, blIdId, autoSelect) {
 function n2st(){
   if(!sBV)return;
   document.getElementById("stsub").textContent=`${fd(cD)} · BV ${sBV.nr}`;
-  document.getElementById("mal").innerHTML=MA.map(m=>`
-    <div class="mr"><div class="av" style="background:${m.bg};color:${m.tc}">${m.k||"?"}</div>
-    <div class="mn">${m.name}</div>
-    <input type="number" class="hi" id="h-${m.id}" value="0" min="0" max="24" step="0.5" inputmode="decimal">
-    <div class="hu">h</div></div>`).join("");
+  teamSel=new Set(MA.map(m=>m.id)); // standardmäßig alle ausgewählt
+  sameTime=true;
+  curPause=0;
+  indivPause={};
+  indivStart={};
+  indivEnd={};
+  document.getElementById("t-start").value="";
+  document.getElementById("t-end").value="";
+  document.getElementById("p-0").classList.add("sl");
+  document.getElementById("p-30").classList.remove("sl");
+  document.getElementById("p-45").classList.remove("sl");
+  document.getElementById("calc-common").style.display="none";
+  document.getElementById("tgl-same").classList.add("on");
+  document.getElementById("stnx").disabled=true;
+  rTeam();
+  rTimeMode();
   go("pg-st");
 }
 
-async function save(){
-  const rows=[];
-  const preview=[];
+function rTeam(){
+  document.getElementById("tml").innerHTML=MA.map(m=>`
+    <div class="tmr">
+      <div class="tmcb ${teamSel.has(m.id)?"on":""}" onclick="toggleTeam('${m.id}')">${teamSel.has(m.id)?"✓":""}</div>
+      <div class="av" style="background:${m.bg};color:${m.tc};width:36px;height:36px;font-size:12px">${m.k||"?"}</div>
+      <div class="mn" style="font-size:14px">${m.name}</div>
+    </div>`).join("");
+}
+function toggleTeam(id){
+  if(teamSel.has(id)) teamSel.delete(id); else teamSel.add(id);
+  rTeam();
+  rTimeMode();
+  checkStValid();
+}
 
-  MA.forEach(m=>{
-    const h=parseFloat(document.getElementById("h-"+m.id)?.value)||0;
-    if(h>0){
-      rows.push({ datum:cD, bv_id:sBV.id, ma_id:m.id, stunden:h });
-      preview.push({ma:m.name,stunden:h});
-    }
-  });
+function toggleSameTime(){
+  sameTime=!sameTime;
+  document.getElementById("tgl-same").classList.toggle("on",sameTime);
+  rTimeMode();
+  checkStValid();
+}
 
-  if(!rows.length){
-    alert("Bitte mindestens bei einem Mitarbeiter Stunden eintragen.");
-    return;
+function rTimeMode(){
+  const common=document.getElementById("time-common");
+  const indiv=document.getElementById("time-indiv");
+  if(sameTime){
+    common.style.display="";
+    indiv.style.display="none";
+  }else{
+    common.style.display="none";
+    indiv.style.display="";
+    const sel=MA.filter(m=>teamSel.has(m.id));
+    sel.forEach(m=>{ if(indivPause[m.id]==null) indivPause[m.id]=0; });
+    indiv.innerHTML=sel.map(m=>{
+      const sv=indivStart[m.id]||"", ev=indivEnd[m.id]||"";
+      return `
+      <div class="lbl" style="display:flex;align-items:center;gap:8px">
+        <div class="av" style="background:${m.bg};color:${m.tc};width:24px;height:24px;font-size:10px">${m.k||"?"}</div>${m.name}
+      </div>
+      <div class="timegrid" style="margin-bottom:8px">
+        <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="start_time">Anfang</div><input type="text" id="ti-start-${m.id}" placeholder="07:00" inputmode="numeric" value="${sv}" oninput="indivStart['${m.id}']=this.value;calcIndiv('${m.id}');checkStValid()"></div>
+        <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="end_time">Ende</div><input type="text" id="ti-end-${m.id}" placeholder="16:00" inputmode="numeric" value="${ev}" oninput="indivEnd['${m.id}']=this.value;calcIndiv('${m.id}');checkStValid()"></div>
+      </div>
+      <div class="pauseg" style="margin-bottom:10px">
+        <button class="pausebtn ${indivPause[m.id]===0?"sl":""}" id="ti-p0-${m.id}" onclick="pickPauseIndiv('${m.id}',0)">${tr("pause_none")}</button>
+        <button class="pausebtn ${indivPause[m.id]===30?"sl":""}" id="ti-p30-${m.id}" onclick="pickPauseIndiv('${m.id}',30)">${tr("pause_30")}</button>
+        <button class="pausebtn ${indivPause[m.id]===45?"sl":""}" id="ti-p45-${m.id}" onclick="pickPauseIndiv('${m.id}',45)">${tr("pause_45")}</button>
+      </div>
+      <div class="calcbox" id="ti-calc-${m.id}" style="display:none;margin:0 0 18px">
+        <div class="calctot" id="ti-tot-${m.id}">0</div>
+        <div class="calclbl">${tr("hours_confirm_lbl")}</div>
+      </div>`;
+    }).join("");
+    sel.forEach(m=>calcIndiv(m.id));
   }
+}
+
+let indivPause={};
+let indivStart={};
+let indivEnd={};
+function pickPauseIndiv(id,min){
+  indivPause[id]=min;
+  ["0","30","45"].forEach(v=>document.getElementById(`ti-p${v}-${id}`).classList.toggle("sl",Number(v)===min));
+  calcIndiv(id);
+  checkStValid();
+}
+
+function parseTime(v){
+  if(!v)return null;
+  const m=v.trim().match(/^(\d{1,2}):?(\d{2})$/);
+  if(!m)return null;
+  const h=parseInt(m[1],10), min=parseInt(m[2],10);
+  if(h<0||h>29||min<0||min>59)return null;
+  return h*60+min;
+}
+function calcHours(startV,endV,pauseMin){
+  const s=parseTime(startV), e=parseTime(endV);
+  if(s===null||e===null)return null;
+  let diff=e-s;
+  if(diff<0)diff+=24*60;
+  diff-=pauseMin;
+  if(diff<0)diff=0;
+  // exakte Stunden (keine Rundung) - z.B. 30 Min = 0,5h, 45 Min = 0,75h
+  return Math.round((diff/60)*100)/100;
+}
+
+function pickPause(min){
+  curPause=min;
+  ["0","30","45"].forEach(v=>document.getElementById(`p-${v}`).classList.toggle("sl",Number(v)===min));
+  calcCommon();
+  checkStValid();
+}
+function calcCommon(){
+  const h=calcHours(document.getElementById("t-start").value,document.getElementById("t-end").value,curPause);
+  const box=document.getElementById("calc-common");
+  if(h===null){ box.style.display="none"; return; }
+  box.style.display="block";
+  document.getElementById("calc-tot").textContent=fmtH(h)+" h";
+}
+function calcIndiv(id){
+  const h=calcHours(document.getElementById(`ti-start-${id}`)?.value,document.getElementById(`ti-end-${id}`)?.value,indivPause[id]||0);
+  const box=document.getElementById(`ti-calc-${id}`);
+  if(!box)return;
+  if(h===null){ box.style.display="none"; return; }
+  box.style.display="block";
+  document.getElementById(`ti-tot-${id}`).textContent=fmtH(h)+" h";
+}
+function fmtH(h){
+  return (h%1===0)?String(h):String(h).replace(".",",");
+}
+
+function checkStValid(){
+  let valid=false;
+  if(teamSel.size>0){
+    if(sameTime){
+      valid = calcHours(document.getElementById("t-start").value,document.getElementById("t-end").value,curPause)!==null;
+    }else{
+      valid = [...teamSel].every(id=>calcHours(document.getElementById(`ti-start-${id}`)?.value,document.getElementById(`ti-end-${id}`)?.value,indivPause[id]||0)!==null);
+    }
+  }
+  document.getElementById("stnx").disabled=!valid;
+  if(sameTime) calcCommon();
+}
+document.addEventListener("input",e=>{
+  if(e.target&&(e.target.id==="t-start"||e.target.id==="t-end")) checkStValid();
+});
+
+function buildRows(){
+  const rows=[];
+  if(sameTime){
+    const h=calcHours(document.getElementById("t-start").value,document.getElementById("t-end").value,curPause);
+    if(h===null)return null;
+    [...teamSel].forEach(id=>{
+      rows.push({ datum:cD, bv_id:sBV.id, ma_id:id, stunden:h, beginn:normTime(document.getElementById("t-start").value), ende:normTime(document.getElementById("t-end").value), pause_min:curPause });
+    });
+  }else{
+    for(const id of teamSel){
+      const h=calcHours(document.getElementById(`ti-start-${id}`)?.value,document.getElementById(`ti-end-${id}`)?.value,indivPause[id]||0);
+      if(h===null)return null;
+      rows.push({ datum:cD, bv_id:sBV.id, ma_id:id, stunden:h, beginn:normTime(document.getElementById(`ti-start-${id}`).value), ende:normTime(document.getElementById(`ti-end-${id}`).value), pause_min:indivPause[id]||0 });
+    }
+  }
+  return rows;
+}
+function normTime(v){
+  const t=parseTime(v);
+  if(t===null)return null;
+  const h=Math.floor(t/60)%24, m=t%60;
+  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+}
+
+function confirmAndSave(){
+  const rows=buildRows();
+  if(!rows||!rows.length){ alert(tr("warn_no_team_or_time")); return; }
+  const tot=rows.reduce((a,b)=>a+b.stunden,0);
+  const namesTxt=rows.map(r=>{const m=maById(r.ma_id);return m?m.name.split(" ")[0]:"?";}).join(", ");
+  const msg = sameTime
+    ? tr("confirm_hours_msg",{hours:fmtH(tot/rows.length),names:namesTxt})
+    : tr("confirm_hours_msg_multi",{names:namesTxt});
+  conf(tr("confirm_hours_title"), msg, async()=>{
+    clco();
+    await save(rows);
+  });
+}
+
+async function save(rows){
+  if(!rows||!rows.length)return;
 
   syn("w",tr("sync_now"));
   const res = await sbIns("en", rows);
@@ -1179,9 +1508,9 @@ async function save(){
   await syncDown();
   syn("",tr("sync_saved"));
 
-  const txt=preview.map(x=>`${x.ma.split(" ")[0]}: ${x.stunden}h`);
-  const tot=preview.reduce((a,b)=>a+b.stunden,0);
-  document.getElementById("okd").textContent=`BV ${sBV.nr} · ${fd(cD)}\n${txt.join(", ")} · ${tot}h`;
+  const txt=rows.map(x=>`${maById(x.ma_id)?.name.split(" ")[0]||"?"}: ${fmtH(x.stunden)}h`);
+  const tot=rows.reduce((a,b)=>a+b.stunden,0);
+  document.getElementById("okd").textContent=`BV ${sBV.nr} · ${fd(cD)}\n${txt.join(", ")} · ${fmtH(tot)}h`;
   go("pg-ok");
 }
 function rsi(){ sBV=null; document.getElementById("bvnx").disabled=true; }
@@ -1559,7 +1888,7 @@ function cDBL(){
 // ═══ OVERLAYS ═══
 function opov(id){ document.getElementById(id).classList.add("on"); }
 function clov(id,ev){ if(ev&&ev.target!==document.getElementById(id))return; cls(id); }
-function cls(id){ document.getElementById(id).classList.remove("on"); eGroupKey=""; eBV=null; eMA=-1; eBL=-1; selC=-1; }
+function cls(id){ document.getElementById(id).classList.remove("on"); eGroupKey=""; eBV=null; eMA=-1; eBL=-1; selC=-1; edBVid=null; }
 function conf(t,m,cb){
   document.getElementById("cft").textContent=t;
   document.getElementById("cfm").textContent=m;
@@ -1569,7 +1898,78 @@ function conf(t,m,cb){
 }
 function clco(){ document.getElementById("cof").classList.remove("on"); }
 
-// ═══ EXPORT ═══
+// ═══ EDITOR PIN ═══
+function pinPress(d){
+  if(pinInput.length>=4)return;
+  pinInput+=d;
+  rPinDots();
+  if(pinInput.length===4){
+    if(pinInput===EDITOR_PIN){
+      document.getElementById("pinerr").textContent="";
+      pinInput="";
+      rPinDots();
+      go("pg-editor");
+      rEditor();
+    }else{
+      document.getElementById("pinerr").textContent=tr("editor_pin_wrong");
+      setTimeout(()=>{ pinInput=""; rPinDots(); },500);
+    }
+  }
+}
+function pinBack(){
+  pinInput=pinInput.slice(0,-1);
+  rPinDots();
+}
+function rPinDots(){
+  for(let i=0;i<4;i++){
+    const el=document.getElementById("pd"+i);
+    if(el) el.classList.toggle("f",i<pinInput.length);
+  }
+}
+
+function rEditor(){
+  document.getElementById("edbvl").innerHTML=[...BV].sort((a,b)=>a.nr.localeCompare(b.nr)).map(b=>{
+    const bl=blById(b.bl_id);
+    const warnOff=b.warn_disabled;
+    return `
+    <div class="bmr"><div style="flex:1">
+      <div style="font-size:12px;color:var(--s);font-weight:600">BV ${b.nr}</div>
+      <div style="font-size:15px">${b.name}</div>
+      <div style="font-size:11px;color:var(--g);margin-top:2px;">BL: ${bl?.name||"—"}${warnOff?` · <span style="color:#e67e22">${tr("editor_warn_is_off")}</span>`:""}</div>
+    </div>
+    <button class="eb" onclick="opEdBv('${b.id}')">✏️</button></div>`;
+  }).join("");
+}
+
+function opEdBv(id){
+  edBVid=id;
+  const bv=BV.find(b=>b.id===id);
+  document.getElementById("edbvt").textContent=`BV ${bv?.nr||"?"} ${tr("editor_bv_edit")}`;
+  document.getElementById("edbv-nr").value=bv?.nr||"";
+  document.getElementById("edbv-name").value=bv?.name||"";
+  document.getElementById("edbv-warn-tgl").classList.toggle("on",!!bv?.warn_disabled);
+  opov("ov-edbv");
+}
+function toggleEdWarn(){
+  document.getElementById("edbv-warn-tgl").classList.toggle("on");
+}
+
+async function svEdBv(){
+  if(!edBVid)return;
+  const nr=document.getElementById("edbv-nr").value.trim();
+  const name=document.getElementById("edbv-name").value.trim();
+  const warnOff=document.getElementById("edbv-warn-tgl").classList.contains("on");
+  if(!nr){ alert("BV-Nummer eingeben!"); return; }
+  if(BV.find(b=>b.nr===nr && b.id!==edBVid)){ alert("BV-Nummer bereits vergeben!"); return; }
+
+  await sbUpd("bv", edBVid, { nr, name: name || "—", warn_disabled: warnOff });
+  await syncDown();
+  cls("ov-edbv");
+  rEditor();
+  toast(tr("toast_updated"));
+}
+
+
 function xls(){
   const von=document.getElementById("ev").value,bis=document.getElementById("eb").value;
   let data=EN.filter(e=>{
@@ -1594,14 +1994,15 @@ function bxls(data,von,bis){
   try{
     const wb=XLSX.utils.book_new();
     const sorted=[...data].sort((a,b)=>a.datum.localeCompare(b.datum));
-    const r1=[["Datum","BV_NUMMER","Name Mitarbeiter","Stunden"]];
+    const r1=[["Datum","BV_NUMMER","Name Mitarbeiter","Stunden","","Anfang","Pause (Min)","Ende"]];
     sorted.forEach(e=>{
       const bv=bvById(e.bv_id);
       const ma=maById(e.ma_id);
-      r1.push([fd(e.datum),bv?.nr||"",ma?.name||"",Number(e.stunden)||0]);
+      const stdVal=Number(e.stunden)||0;
+      r1.push([fd(e.datum),bv?.nr||"",ma?.name||"",stdVal,"",e.beginn||"",(e.pause_min!=null?e.pause_min:""),e.ende||""]);
     });
     const ws1=XLSX.utils.aoa_to_sheet(r1);
-    ws1["!cols"]=[{wch:12},{wch:12},{wch:22},{wch:10}];
+    ws1["!cols"]=[{wch:12},{wch:12},{wch:22},{wch:10},{wch:2},{wch:10},{wch:12},{wch:10}];
     XLSX.utils.book_append_sheet(wb,ws1,"Seith_Stunden");
 
     const r2=[["BV-Nummer","Adresse / Beschreibung","Bauleiter"]];
