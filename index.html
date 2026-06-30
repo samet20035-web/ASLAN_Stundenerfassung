@@ -77,13 +77,16 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 .nbv-grid{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:8px;}
 .nbv-grid input,.nbv-grid select{font-size:15px;padding:11px 12px;}
 .bvg{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px;}
-.bvb{padding:12px 10px;border:.5px solid var(--bs);border-radius:var(--rs);background:var(--c);cursor:pointer;text-align:left;font-family:inherit;}
+.bvb{position:relative;padding:12px 10px;border:.5px solid var(--bs);border-radius:var(--rs);background:var(--c);cursor:pointer;text-align:left;font-family:inherit;}
 .bvb:active{transform:scale(.97);}
 .bvb.sl{border:2px solid var(--g);background:var(--gl);}
-.bvnr{font-size:11px;color:var(--s);margin-bottom:3px;}
+.bvnr{font-size:11px;color:var(--s);margin-bottom:3px;padding-right:20px;}
 .bvb.sl .bvnr{color:var(--gd);}
 .bvnm{font-size:13px;font-weight:500;line-height:1.3;}
 .bvb.sl .bvnm{color:var(--gd);}
+.favstar{position:absolute;top:4px;right:4px;background:transparent;border:none;font-size:17px;line-height:1;padding:4px;cursor:pointer;color:var(--bs);}
+.favstar.on{color:#f5a623;}
+.bvrubric{font-size:13px;font-weight:700;color:var(--gd);text-transform:uppercase;letter-spacing:.06em;padding:0 16px;margin-bottom:8px;}
 .wb{margin:9px 16px 0;border-radius:var(--r);overflow:hidden;border:1.5px solid #e67e22;}
 .wh{background:#e67e22;padding:9px 14px;display:flex;align-items:center;gap:8px;}
 .wht{font-size:14px;font-weight:700;color:#fff;}
@@ -316,8 +319,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       </div>
       <div id="bvhint" style="font-size:12px;margin-top:6px;color:var(--gd);display:none"></div>
     </div>
-    <div class="lbl" style="margin-top:18px" data-i18n="tap_bv">Baustelle antippen</div>
-    <div class="bvg" id="bvg"></div>
+    <div id="bvg-wrap"></div>
     <div style="height:24px"></div>
   </div>
   <div class="nav"><button class="btn" id="bvnx" onclick="n2st()" disabled data-i18n="to_hours_btn">Zu den Stunden →</button></div>
@@ -339,8 +341,8 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     <div id="time-common">
       <div class="lbl" data-i18n="times_label">Arbeitszeit</div>
       <div class="timegrid">
-        <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="start_time">Anfang</div><input type="text" id="t-start" placeholder="07:00" inputmode="numeric" maxlength="5" oninput="autoTimeFmt(this);checkStValid()"></div>
-        <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="end_time">Ende</div><input type="text" id="t-end" placeholder="16:00" inputmode="numeric" maxlength="5" oninput="autoTimeFmt(this);checkStValid()"></div>
+        <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="start_time">Anfang</div><input type="text" id="t-start" placeholder="07:00" inputmode="numeric" maxlength="5" oninput="autoTimeFmt(this);checkStValid()" onblur="finalizeTimeFmt(this)"></div>
+        <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="end_time">Ende</div><input type="text" id="t-end" placeholder="16:00" inputmode="numeric" maxlength="5" oninput="autoTimeFmt(this);checkStValid()" onblur="finalizeTimeFmt(this)"></div>
       </div>
       <div class="lbl" data-i18n="pause_label">Pause</div>
       <div class="pauseg">
@@ -650,8 +652,13 @@ const I18N = {
     step2_title: "Schritt 2 – Baustelle",
     new_bv: "Neue Baustelle",
     bv_nr: "BV-Nr.",
+    bv_nr_invalid: "Hinweis: Diese BV-Nummer entspricht nicht dem Schema (5-stellig, beginnt mit 65 oder 66).",
+    bv_nr_invalid_confirm: "Diese BV-Nummer entspricht nicht dem üblichen Schema (5-stellig, beginnt mit 65 oder 66). Trotzdem anlegen?",
+    bv_nr_invalid_short: "Ungültige BV-Nummer",
     bv_addr: "Adresse / Beschreibung",
     tap_bv: "Baustelle antippen",
+    fav_bv_label: "Favoriten",
+    yesterday_bv_label: "Baustellen von gestern",
     to_hours_btn: "Zu den Stunden →",
 
     step3_title: "Schritt 3 – Stunden",
@@ -697,6 +704,8 @@ const I18N = {
     report_field_datum: "Datum",
     report_field_addr: "Adresse",
     report_field_bvnr: "BV-Nummer",
+    report_field_bauleiter: "Bauleiter",
+    report_field_bauleiter_missing: "Kein Bauleiter",
     report_field_start: "Anfang",
     report_field_end: "Ende",
     report_field_pause: "Pause",
@@ -810,8 +819,13 @@ const I18N = {
     step2_title: "Adım 2 – Şantiye",
     new_bv: "Yeni şantiye",
     bv_nr: "Şantiye No.",
+    bv_nr_invalid: "Not: Bu BV numarası standart şemaya uymuyor (5 haneli, 65 veya 66 ile başlar).",
+    bv_nr_invalid_confirm: "Bu BV numarası standart şemaya uymuyor (5 haneli, 65 veya 66 ile başlar). Yine de eklensin mi?",
+    bv_nr_invalid_short: "Geçersiz BV numarası",
     bv_addr: "Adres / Açıklama",
     tap_bv: "Şantiyeye dokun",
+    fav_bv_label: "Favoriler",
+    yesterday_bv_label: "Dünkü şantiyeler",
     to_hours_btn: "Saatlere git →",
 
     step3_title: "Adım 3 – Saatler",
@@ -857,6 +871,8 @@ const I18N = {
     report_field_datum: "Tarih",
     report_field_addr: "Adres",
     report_field_bvnr: "BV numarası",
+    report_field_bauleiter: "Şantiye Şefi",
+    report_field_bauleiter_missing: "Şantiye şefi yok",
     report_field_start: "Başlangıç",
     report_field_end: "Bitiş",
     report_field_pause: "Mola",
@@ -1173,6 +1189,8 @@ function gkw(ds){
 function bvById(id){ return BV.find(b=>b.id===id); }
 function maById(id){ return MA.find(m=>m.id===id); }
 function blById(id){ return BL.find(b=>b.id===id); }
+function validBVNr(nr){ return /^6[56]\d{3}$/.test(String(nr||"").trim()); }
+function bvNrBadge(nr){ return validBVNr(nr) ? "" : ` <span title="${tr("bv_nr_invalid_short")}" style="color:#c0392b;font-weight:bold;">⚠️</span>`; }
 
 function groupedEntries(){
   const map={};
@@ -1199,7 +1217,7 @@ function rmissing() {
   const list = document.getElementById("miss-info-list");
   if(!container || !list) return;
 
-  const missing = BV.filter(b => !b.warn_disabled && (!b.name || b.name === "—" || b.name.trim() === "" || !b.bl_id));
+  const missing = BV.filter(b => !b.warn_disabled && (!b.name || b.name === "—" || b.name.trim() === "" || !b.bl_id || !validBVNr(b.nr)));
   
   if (missing.length === 0) {
     container.style.display = "none";
@@ -1210,12 +1228,16 @@ function rmissing() {
       const addrTxt = isMissingAddr ? `<span style="color:#c0392b; font-weight:bold;">Keine Adresse</span>` : b.name;
       const bl = blById(b.bl_id);
       const blTxt = bl ? bl.name : `<span style="color:#c0392b; font-weight:bold;">Kein Bauleiter</span>`;
+      const nrInvalid = !validBVNr(b.nr);
+      const nrLabel = nrInvalid ? `<span style="color:#c0392b; font-weight:bold;">BV ${b.nr} ⚠️</span>` : `BV ${b.nr}`;
+      const detailParts = [addrTxt, blTxt];
+      if(nrInvalid) detailParts.push(`<span style="color:#c0392b; font-weight:bold;">${tr("bv_nr_invalid_short")}</span>`);
 
       return `
         <div class="li" onclick="go('pg-bvm'); opbv('${b.id}')" style="cursor:pointer; background:var(--bg);">
           <div class="lii">
-            <div class="lib">BV ${b.nr}</div>
-            <div class="lid">${addrTxt} | ${blTxt}</div>
+            <div class="lib">${nrLabel}</div>
+            <div class="lid">${detailParts.join(" | ")}</div>
           </div>
           <div class="ar" style="align-self:center">›</div>
         </div>
@@ -1337,10 +1359,46 @@ function n2bv(){
   go("pg-bv");
 }
 
+function getFavBvIds(){ return lsGet("bv_favs", []); }
+function isFavBv(id){ return getFavBvIds().includes(id); }
+function toggleFavBv(id){
+  let favs = getFavBvIds();
+  favs = favs.includes(id) ? favs.filter(x=>x!==id) : [...favs, id];
+  lsSet("bv_favs", favs);
+  rbvg();
+}
+function prevDayOf(dateStr){
+  if(!dateStr) return null;
+  const d = new Date(dateStr+"T00:00:00");
+  d.setDate(d.getDate()-1);
+  return d.toISOString().slice(0,10);
+}
+function bvTile(b){
+  const fav = isFavBv(b.id);
+  const sel = sBV && sBV.nr===b.nr;
+  return `<div class="bvb ${sel?"sl":""}" onclick="pkBV('${b.id}')">
+    <button class="favstar ${fav?"on":""}" onclick="event.stopPropagation();toggleFavBv('${b.id}')" aria-label="Favorit">${fav?"★":"☆"}</button>
+    <div class="bvnr">BV ${b.nr}${bvNrBadge(b.nr)}</div><div class="bvnm">${b.name}</div></div>`;
+}
 function rbvg(){
-  document.getElementById("bvg").innerHTML=[...BV].sort((a,b)=>a.nr.localeCompare(b.nr)).map(b=>`
-    <button class="bvb ${sBV&&sBV.nr===b.nr?"sl":""}" onclick="pkBV('${b.id}')">
-      <div class="bvnr">BV ${b.nr}</div><div class="bvnm">${b.name}</div></button>`).join("");
+  const all=[...BV].sort((a,b)=>a.nr.localeCompare(b.nr));
+  const favIds=new Set(getFavBvIds());
+  const favs=all.filter(b=>favIds.has(b.id));
+
+  const yDate=prevDayOf(cD);
+  const yIds=new Set(EN.filter(e=>e.datum===yDate).map(e=>e.bv_id));
+  const yesterday=all.filter(b=>yIds.has(b.id) && !favIds.has(b.id));
+
+  let html="";
+  if(favs.length){
+    html+=`<div class="bvrubric">⭐ ${tr("fav_bv_label")}</div><div class="bvg" style="margin-bottom:18px">${favs.map(bvTile).join("")}</div>`;
+  }
+  if(yesterday.length){
+    html+=`<div class="bvrubric">🕓 ${tr("yesterday_bv_label")}</div><div class="bvg" style="margin-bottom:18px">${yesterday.map(bvTile).join("")}</div>`;
+  }
+  html+=`<div class="lbl" data-i18n="tap_bv">${tr("tap_bv")}</div><div class="bvg">${all.map(bvTile).join("")}</div>`;
+
+  document.getElementById("bvg-wrap").innerHTML=html;
 }
 function pkBV(id){
   sBV=BV.find(b=>b.id===id);
@@ -1375,8 +1433,12 @@ async function handleAddBV(nrId, nmId, blIdId, autoSelect) {
     }
   };
 
-  if(!nm || !blId) {
-    conf(tr("missing_info"), tr("warn_missing"), async () => {
+  const nrInvalid = !validBVNr(nr);
+  if(nrInvalid || !nm || !blId) {
+    const parts=[];
+    if(nrInvalid) parts.push(tr("bv_nr_invalid_confirm"));
+    if(!nm || !blId) parts.push(tr("warn_missing"));
+    conf(tr("missing_info"), parts.join("\n\n"), async () => {
       document.getElementById("cfok").innerHTML = tr("sync_now");
       await execAdd();
       clco();
@@ -1449,8 +1511,8 @@ function rTimeMode(){
         <div class="av" style="background:${m.bg};color:${m.tc};width:24px;height:24px;font-size:10px">${m.k||"?"}</div>${m.name}
       </div>
       <div class="timegrid" style="margin-bottom:8px">
-        <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="start_time">Anfang</div><input type="text" id="ti-start-${m.id}" placeholder="07:00" inputmode="numeric" maxlength="5" value="${sv}" oninput="autoTimeFmt(this);indivStart['${m.id}']=this.value;calcIndiv('${m.id}');checkStValid()"></div>
-        <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="end_time">Ende</div><input type="text" id="ti-end-${m.id}" placeholder="16:00" inputmode="numeric" maxlength="5" value="${ev}" oninput="autoTimeFmt(this);indivEnd['${m.id}']=this.value;calcIndiv('${m.id}');checkStValid()"></div>
+        <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="start_time">Anfang</div><input type="text" id="ti-start-${m.id}" placeholder="07:00" inputmode="numeric" maxlength="5" value="${sv}" oninput="autoTimeFmt(this);indivStart['${m.id}']=this.value;calcIndiv('${m.id}');checkStValid()" onblur="finalizeTimeFmt(this)"></div>
+        <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="end_time">Ende</div><input type="text" id="ti-end-${m.id}" placeholder="16:00" inputmode="numeric" maxlength="5" value="${ev}" oninput="autoTimeFmt(this);indivEnd['${m.id}']=this.value;calcIndiv('${m.id}');checkStValid()" onblur="finalizeTimeFmt(this)"></div>
       </div>
       <div class="pauseg" style="margin-bottom:10px">
         <button class="pausebtn ${indivPause[m.id]===0?"sl":""}" id="ti-p0-${m.id}" onclick="pickPauseIndiv('${m.id}',0)">${tr("pause_none")}</button>
@@ -1484,6 +1546,19 @@ function autoTimeFmt(el){
     formatted=digits.slice(0,digits.length-2)+":"+digits.slice(-2);
   }
   el.value=formatted;
+}
+
+// Wenn beim Verlassen des Feldes nur 1-2 Ziffern stehen (z.B. "6" oder "16"),
+// wird automatisch ":00" ergänzt -> "06:00" bzw. "16:00"
+function finalizeTimeFmt(el){
+  const v=el.value.trim();
+  if(/^\d{1,2}$/.test(v)){
+    const h=parseInt(v,10);
+    if(h>=0&&h<=29){
+      el.value=String(h).padStart(2,"0")+":00";
+      el.dispatchEvent(new Event("input",{bubbles:true}));
+    }
+  }
 }
 
 function parseTime(v){
@@ -1808,7 +1883,7 @@ function rbvm(){
     const bl = blById(b.bl_id);
     return `
     <div class="bmr"><div style="flex:1">
-      <div style="font-size:12px;color:var(--s);font-weight:600">BV ${b.nr}</div>
+      <div style="font-size:12px;color:var(--s);font-weight:600">BV ${b.nr}${bvNrBadge(b.nr)}</div>
       <div style="font-size:15px">${b.name}</div>
       <div style="font-size:11px;color:var(--g);margin-top:2px;">BL: ${bl?.name||"—"}</div>
     </div>
@@ -2024,7 +2099,7 @@ function rEditor(){
     const warnOff=b.warn_disabled;
     return `
     <div class="bmr"><div style="flex:1">
-      <div style="font-size:12px;color:var(--s);font-weight:600">BV ${b.nr}</div>
+      <div style="font-size:12px;color:var(--s);font-weight:600">BV ${b.nr}${bvNrBadge(b.nr)}</div>
       <div style="font-size:15px">${b.name}</div>
       <div style="font-size:11px;color:var(--g);margin-top:2px;">BL: ${bl?.name||"—"}${warnOff?` · <span style="color:#e67e22">${tr("editor_warn_is_off")}</span>`:""}</div>
     </div>
@@ -2097,7 +2172,7 @@ function rRepBvg(){
   }
   document.getElementById("repbvg").innerHTML=list.map(b=>`
     <button class="bvb" onclick="opRepView('${b.id}')">
-      <div class="bvnr">BV ${b.nr}</div><div class="bvnm">${b.name}</div></button>`).join("");
+      <div class="bvnr">BV ${b.nr}${bvNrBadge(b.nr)}</div><div class="bvnm">${b.name}</div></button>`).join("");
 }
 
 function opRepView(bvId){
@@ -2115,6 +2190,7 @@ function opRepView(bvId){
       ${repFieldRow(tr("report_field_datum"), fd(repD), fd(repD))}
       ${repFieldRow(tr("report_field_addr"), repBV.name, repBV.name)}
       ${repFieldRow(tr("report_field_bvnr"), repBV.nr, repBV.nr)}
+      ${repFieldRow(tr("report_field_bauleiter"), blById(repBV.bl_id)?.name || tr("report_field_bauleiter_missing"), blById(repBV.bl_id)?.name || "")}
     </div>
   </div>`;
 
@@ -2184,11 +2260,19 @@ async function svEdBv(){
   if(!nr){ alert("BV-Nummer eingeben!"); return; }
   if(BV.find(b=>b.nr===nr && b.id!==edBVid)){ alert("BV-Nummer bereits vergeben!"); return; }
 
-  await sbUpd("bv", edBVid, { nr, name: name || "—", warn_disabled: warnOff });
-  await syncDown();
-  cls("ov-edbv");
-  rEditor();
-  toast(tr("toast_updated"));
+  const execSave = async () => {
+    await sbUpd("bv", edBVid, { nr, name: name || "—", warn_disabled: warnOff });
+    await syncDown();
+    cls("ov-edbv");
+    rEditor();
+    toast(tr("toast_updated"));
+  };
+
+  if(!validBVNr(nr)){
+    conf(tr("missing_info"), tr("bv_nr_invalid_confirm"), async () => { await execSave(); clco(); });
+  } else {
+    await execSave();
+  }
 }
 
 
