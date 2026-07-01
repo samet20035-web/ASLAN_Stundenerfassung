@@ -374,6 +374,19 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     <button onclick="toggleBulkMode()" id="bulk-toggle-btn" style="margin-left:auto;padding:7px 11px;background:transparent;border:.5px solid var(--bs);border-radius:var(--rs);color:var(--t);font-size:13px;font-weight:700;cursor:pointer" data-i18n="bulk_select_btn">☑️ Auswählen</button>
     <button onclick="cDA()" style="margin-left:8px;padding:7px 11px;background:transparent;border:.5px solid #e57373;border-radius:var(--rs);color:#c0392b;font-size:13px;font-weight:700;cursor:pointer" data-i18n="delete_all_btn">Alle löschen</button>
   </div>
+  <div style="padding:10px 16px 4px">
+    <input type="text" id="vsearch" oninput="rverl()" data-i18n-ph="filter_search_ph" placeholder="Suche: Mitarbeiter, Baustelle, Datum…" style="margin-bottom:8px">
+    <div style="display:flex;gap:8px">
+      <select id="vfilter-bv" onchange="rverl()" style="flex:1"></select>
+      <select id="vfilter-ma" onchange="rverl()" style="flex:1"></select>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+      <input type="date" id="vfilter-von" onchange="rverl()" style="flex:1">
+      <span style="color:var(--s)">–</span>
+      <input type="date" id="vfilter-bis" onchange="rverl()" style="flex:1">
+      <button onclick="resetVerlFilter()" title="✕" style="padding:0 14px;height:44px;background:transparent;border:.5px solid var(--bs);border-radius:var(--rs);color:var(--t);font-size:15px;cursor:pointer">✕</button>
+    </div>
+  </div>
   <div class="sc" id="vbody"><div class="emp"><div class="eic">📋</div>Noch keine Einträge.</div></div>
 </div>
 
@@ -786,6 +799,13 @@ const I18N = {
     entries_title: "Einträge",
     delete_all_btn: "Alle löschen",
     no_entries: "Noch keine Einträge.",
+    filter_search_ph: "Suche: Mitarbeiter, Baustelle, Datum…",
+    filter_all_bv: "Alle Baustellen",
+    filter_all_ma: "Alle Mitarbeiter",
+    filter_from: "Von",
+    filter_to: "Bis",
+    filter_reset: "Filter zurücksetzen",
+    no_search_results: "Keine Einträge für diese Suche gefunden.",
 
     ma_title: "Mitarbeiter",
     ma_sub: "Verwalten & anlegen",
@@ -975,6 +995,13 @@ const I18N = {
     entries_title: "Kayıtlar",
     delete_all_btn: "Hepsini sil",
     no_entries: "Henüz kayıt yok.",
+    filter_search_ph: "Ara: Personel, şantiye, tarih…",
+    filter_all_bv: "Tüm şantiyeler",
+    filter_all_ma: "Tüm personel",
+    filter_from: "Başlangıç",
+    filter_to: "Bitiş",
+    filter_reset: "Filtreyi sıfırla",
+    no_search_results: "Bu arama için kayıt bulunamadı.",
 
     ma_title: "Çalışanlar",
     ma_sub: "Yönet ve ekle",
@@ -1891,6 +1918,26 @@ function rw(){
 }
 
 // ═══ VERLAUF ═══
+function populateVerlFilters(){
+  const bvSel=document.getElementById("vfilter-bv");
+  const maSel=document.getElementById("vfilter-ma");
+  if(!bvSel||!maSel)return;
+  const curBv=bvSel.value, curMa=maSel.value;
+  bvSel.innerHTML=`<option value="">${tr("filter_all_bv")}</option>`+
+    [...BV].sort((a,b)=>a.nr.localeCompare(b.nr)).map(b=>`<option value="${b.id}">BV ${b.nr} · ${b.name}</option>`).join("");
+  maSel.innerHTML=`<option value="">${tr("filter_all_ma")}</option>`+
+    [...MA].sort((a,b)=>a.name.localeCompare(b.name)).map(m=>`<option value="${m.id}">${m.name}</option>`).join("");
+  if([...bvSel.options].some(o=>o.value===curBv)) bvSel.value=curBv;
+  if([...maSel.options].some(o=>o.value===curMa)) maSel.value=curMa;
+}
+function resetVerlFilter(){
+  const s=document.getElementById("vsearch"); if(s)s.value="";
+  const bv=document.getElementById("vfilter-bv"); if(bv)bv.value="";
+  const ma=document.getElementById("vfilter-ma"); if(ma)ma.value="";
+  const von=document.getElementById("vfilter-von"); if(von)von.value="";
+  const bis=document.getElementById("vfilter-bis"); if(bis)bis.value="";
+  rverl();
+}
 function rverl(){
   const c=document.getElementById("vbody");
   const toggleBtn=document.getElementById("bulk-toggle-btn");
@@ -1898,17 +1945,41 @@ function rverl(){
     toggleBtn.textContent = bulkMode ? "✖️ "+tr("cancel_btn") : "☑️ "+tr("bulk_select_btn");
   }
 
+  populateVerlFilters();
+
   if(!EN.length){
     c.innerHTML=`<div class="emp"><div class="eic">📋</div>${tr("no_entries")}</div>`;
     return;
   }
 
-  const groups=groupedEntries();
+  const search=(document.getElementById("vsearch")?.value||"").trim().toLowerCase();
+  const fBv=document.getElementById("vfilter-bv")?.value||"";
+  const fMa=document.getElementById("vfilter-ma")?.value||"";
+  const fVon=document.getElementById("vfilter-von")?.value||"";
+  const fBis=document.getElementById("vfilter-bis")?.value||"";
+
+  let groups=groupedEntries();
+  if(fBv) groups=groups.filter(g=>g.bv_id===fBv);
+  if(fMa) groups=groups.filter(g=>g.rows.some(r=>r.ma_id===fMa));
+  if(fVon) groups=groups.filter(g=>g.datum>=fVon);
+  if(fBis) groups=groups.filter(g=>g.datum<=fBis);
+  if(search){
+    groups=groups.filter(g=>{
+      const bv=bvById(g.bv_id);
+      const hay=[fd(g.datum),g.datum,bv?.nr||"",bv?.name||"",...g.rows.map(r=>maById(r.ma_id)?.name||"")].join(" ").toLowerCase();
+      return hay.includes(search);
+    });
+  }
 
   const bar = bulkMode ? `<div class="crd" style="margin:12px 16px;padding:12px 14px;display:flex;align-items:center;gap:10px;background:var(--gl);border-color:var(--gm)">
       <div style="flex:1;font-size:13px;font-weight:700;color:var(--gd)">${bulkSel.size} ${tr("bulk_selected_count")}</div>
       <button class="eb" onclick="openBulkMove()" style="background:var(--g);color:#fff;border-color:var(--g)" data-i18n="bulk_move_btn">➡️ ${tr("bulk_move_btn")}</button>
     </div>` : "";
+
+  if(!groups.length){
+    c.innerHTML=bar+`<div class="emp"><div class="eic">🔍</div>${tr("no_search_results")}<div style="margin-top:12px"><button class="bto" onclick="resetVerlFilter()">${tr("filter_reset")}</button></div></div>`;
+    return;
+  }
 
   c.innerHTML=bar+`<div class="crd" style="margin:12px 16px">${
     groups.map(g=>{
