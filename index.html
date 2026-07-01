@@ -248,18 +248,6 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       <div class="ar">›</div>
     </button>
 
-    <button class="ba" onclick="requirePin('pg-ma')">
-      <div class="ai">👷</div>
-      <div><div class="at" data-i18n="home_ma_title">Mitarbeiter verwalten</div><div class="as" data-i18n="home_ma_sub">Namen ändern, neu anlegen</div></div>
-      <div class="ar">›</div>
-    </button>
-
-    <button class="ba" onclick="requirePin('pg-bl')">
-      <div class="ai">👨‍💼</div>
-      <div><div class="at" data-i18n="home_bl_title">Bauleiter verwalten</div><div class="as" data-i18n="home_bl_sub">Zuweisung für Baustellen</div></div>
-      <div class="ar">›</div>
-    </button>
-
     <button class="ba" onclick="go('pg-bvm')">
       <div class="ai">🏗️</div>
       <div><div class="at" data-i18n="home_bv_title">Baustellen verwalten</div><div class="as" data-i18n="home_bv_sub">BV-Adressen bearbeiten</div></div>
@@ -399,7 +387,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 </div>
 
 <div class="pg" id="pg-ma">
-  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="ma_title">Mitarbeiter</div><div class="hs" data-i18n="ma_sub">Verwalten & anlegen</div></div></div>
+  <div class="hdr"><button class="bck" onclick="bk('pg-editor')">‹</button><div><div class="ht" data-i18n="ma_title">Mitarbeiter</div><div class="hs" data-i18n="ma_sub">Verwalten & anlegen</div></div></div>
   <div class="sc">
     <div class="nbv" style="margin-top:12px">
       <div style="font-size:13px;font-weight:700;color:var(--gd);text-transform:uppercase;letter-spacing:.06em" data-i18n="new_ma">Neuer Mitarbeiter</div>
@@ -411,7 +399,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 </div>
 
 <div class="pg" id="pg-bl">
-  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="bl_title">Bauleiter</div><div class="hs" data-i18n="home_bl_sub">Verwalten & anlegen</div></div></div>
+  <div class="hdr"><button class="bck" onclick="bk('pg-editor')">‹</button><div><div class="ht" data-i18n="bl_title">Bauleiter</div><div class="hs" data-i18n="home_bl_sub">Verwalten & anlegen</div></div></div>
   <div class="sc">
     <div class="nbv" style="margin-top:12px">
       <div style="font-size:13px;font-weight:700;color:var(--gd);text-transform:uppercase;letter-spacing:.06em" data-i18n="new_bl">Neuer Bauleiter</div>
@@ -494,6 +482,18 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 <div class="pg" id="pg-editor">
   <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="editor_title">Editor-Modus</div><div class="hs" data-i18n="editor_sub">Baustellen-Einstellungen</div></div></div>
   <div class="sc">
+    <button class="ba" onclick="go('pg-ma')" style="margin-bottom:10px">
+      <div class="ai">👷</div>
+      <div><div class="at" data-i18n="home_ma_title">Mitarbeiter verwalten</div><div class="as" data-i18n="home_ma_sub">Namen ändern, neu anlegen</div></div>
+      <div class="ar">›</div>
+    </button>
+
+    <button class="ba" onclick="go('pg-bl')" style="margin-bottom:16px">
+      <div class="ai">👨‍💼</div>
+      <div><div class="at" data-i18n="home_bl_title">Bauleiter verwalten</div><div class="as" data-i18n="home_bl_sub">Zuweisung für Baustellen</div></div>
+      <div class="ar">›</div>
+    </button>
+
     <div class="lbl" data-i18n="editor_bv_list">Baustellen</div>
     <div class="crd" id="edbvl" style="margin-bottom:16px"></div>
 
@@ -1254,6 +1254,7 @@ function bk(to){
   if(to==="pg-ma")rmam();
   if(to==="pg-bl")rblm();
   if(to==="pg-woche")rw();
+  if(to==="pg-editor")rEditor();
 }
 
 // ═══ HELPERS ═══
