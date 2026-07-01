@@ -372,7 +372,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 <div class="pg" id="pg-verl">
   <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="entries_title">Einträge</div></div>
     <button onclick="toggleBulkMode()" id="bulk-toggle-btn" style="margin-left:auto;padding:7px 11px;background:transparent;border:.5px solid var(--bs);border-radius:var(--rs);color:var(--t);font-size:13px;font-weight:700;cursor:pointer" data-i18n="bulk_select_btn">☑️ Auswählen</button>
-    <button onclick="cDA()" style="margin-left:8px;padding:7px 11px;background:transparent;border:.5px solid #e57373;border-radius:var(--rs);color:#c0392b;font-size:13px;font-weight:700;cursor:pointer" data-i18n="delete_all_btn">Alle löschen</button>
+    <button id="del-all-btn" onclick="cDA()" style="margin-left:8px;padding:7px 11px;background:transparent;border:.5px solid #e57373;border-radius:var(--rs);color:#c0392b;font-size:13px;font-weight:700;cursor:pointer">🗑 Alle löschen</button>
   </div>
   <div style="padding:10px 16px 4px">
     <input type="text" id="vsearch" oninput="rverl()" data-i18n-ph="filter_search_ph" placeholder="Suche: Mitarbeiter, Baustelle, Datum…" style="margin-bottom:8px">
@@ -798,6 +798,7 @@ const I18N = {
 
     entries_title: "Einträge",
     delete_all_btn: "Alle löschen",
+    delete_range_btn: "Zeitraum löschen",
     no_entries: "Noch keine Einträge.",
     filter_search_ph: "Suche: Mitarbeiter, Baustelle, Datum…",
     filter_all_bv: "Alle Baustellen",
@@ -994,6 +995,7 @@ const I18N = {
 
     entries_title: "Kayıtlar",
     delete_all_btn: "Hepsini sil",
+    delete_range_btn: "Aralığı sil",
     no_entries: "Henüz kayıt yok.",
     filter_search_ph: "Ara: Personel, şantiye, tarih…",
     filter_all_bv: "Tüm şantiyeler",
@@ -1938,20 +1940,15 @@ function resetVerlFilter(){
   const bis=document.getElementById("vfilter-bis"); if(bis)bis.value="";
   rverl();
 }
-function rverl(){
-  const c=document.getElementById("vbody");
-  const toggleBtn=document.getElementById("bulk-toggle-btn");
-  if(toggleBtn){
-    toggleBtn.textContent = bulkMode ? "✖️ "+tr("cancel_btn") : "☑️ "+tr("bulk_select_btn");
-  }
-
-  populateVerlFilters();
-
-  if(!EN.length){
-    c.innerHTML=`<div class="emp"><div class="eic">📋</div>${tr("no_entries")}</div>`;
-    return;
-  }
-
+function verlFiltersActive(){
+  const search=(document.getElementById("vsearch")?.value||"").trim();
+  const fBv=document.getElementById("vfilter-bv")?.value||"";
+  const fMa=document.getElementById("vfilter-ma")?.value||"";
+  const fVon=document.getElementById("vfilter-von")?.value||"";
+  const fBis=document.getElementById("vfilter-bis")?.value||"";
+  return !!(search||fBv||fMa||fVon||fBis);
+}
+function getFilteredGroups(){
   const search=(document.getElementById("vsearch")?.value||"").trim().toLowerCase();
   const fBv=document.getElementById("vfilter-bv")?.value||"";
   const fMa=document.getElementById("vfilter-ma")?.value||"";
@@ -1970,6 +1967,29 @@ function rverl(){
       return hay.includes(search);
     });
   }
+  return groups;
+}
+function rverl(){
+  const c=document.getElementById("vbody");
+  const toggleBtn=document.getElementById("bulk-toggle-btn");
+  if(toggleBtn){
+    toggleBtn.textContent = bulkMode ? "✖️ "+tr("cancel_btn") : "☑️ "+tr("bulk_select_btn");
+  }
+
+  populateVerlFilters();
+
+  const delBtn=document.getElementById("del-all-btn");
+  if(delBtn){
+    const active=verlFiltersActive();
+    delBtn.textContent = active ? "🗑 "+tr("delete_range_btn") : "🗑 "+tr("delete_all_btn");
+  }
+
+  if(!EN.length){
+    c.innerHTML=`<div class="emp"><div class="eic">📋</div>${tr("no_entries")}</div>`;
+    return;
+  }
+
+  const groups=getFilteredGroups();
 
   const bar = bulkMode ? `<div class="crd" style="margin:12px 16px;padding:12px 14px;display:flex;align-items:center;gap:10px;background:var(--gl);border-color:var(--gm)">
       <div style="flex:1;font-size:13px;font-weight:700;color:var(--gd)">${bulkSel.size} ${tr("bulk_selected_count")}</div>
@@ -2280,10 +2300,22 @@ function cDE(){
 }
 
 function cDA(){
-  conf(tr("delete_all_btn"),`${EN.length} ${LANG==="tr"?"kayıt":"Einträge"}`,async()=>{
-    for(const e of EN) if(e.id) await sbDel("en",e.id);
+  const active=verlFiltersActive();
+  const groups=active?getFilteredGroups():groupedEntries();
+  const rows=groups.flatMap(g=>g.rows);
+  const fVon=document.getElementById("vfilter-von")?.value||"";
+  const fBis=document.getElementById("vfilter-bis")?.value||"";
+  let rangeTxt="";
+  if(active && (fVon||fBis)){
+    rangeTxt=` (${fVon?fd(fVon):"…"} – ${fBis?fd(fBis):"…"})`;
+  }
+  const title = active ? tr("delete_range_btn") : tr("delete_all_btn");
+  const msg = `${rows.length} ${LANG==="tr"?"kayıt":"Einträge"}${rangeTxt}`;
+  conf(title,msg,async()=>{
+    for(const e of rows) if(e.id) await sbDel("en",e.id);
     await syncDown();
-    clco(); rverl(); ustats(); rwarn(); toast(tr("toast_deleted_all"));
+    clco(); rverl(); ustats(); rwarn();
+    toast(active?tr("toast_deleted_all"):tr("toast_deleted_all"));
   });
 }
 
