@@ -248,13 +248,13 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       <div class="ar">›</div>
     </button>
 
-    <button class="ba" onclick="go('pg-ma')">
+    <button class="ba" onclick="requirePin('pg-ma')">
       <div class="ai">👷</div>
       <div><div class="at" data-i18n="home_ma_title">Mitarbeiter verwalten</div><div class="as" data-i18n="home_ma_sub">Namen ändern, neu anlegen</div></div>
       <div class="ar">›</div>
     </button>
 
-    <button class="ba" onclick="go('pg-bl')">
+    <button class="ba" onclick="requirePin('pg-bl')">
       <div class="ai">👨‍💼</div>
       <div><div class="at" data-i18n="home_bl_title">Bauleiter verwalten</div><div class="as" data-i18n="home_bl_sub">Zuweisung für Baustellen</div></div>
       <div class="ar">›</div>
@@ -288,7 +288,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     </div>
 
     <div style="text-align:center;padding:18px 0 4px">
-      <span onclick="go('pg-pin')" style="font-size:12px;color:var(--s);opacity:.55;cursor:pointer;letter-spacing:.02em" data-i18n="editor_link">🔒 Editor-Modus</span>
+      <span onclick="requirePin('pg-editor')" style="font-size:12px;color:var(--s);opacity:.55;cursor:pointer;letter-spacing:.02em" data-i18n="editor_link">🔒 Editor-Modus</span>
     </div>
 
     <div style="height:24px"></div>
@@ -383,9 +383,19 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 
 <div class="pg" id="pg-verl">
   <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="entries_title">Einträge</div></div>
-    <button onclick="cDA()" style="margin-left:auto;padding:7px 11px;background:transparent;border:.5px solid #e57373;border-radius:var(--rs);color:#c0392b;font-size:13px;font-weight:700;cursor:pointer" data-i18n="delete_all_btn">Alle löschen</button>
+    <button onclick="toggleBulkMode()" id="bulk-toggle-btn" style="margin-left:auto;padding:7px 11px;background:transparent;border:.5px solid var(--bs);border-radius:var(--rs);color:var(--t);font-size:13px;font-weight:700;cursor:pointer" data-i18n="bulk_select_btn">☑️ Auswählen</button>
+    <button onclick="cDA()" style="margin-left:8px;padding:7px 11px;background:transparent;border:.5px solid #e57373;border-radius:var(--rs);color:#c0392b;font-size:13px;font-weight:700;cursor:pointer" data-i18n="delete_all_btn">Alle löschen</button>
   </div>
   <div class="sc" id="vbody"><div class="emp"><div class="eic">📋</div>Noch keine Einträge.</div></div>
+</div>
+
+<div class="ov" id="ov-bulkmove" onclick="clov('ov-bulkmove',event)">
+  <div class="sh" onclick="event.stopPropagation()">
+    <div class="shh"></div><div class="sht" id="bulkmove-t" data-i18n="bulk_move_title">Ausgewählte Einträge verschieben</div>
+    <div style="margin-bottom:14px"><div class="lbl" style="margin:0 0 6px" data-i18n="bulk_move_target">Neue Baustelle</div><select id="bulkmove-bv"></select></div>
+    <button class="btn" onclick="confirmBulkMove()" data-i18n="bulk_move_confirm">✅ Verschieben</button>
+    <button class="bto" onclick="cls('ov-bulkmove')" data-i18n="cancel_btn">Abbrechen</button>
+  </div>
 </div>
 
 <div class="pg" id="pg-ma">
@@ -486,6 +496,19 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
   <div class="sc">
     <div class="lbl" data-i18n="editor_bv_list">Baustellen</div>
     <div class="crd" id="edbvl" style="margin-bottom:16px"></div>
+
+    <div class="lbl" id="edbvl-arch-lbl" data-i18n="editor_bv_archived_list" style="display:none">Archivierte Baustellen</div>
+    <div class="crd" id="edbvl-arch" style="margin-bottom:16px;display:none"></div>
+
+    <div class="lbl" data-i18n="editor_pin_change_title">PIN ändern</div>
+    <div class="crd" style="margin-bottom:16px">
+      <div style="padding:14px 16px">
+        <div style="margin-bottom:10px"><div class="lbl" style="margin:0 0 6px" data-i18n="editor_pin_current">Aktueller PIN</div><input type="text" id="pin-cur" inputmode="numeric" maxlength="4" placeholder="••••"></div>
+        <div style="margin-bottom:10px"><div class="lbl" style="margin:0 0 6px" data-i18n="editor_pin_new">Neuer PIN (4-stellig)</div><input type="text" id="pin-new" inputmode="numeric" maxlength="4" placeholder="••••"></div>
+        <div style="margin-bottom:10px"><div class="lbl" style="margin:0 0 6px" data-i18n="editor_pin_confirm">Neuer PIN wiederholen</div><input type="text" id="pin-new2" inputmode="numeric" maxlength="4" placeholder="••••"></div>
+        <button class="btn" onclick="changeEditorPin()" data-i18n="editor_pin_change_btn">🔑 PIN ändern</button>
+      </div>
+    </div>
     <div style="height:24px"></div>
   </div>
 </div>
@@ -499,6 +522,12 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       <div class="toggle-row">
         <div class="lbl2" data-i18n="editor_warn_off">Warnung "Fehlende Angaben" für diese Baustelle deaktivieren</div>
         <button class="tgl" id="edbv-warn-tgl" onclick="toggleEdWarn()"></button>
+      </div>
+    </div>
+    <div style="margin-bottom:14px">
+      <div class="toggle-row">
+        <div class="lbl2" data-i18n="editor_archive_toggle">Baustelle archivieren (aus Auswahl ausblenden, Historie bleibt erhalten)</div>
+        <button class="tgl" id="edbv-arch-tgl" onclick="toggleEdArchive()"></button>
       </div>
     </div>
     <button class="btn" onclick="svEdBv()" data-i18n="save_changes">✅ Speichern</button>
@@ -524,6 +553,11 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 <div class="ov" id="ov-e" onclick="clov('ov-e',event)">
   <div class="sh" onclick="event.stopPropagation()">
     <div class="shh"></div><div class="sht" id="et" data-i18n="edit_entry">Eintrag bearbeiten</div>
+    <div class="lbl" style="margin:0 0 10px" data-i18n="editor_move_hint">Datum oder Baustelle ändern, um den Eintrag zu verschieben</div>
+    <div class="timegrid" style="margin-bottom:12px">
+      <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="report_field_datum">Datum</div><input type="date" id="ed-datum" onchange="edMoveChanged()"></div>
+      <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="editor_move_bv_label">Baustelle</div><select id="ed-bv" onchange="edMoveChanged()"></select></div>
+    </div>
     <div id="ema"></div>
     <div style="margin-top:14px">
       <button class="btn" onclick="svedit()" data-i18n="save_changes">✅ Speichern</button>
@@ -587,7 +621,13 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 const SBU="https://orluvjqjkngjdmajtwvp.supabase.co";
 const SBK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ybHV2anFqa25namRtYWp0d3ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0NDkyNDYsImV4cCI6MjA5NzAyNTI0Nn0.DsNorH_TZlT4rMC0IBYXipiMEAybZia_KMM-tTiAsgk";
 const LS="a3_";
-const EDITOR_PIN="0705";
+const EDITOR_PIN_DEFAULT="0705";
+function getEditorPin(){
+  try{ return localStorage.getItem("aslan_editor_pin") || EDITOR_PIN_DEFAULT; }catch(e){ return EDITOR_PIN_DEFAULT; }
+}
+function setEditorPin(pin){
+  try{ localStorage.setItem("aslan_editor_pin", pin); }catch(e){}
+}
 
 const CLRS=[
   {bg:"#dbeafe",tc:"#1e3a8a"},
@@ -694,6 +734,28 @@ const I18N = {
     editor_bv_in_use: "Diese Baustelle hat bereits Einträge und kann nicht gelöscht werden.",
     editor_bv_delete_title: "Baustelle löschen",
     editor_bv_delete_msg: "BV {nr} wirklich endgültig löschen? Dies kann nicht rückgängig gemacht werden.",
+    editor_bv_archived_list: "Archivierte Baustellen",
+    editor_archived_badge: "Archiviert",
+    editor_archive_toggle: "Baustelle archivieren (aus Auswahl ausblenden, Historie bleibt erhalten)",
+    editor_pin_change_title: "PIN ändern",
+    editor_pin_current: "Aktueller PIN",
+    editor_pin_new: "Neuer PIN (4-stellig)",
+    editor_pin_confirm: "Neuer PIN wiederholen",
+    editor_pin_change_btn: "🔑 PIN ändern",
+    editor_pin_invalid: "PIN muss 4-stellig sein.",
+    editor_pin_mismatch: "Die neuen PINs stimmen nicht überein.",
+    editor_pin_changed: "✅ PIN geändert",
+    editor_move_hint: "Datum oder Baustelle ändern, um den Eintrag zu verschieben",
+    editor_move_bv_label: "Baustelle",
+    editor_add_row: "➕ Mitarbeiter hinzufügen",
+
+    bulk_select_btn: "Auswählen",
+    bulk_selected_count: "ausgewählt",
+    bulk_move_btn: "Verschieben",
+    bulk_move_title: "Ausgewählte Einträge verschieben",
+    bulk_move_target: "Neue Baustelle",
+    bulk_move_confirm: "✅ Verschieben",
+    bulk_select_first: "Bitte zuerst Einträge auswählen!",
 
     report_title: "Tagesbericht",
     report_sub: "Rapport-Daten zum Kopieren",
@@ -861,6 +923,28 @@ const I18N = {
     editor_bv_in_use: "Bu şantiyenin kayıtları var, silinemez.",
     editor_bv_delete_title: "Şantiyeyi sil",
     editor_bv_delete_msg: "BV {nr} kalıcı olarak silinsin mi? Bu işlem geri alınamaz.",
+    editor_bv_archived_list: "Arşivlenmiş şantiyeler",
+    editor_archived_badge: "Arşivlendi",
+    editor_archive_toggle: "Şantiyeyi arşivle (seçim listesinden gizle, geçmiş kalır)",
+    editor_pin_change_title: "PIN değiştir",
+    editor_pin_current: "Mevcut PIN",
+    editor_pin_new: "Yeni PIN (4 haneli)",
+    editor_pin_confirm: "Yeni PIN tekrar",
+    editor_pin_change_btn: "🔑 PIN değiştir",
+    editor_pin_invalid: "PIN 4 haneli olmalı.",
+    editor_pin_mismatch: "Yeni PIN'ler eşleşmiyor.",
+    editor_pin_changed: "✅ PIN değiştirildi",
+    editor_move_hint: "Kaydı taşımak için tarih veya şantiyeyi değiştirin",
+    editor_move_bv_label: "Şantiye",
+    editor_add_row: "➕ Çalışan ekle",
+
+    bulk_select_btn: "Seç",
+    bulk_selected_count: "seçildi",
+    bulk_move_btn: "Taşı",
+    bulk_move_title: "Seçilen kayıtları taşı",
+    bulk_move_target: "Yeni şantiye",
+    bulk_move_confirm: "✅ Taşı",
+    bulk_select_first: "Lütfen önce kayıt seçin!",
 
     report_title: "Günlük rapor",
     report_sub: "Kopyalanacak rapor verileri",
@@ -997,6 +1081,10 @@ let sameTime=true;
 let curPause=30;
 let pinInput="";
 let edBVid=null;
+let pendingPinTarget=null;
+let editorUnlocked=false;
+let bulkMode=false, bulkSel=new Set();
+let edRows=[], edDatum="", edBvId="";
 
 // ═══ SUPABASE ═══
 const SBH={
@@ -1381,7 +1469,7 @@ function bvTile(b){
     <div class="bvnr">BV ${b.nr}${bvNrBadge(b.nr)}</div><div class="bvnm">${b.name}</div></div>`;
 }
 function rbvg(){
-  const all=[...BV].sort((a,b)=>a.nr.localeCompare(b.nr));
+  const all=[...BV].filter(b=>!b.archived).sort((a,b)=>a.nr.localeCompare(b.nr));
   const favIds=new Set(getFavBvIds());
   const favs=all.filter(b=>favIds.has(b.id));
 
@@ -1804,6 +1892,11 @@ function rw(){
 // ═══ VERLAUF ═══
 function rverl(){
   const c=document.getElementById("vbody");
+  const toggleBtn=document.getElementById("bulk-toggle-btn");
+  if(toggleBtn){
+    toggleBtn.textContent = bulkMode ? "✖️ "+tr("cancel_btn") : "☑️ "+tr("bulk_select_btn");
+  }
+
   if(!EN.length){
     c.innerHTML=`<div class="emp"><div class="eic">📋</div>${tr("no_entries")}</div>`;
     return;
@@ -1811,62 +1904,151 @@ function rverl(){
 
   const groups=groupedEntries();
 
-  c.innerHTML=`<div class="crd" style="margin:12px 16px">${
+  const bar = bulkMode ? `<div class="crd" style="margin:12px 16px;padding:12px 14px;display:flex;align-items:center;gap:10px;background:var(--gl);border-color:var(--gm)">
+      <div style="flex:1;font-size:13px;font-weight:700;color:var(--gd)">${bulkSel.size} ${tr("bulk_selected_count")}</div>
+      <button class="eb" onclick="openBulkMove()" style="background:var(--g);color:#fff;border-color:var(--g)" data-i18n="bulk_move_btn">➡️ ${tr("bulk_move_btn")}</button>
+    </div>` : "";
+
+  c.innerHTML=bar+`<div class="crd" style="margin:12px 16px">${
     groups.map(g=>{
       const bv=bvById(g.bv_id);
       const pills=g.rows.map(r=>{
         const ma=maById(r.ma_id);
         return `<span class="pill">${ma?.name?.split(" ")[0]||"?"}: ${r.stunden}h</span>`;
       }).join("");
+      const checked=bulkSel.has(g.key);
 
       return `<div class="li">
-        <div class="lii">
+        ${bulkMode?`<div class="tmcb ${checked?"on":""}" onclick="toggleBulkSel('${g.key}')" style="margin-top:2px">${checked?"✓":""}</div>`:""}
+        <div class="lii" ${bulkMode?`onclick="toggleBulkSel('${g.key}')" style="cursor:pointer"`:""}>
           <div class="lid">${fd(g.datum)}</div>
           <div class="lib">BV ${bv?.nr||"?"} · ${bv?.name||"—"}</div>
           <div class="pills">${pills||`<span class="pill" style="opacity:.5">${LANG==="tr"?"Saat yok":"Keine Stunden"}</span>`}</div>
         </div>
-        <button class="eb" onclick="oped('${g.key}')">✏️</button>
+        ${bulkMode?"":`<button class="eb" onclick="oped('${g.key}')">✏️</button>`}
       </div>`;
     }).join("")
   }</div><div style="height:24px"></div>`;
 }
 
-// ═══ EDIT ENTRY GROUP ═══
+// ═══ MEHRFACHAUSWAHL / BULK-VERSCHIEBEN ═══
+function toggleBulkMode(){
+  bulkMode=!bulkMode;
+  bulkSel=new Set();
+  rverl();
+}
+function toggleBulkSel(key){
+  if(bulkSel.has(key)) bulkSel.delete(key); else bulkSel.add(key);
+  rverl();
+}
+function openBulkMove(){
+  if(!bulkSel.size){ alert(tr("bulk_select_first")); return; }
+  const opts=[...BV].sort((a,b)=>a.nr.localeCompare(b.nr)).map(b=>`<option value="${b.id}">BV ${b.nr} · ${b.name}</option>`).join("");
+  document.getElementById("bulkmove-bv").innerHTML=opts;
+  opov("ov-bulkmove");
+}
+async function confirmBulkMove(){
+  const newBv=document.getElementById("bulkmove-bv").value;
+  if(!newBv)return;
+  const groups=groupedEntries().filter(g=>bulkSel.has(g.key));
+  for(const g of groups){
+    for(const r of g.rows){
+      await sbUpd("en", r.id, { bv_id:newBv });
+    }
+  }
+  await syncDown();
+  cls("ov-bulkmove");
+  bulkMode=false;
+  bulkSel=new Set();
+  rverl();
+  ustats();
+  rwarn();
+  toast(tr("toast_updated"));
+}
+
+// ═══ EDIT ENTRY GROUP (inkl. Verschieben von Datum/Baustelle/Mitarbeiter) ═══
 function oped(groupKey){
   eGroupKey=groupKey;
   const g=groupedEntries().find(x=>x.key===groupKey);
   if(!g)return;
 
+  edDatum=g.datum;
+  edBvId=g.bv_id;
+  edRows=g.rows.map(r=>({ id:r.id, ma_id:r.ma_id, stunden:r.stunden, beginn:r.beginn||null, ende:r.ende||null, pause_min:r.pause_min||0 }));
+
   const bv=bvById(g.bv_id);
   document.getElementById("et").textContent=`BV ${bv?.nr||"?"} · ${fd(g.datum)}`;
 
-  const map={};
-  g.rows.forEach(r=>map[r.ma_id]=r);
-
-  document.getElementById("ema").innerHTML=MA.map(m=>{
-    const val=map[m.id]?map[m.id].stunden:0;
-    return `<div class="mr" style="padding:10px 0;border-bottom:.5px solid var(--b)">
-      <div class="av" style="background:${m.bg};color:${m.tc};width:36px;height:36px;font-size:12px">${m.k||"?"}</div>
-      <div class="mn" style="font-size:14px">${m.name}</div>
-      <input type="number" class="hi" id="ed-${m.id}" value="${val}" min="0" max="24" step="0.5" inputmode="decimal">
-      <div class="hu">h</div></div>`;
-  }).join("");
+  rEdMove();
+  rEdRows();
 
   opov("ov-e");
+}
+
+function rEdMove(){
+  document.getElementById("ed-datum").value=edDatum;
+  const opts=[...BV].filter(b=>!b.archived || b.id===edBvId).sort((a,b)=>a.nr.localeCompare(b.nr))
+    .map(b=>`<option value="${b.id}" ${b.id===edBvId?"selected":""}>BV ${b.nr} · ${b.name}</option>`).join("");
+  document.getElementById("ed-bv").innerHTML=opts;
+}
+function edMoveChanged(){
+  edDatum=document.getElementById("ed-datum").value;
+  edBvId=document.getElementById("ed-bv").value;
+}
+
+function rEdRows(){
+  const rowsHtml=edRows.map((r,i)=>{
+    const opts=MA.map(m=>`<option value="${m.id}" ${m.id===r.ma_id?"selected":""}>${m.name}</option>`).join("");
+    return `<div class="mr" style="padding:10px 0;border-bottom:.5px solid var(--b);gap:8px">
+      <select id="ed-ma-${i}" onchange="edRowMaChange(${i})" style="flex:1;min-width:0;padding:9px 8px;font-size:14px;border-radius:8px;border:.5px solid var(--bs);background:var(--c);color:var(--t)">${opts}</select>
+      <input type="number" class="hi" id="ed-h-${i}" value="${r.stunden}" min="0" max="24" step="0.5" inputmode="decimal">
+      <div class="hu">h</div>
+      <button class="eb" onclick="edRemoveRow(${i})" title="${tr("delete_entry")}">🗑️</button>
+    </div>`;
+  }).join("");
+  document.getElementById("ema").innerHTML = rowsHtml +
+    `<button class="bto" onclick="edAddRow()" style="margin-top:10px" data-i18n="editor_add_row">➕ Mitarbeiter hinzufügen</button>`;
+}
+function edRowMaChange(i){
+  const el=document.getElementById("ed-ma-"+i);
+  if(el && edRows[i]) edRows[i].ma_id=el.value;
+}
+function edAddRow(){
+  const used=new Set(edRows.map(r=>r.ma_id));
+  const free=MA.find(m=>!used.has(m.id))||MA[0];
+  if(!free)return;
+  edRows.push({ id:null, ma_id:free.id, stunden:0, beginn:null, ende:null, pause_min:0 });
+  rEdRows();
+}
+function edRemoveRow(i){
+  edRows.splice(i,1);
+  rEdRows();
 }
 
 async function svedit(){
   const g=groupedEntries().find(x=>x.key===eGroupKey);
   if(!g)return;
+  edMoveChanged();
+  if(!edDatum || !edBvId){ alert(tr("warn_missing")); return; }
+
+  edRows.forEach((r,i)=>{
+    const hEl=document.getElementById("ed-h-"+i);
+    const mEl=document.getElementById("ed-ma-"+i);
+    r.stunden=parseFloat(hEl?.value)||0;
+    if(mEl) r.ma_id=mEl.value;
+  });
+
   for(const r of g.rows) await sbDel("en",r.id);
 
-  const rows=[];
-  MA.forEach(m=>{
-    const h=parseFloat(document.getElementById("ed-"+m.id)?.value)||0;
-    if(h>0){
-      rows.push({ datum:g.datum, bv_id:g.bv_id, ma_id:m.id, stunden:h });
+  const merged={};
+  edRows.forEach(r=>{
+    if(r.stunden<=0)return;
+    if(!merged[r.ma_id]){
+      merged[r.ma_id]={ datum:edDatum, bv_id:edBvId, ma_id:r.ma_id, stunden:0, beginn:r.beginn, ende:r.ende, pause_min:r.pause_min||0 };
     }
+    merged[r.ma_id].stunden+=r.stunden;
   });
+  const rows=Object.values(merged);
 
   if(rows.length) await sbIns("en",rows);
   await syncDown();
@@ -2065,17 +2247,33 @@ function conf(t,m,cb){
 function clco(){ document.getElementById("cof").classList.remove("on"); }
 
 // ═══ EDITOR PIN ═══
+function requirePin(target){
+  if(editorUnlocked){
+    go(target);
+    if(target==="pg-editor") rEditor();
+    else if(target==="pg-ma") rmam();
+    else if(target==="pg-bl") rblm();
+    return;
+  }
+  pendingPinTarget=target;
+  go("pg-pin");
+}
 function pinPress(d){
   if(pinInput.length>=4)return;
   pinInput+=d;
   rPinDots();
   if(pinInput.length===4){
-    if(pinInput===EDITOR_PIN){
+    if(pinInput===getEditorPin()){
       document.getElementById("pinerr").textContent="";
       pinInput="";
       rPinDots();
-      go("pg-editor");
-      rEditor();
+      editorUnlocked=true;
+      const target=pendingPinTarget||"pg-editor";
+      pendingPinTarget=null;
+      go(target);
+      if(target==="pg-editor") rEditor();
+      else if(target==="pg-ma") rmam();
+      else if(target==="pg-bl") rblm();
     }else{
       document.getElementById("pinerr").textContent=tr("editor_pin_wrong");
       setTimeout(()=>{ pinInput=""; rPinDots(); },500);
@@ -2094,17 +2292,33 @@ function rPinDots(){
 }
 
 function rEditor(){
-  document.getElementById("edbvl").innerHTML=[...BV].sort((a,b)=>a.nr.localeCompare(b.nr)).map(b=>{
+  const active=[...BV].filter(b=>!b.archived).sort((a,b)=>a.nr.localeCompare(b.nr));
+  const archived=[...BV].filter(b=>b.archived).sort((a,b)=>a.nr.localeCompare(b.nr));
+
+  const rowHtml=(b)=>{
     const bl=blById(b.bl_id);
     const warnOff=b.warn_disabled;
     return `
     <div class="bmr"><div style="flex:1">
       <div style="font-size:12px;color:var(--s);font-weight:600">BV ${b.nr}${bvNrBadge(b.nr)}</div>
       <div style="font-size:15px">${b.name}</div>
-      <div style="font-size:11px;color:var(--g);margin-top:2px;">BL: ${bl?.name||"—"}${warnOff?` · <span style="color:#e67e22">${tr("editor_warn_is_off")}</span>`:""}</div>
+      <div style="font-size:11px;color:var(--g);margin-top:2px;">BL: ${bl?.name||"—"}${warnOff?` · <span style="color:#e67e22">${tr("editor_warn_is_off")}</span>`:""}${b.archived?` · <span style="color:#e67e22">${tr("editor_archived_badge")}</span>`:""}</div>
     </div>
     <button class="eb" onclick="opEdBv('${b.id}')">✏️</button></div>`;
-  }).join("");
+  };
+
+  document.getElementById("edbvl").innerHTML=active.map(rowHtml).join("");
+
+  const archLbl=document.getElementById("edbvl-arch-lbl");
+  const archWrap=document.getElementById("edbvl-arch");
+  if(archived.length){
+    archLbl.style.display="";
+    archWrap.style.display="";
+    archWrap.innerHTML=archived.map(rowHtml).join("");
+  }else{
+    archLbl.style.display="none";
+    archWrap.style.display="none";
+  }
 }
 
 function opEdBv(id){
@@ -2114,6 +2328,7 @@ function opEdBv(id){
   document.getElementById("edbv-nr").value=bv?.nr||"";
   document.getElementById("edbv-name").value=bv?.name||"";
   document.getElementById("edbv-warn-tgl").classList.toggle("on",!!bv?.warn_disabled);
+  document.getElementById("edbv-arch-tgl").classList.toggle("on",!!bv?.archived);
   const inUse=EN.some(e=>e.bv_id===id);
   const delBtn=document.getElementById("edbv-del");
   delBtn.style.display = inUse ? "none" : "";
@@ -2121,6 +2336,9 @@ function opEdBv(id){
 }
 function toggleEdWarn(){
   document.getElementById("edbv-warn-tgl").classList.toggle("on");
+}
+function toggleEdArchive(){
+  document.getElementById("edbv-arch-tgl").classList.toggle("on");
 }
 
 async function delEdBv(){
@@ -2257,11 +2475,12 @@ async function svEdBv(){
   const nr=document.getElementById("edbv-nr").value.trim();
   const name=document.getElementById("edbv-name").value.trim();
   const warnOff=document.getElementById("edbv-warn-tgl").classList.contains("on");
+  const archived=document.getElementById("edbv-arch-tgl").classList.contains("on");
   if(!nr){ alert("BV-Nummer eingeben!"); return; }
   if(BV.find(b=>b.nr===nr && b.id!==edBVid)){ alert("BV-Nummer bereits vergeben!"); return; }
 
   const execSave = async () => {
-    await sbUpd("bv", edBVid, { nr, name: name || "—", warn_disabled: warnOff });
+    await sbUpd("bv", edBVid, { nr, name: name || "—", warn_disabled: warnOff, archived: archived });
     await syncDown();
     cls("ov-edbv");
     rEditor();
@@ -2273,6 +2492,21 @@ async function svEdBv(){
   } else {
     await execSave();
   }
+}
+
+// ═══ PIN ÄNDERN ═══
+function changeEditorPin(){
+  const cur=document.getElementById("pin-cur").value.trim();
+  const n1=document.getElementById("pin-new").value.trim();
+  const n2=document.getElementById("pin-new2").value.trim();
+  if(cur!==getEditorPin()){ alert(tr("editor_pin_wrong")); return; }
+  if(!/^\d{4}$/.test(n1)){ alert(tr("editor_pin_invalid")); return; }
+  if(n1!==n2){ alert(tr("editor_pin_mismatch")); return; }
+  setEditorPin(n1);
+  document.getElementById("pin-cur").value="";
+  document.getElementById("pin-new").value="";
+  document.getElementById("pin-new2").value="";
+  toast(tr("editor_pin_changed"));
 }
 
 
