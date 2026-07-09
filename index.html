@@ -184,7 +184,8 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 .cpc.sel{border-color:var(--g);}
 .qb{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
 .qbtn{padding:11px;border:.5px solid var(--bs);border-radius:var(--rs);background:var(--c);color:var(--t);font-size:15px;cursor:pointer;text-align:center;font-family:inherit;}
-#lang-switch{
+.qbtn.sl{border:2px solid var(--g);background:var(--gl);color:var(--gd);font-weight:700;}
+  #lang-switch{
   position:absolute;
   right:12px;
   bottom:calc(var(--sb) + 12px);
@@ -442,11 +443,21 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 
 <div class="pg" id="pg-rep-date">
   <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="report_title">Tagesbericht</div><div class="hs" data-i18n="report_pick_date">Datum wählen</div></div></div>
-  <div class="sc"><div style="padding:16px">
-    <input type="date" id="rep-d" style="font-size:19px;padding:15px">
-    <div class="qb"><button class="qbtn" onclick="repD0()" data-i18n="today_btn">📅 Heute</button><button class="qbtn" onclick="repD1()" data-i18n="yesterday_btn">◀ Gestern</button></div>
-  </div></div>
-  <div class="nav"><button class="btn" onclick="n2RepBv()" data-i18n="to_bv_btn">Zur Baustelle →</button></div>
+  <div style="display:flex;gap:8px;padding:12px 16px 0">
+    <button class="qbtn sl" id="repmode-date-btn" onclick="repSetMode('date')" data-i18n="report_mode_date">📅 Nach Datum</button>
+    <button class="qbtn" id="repmode-bv-btn" onclick="repSetMode('bv')" data-i18n="report_mode_bv">🏗️ Nach Baustelle</button>
+  </div>
+  <div class="sc">
+    <div id="repdate-datemode" style="padding:16px">
+      <input type="date" id="rep-d" style="font-size:19px;padding:15px">
+      <div class="qb"><button class="qbtn" onclick="repD0()" data-i18n="today_btn">📅 Heute</button><button class="qbtn" onclick="repD1()" data-i18n="yesterday_btn">◀ Gestern</button></div>
+    </div>
+    <div id="repdate-bvmode" style="display:none">
+      <div class="bvg" id="repallbvg"></div>
+      <div style="height:24px"></div>
+    </div>
+  </div>
+  <div class="nav" id="repdate-nav"><button class="btn" onclick="n2RepBv()" data-i18n="to_bv_btn">Zur Baustelle →</button></div>
 </div>
 
 <div class="pg" id="pg-rep-bv">
@@ -457,10 +468,14 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
   </div>
 </div>
 
+<div class="pg" id="pg-rep-date2">
+  <div class="hdr"><button class="bck" onclick="bk('pg-rep-date')">‹</button><div><div class="ht" data-i18n="report_title">Tagesbericht</div><div class="hs" id="repdate2sub">—</div></div></div>
+  <div class="sc" id="repdate2list"></div>
+</div>
+
 <div class="pg" id="pg-rep-view">
-  <div class="hdr"><button class="bck" onclick="bk('pg-rep-bv')">‹</button><div><div class="ht" id="repviewt">Rapport</div><div class="hs" data-i18n="report_title">Tagesbericht</div></div></div>
-  <div class="sc" id="repviewcnt">
-    <div style="height:24px"></div>
+  <div class="hdr"><button class="bck" onclick="bk(repMode==='bv'?'pg-rep-date2':'pg-rep-bv')">‹</button>...
+  <div style="height:24px"></div>
   </div>
 </div>
 
@@ -863,6 +878,10 @@ const I18N = {
     notify_title: "⏰ ASLAN Stundenerfassung",
     notify_body: "Stunden für heute noch nicht eingetragen!",
 
+    report_mode_date: "📅 Tarihe göre",
+    report_mode_bv: "🏗️ Şantiyeye göre",
+    report_entries_count: "kayıt",
+    
     excel_build: "⏳ Excel wird erstellt…",
     excel_empty: "⚠️ Keine Einträge.",
     excel_done: "✅ Datei heruntergeladen!"
@@ -1059,6 +1078,10 @@ const I18N = {
 
     notify_title: "⏰ ASLAN Saat Takibi",
     notify_body: "Bugün için henüz saat girilmedi!",
+
+    report_mode_date: "📅 Tarihe göre",
+    report_mode_bv: "🏗️ Şantiyeye göre",
+    report_entries_count: "kayıt",
 
     excel_build: "⏳ Excel hazırlanıyor…",
     excel_empty: "⚠️ Kayıt yok.",
@@ -2467,12 +2490,53 @@ async function delEdBv(){
 }
 
 // ═══ TAGESBERICHT / RAPPORT ═══
+let repMode="date";
 let repD="", repBV=null;
 
 function repD0(){ document.getElementById("rep-d").value=td(); }
 function repD1(){
   const d=new Date(); d.setDate(d.getDate()-1);
   document.getElementById("rep-d").value=d.toISOString().slice(0,10);
+}
+
+function repSetMode(mode){
+  repMode=mode;
+  document.getElementById("repmode-date-btn").classList.toggle("sl",mode==="date");
+  document.getElementById("repmode-bv-btn").classList.toggle("sl",mode==="bv");
+  document.getElementById("repdate-datemode").style.display=mode==="date"?"":"none";
+  document.getElementById("repdate-bvmode").style.display=mode==="bv"?"":"none";
+  document.getElementById("repdate-nav").style.display=mode==="date"?"":"none";
+  if(mode==="bv") rRepAllBvg();
+}
+
+function rRepAllBvg(){
+  const list=[...BV].filter(b=>!b.archived).sort((a,b)=>a.nr.localeCompare(b.nr));
+  document.getElementById("repallbvg").innerHTML=list.map(b=>`
+    <button class="bvb" onclick="pickRepBvFirst('${b.id}')">
+      <div class="bvnr">BV ${b.nr}${bvNrBadge(b.nr)}</div><div class="bvnm">${b.name}</div></button>`).join("");
+}
+
+function pickRepBvFirst(id){
+  repBV=BV.find(b=>b.id===id);
+  if(!repBV)return;
+  rRepDate2();
+  go("pg-rep-date2");
+}
+
+function rRepDate2(){
+  document.getElementById("repdate2sub").textContent=`BV ${repBV.nr} · ${repBV.name}`;
+  const dates=[...new Set(EN.filter(e=>e.bv_id===repBV.id).map(e=>e.datum))].sort((a,b)=>b.localeCompare(a));
+  const c=document.getElementById("repdate2list");
+  if(!dates.length){
+    c.innerHTML=`<div class="emp"><div class="eic">📋</div>${tr("report_no_entries")}</div>`;
+    return;
+  }
+  c.innerHTML=`<div class="crd" style="margin:12px 16px">`+dates.map(d=>{
+    const cnt=EN.filter(e=>e.datum===d && e.bv_id===repBV.id).length;
+    return `<div class="li" onclick="repD='${d}';opRepView('${repBV.id}')" style="cursor:pointer">
+      <div class="lii"><div class="lib">${fd(d)}</div><div class="lid">${cnt} ${tr("report_entries_count")}</div></div>
+      <div class="ar">›</div></div>`;
+  }).join("")+`</div><div style="height:24px"></div>`;
 }
 
 function n2RepBv(){
