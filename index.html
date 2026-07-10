@@ -665,8 +665,18 @@ const formatVal = (val) => {
 // Hilfsfunktion: 6:00 -> 6, 6:30 -> 6:30
 const formatTime = (t) => {
     if (!t) return "";
-    if (t.toString().endsWith(":00")) return t.split(":")[0];
-    return t;
+    
+    // Teile den String in Stunden und Minuten auf
+    const parts = t.toString().split(":");
+    const hour = parseInt(parts[0], 10); // Wandelt "06" in die Zahl 6 um
+    
+    // Fall 1: Volle Stunde (z.B. "06:00" oder "06") -> Gib nur die Zahl zurück
+    if (parts.length === 1 || parts[1] === "00") {
+        return hour.toString();
+    }
+    
+    // Fall 2: Mit Minuten (z.B. "06:15") -> Gib Zahl:Minuten zurück
+    return hour + ":" + parts[1];
 };
 
 // Hilfsfunktion: 2026-07-10 -> 10.07.2026
