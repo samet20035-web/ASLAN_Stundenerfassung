@@ -1225,29 +1225,41 @@ function showBvList() {
 
 // 2. Ausgewählte PDFs generieren
 async function generateSelectedPDFs() {
-    const dateStr = document.getElementById("rep-d").value;
-    const checkedBoxes = document.querySelectorAll('.bv-check:checked');
-    
-    if (checkedBoxes.length === 0) { alert("Bitte mindestens eine Baustelle auswählen!"); return; }
-
-    const response = await fetch('Rapport_Vorlage.pdf');
-    const arrayBuffer = await response.arrayBuffer();
-    const { PDFDocument } = PDFLib;
-
-    for (const box of checkedBoxes) {
-        const bvId = box.value;
-        const pdfDoc = await PDFDocument.load(arrayBuffer);
-        const form = pdfDoc.getForm();
+    try {
+        const dateStr = document.getElementById("rep-d").value;
+        const checkedBoxes = document.querySelectorAll('.bv-check:checked');
         
-        const bv = BV.find(x => x.id == bvId);
-        const bl = BL.find(x => x.id == bv.bl_id) || { name: "" };
-        const rows = EN.filter(e => e.datum === dateStr && e.bv_id == bvId);
+        if (checkedBoxes.length === 0) { 
+            alert("Bitte mindestens eine Baustelle auswählen!"); 
+            return; 
+        }
 
-        // Felder befüllen
-        form.getTextField('text_3').setText(bv.nr || "");
-        form.getTextField('text_0').setText(formatDate(dateStr)); // Nutzt neues Format
-        form.getTextField('text_111 (0)').setText(bv.name || "");
-        form.getTextField('text_9').setText(bl.name || "");
+        const response = await fetch('Rapport_Vorlage.pdf');
+        if (!response.ok) throw new Error("Konnte 'Rapport_Vorlage.pdf' nicht laden. Liegt die Datei im richtigen Ordner?");
+        
+        const arrayBuffer = await response.arrayBuffer();
+        const { PDFDocument } = PDFLib;
+
+        for (const box of checkedBoxes) {
+            const bvId = box.value;
+            const pdfDoc = await PDFDocument.load(arrayBuffer);
+            const form = pdfDoc.getForm();
+            
+            // DEBUG: Hier werden alle Felder im PDF aufgelistet, falls ein Fehler auftritt
+            const fields = form.getFields();
+            const fieldNames = fields.map(f => f.getName());
+            console.log("Vorhandene Felder im PDF:", fieldNames);
+
+            const bv = BV.find(x => x.id == bvId);
+            const bl = BL.find(x => x.id == bv.bl_id) || { name: "" };
+            const rows = EN.filter(e => e.datum === dateStr && e.bv_id == bvId);
+
+            // --- FELDER BEFÜLLEN ---
+            // Wenn hier ein Fehler kommt, prüf die Namen in fieldNames oben!
+            form.getTextField('text_3').setText(bv.nr || "");
+            form.getTextField('text_0').setText(formatDate(dateStr)); 
+            form.getTextField('text_111 (0)').setText(bv.name || "");
+            form.getTextField('text_9').setText(bl.name || "");
 
         // Mitarbeiter-Schleife (Hier die Formatter anwenden)
         const empFields = [
@@ -1277,6 +1289,11 @@ async function generateSelectedPDFs() {
         link.href = URL.createObjectURL(blob);
         link.download = `Tagesbericht_${formatDate(dateStr)}_BV-${bv.nr}.pdf`;
         link.click();
+	}
+        alert("PDFs erfolgreich erstellt!");
+    } catch (e) {
+        console.error("FEHLER:", e);
+        alert("Ein Fehler ist aufgetreten: " + e.message + "\n\n(Prüfe die Konsole mit F12 für Details)");
     }
 }
 
