@@ -1292,21 +1292,25 @@ async function generateSelectedPDFs() {
             form.getTextField(f.hours).setText(formatVal(row.stunden));
         });
 
-        // Download
+		// Download
         const pdfBytes = await pdfDoc.save();
         const blob = new Blob([pdfBytes], { type: "application/pdf" });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-		const [year, month, day] = dateStr.split('-');
-		const shortYear = year.slice(2); // Nimmt "26" aus "2026"
-		const fileName = `Rapport_${shortYear}-${month}-${day}_BV-${bv.nr}.pdf`;
-		link.click();
-	}
-        alert("PDFs erfolgreich erstellt!");
-    } catch (e) {
-        console.error("FEHLER:", e);
-        alert("Ein Fehler ist aufgetreten: " + e.message + "\n\n(Prüfe die Konsole mit F12 für Details)");
-    }
+
+        // Dateinamen-Logik
+        const [year, month, day] = dateStr.split('-');
+        const shortYear = year.slice(2); // Nimmt "26" aus "2026"
+        const fileName = `Rapport_${shortYear}-${month}-${day}_BV-${bv.nr}.pdf`;
+
+        link.download = fileName; // <--- DIESE ZEILE HAT GEFEHLT!
+        link.click();
+    } // Ende der Schleife
+    
+    alert("PDFs erfolgreich erstellt!");
+} catch (e) {
+    console.error("FEHLER:", e);
+    alert("Ein Fehler ist aufgetreten: " + e.message + "\n\n(Prüfe die Konsole mit F12 für Details)");
 }
 
 // ═══ LOCAL CACHE ═══
