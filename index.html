@@ -1297,8 +1297,10 @@ async function generateSelectedPDFs() {
         const blob = new Blob([pdfBytes], { type: "application/pdf" });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = `Tagesbericht_${formatDate(dateStr)}_BV-${bv.nr}.pdf`;
-        link.click();
+		const [year, month, day] = dateStr.split('-');
+		const shortYear = year.slice(2); // Nimmt "26" aus "2026"
+		const fileName = `Rapport_${shortYear}-${month}-${day}_BV-${bv.nr}.pdf`;
+		link.click();
 	}
         alert("PDFs erfolgreich erstellt!");
     } catch (e) {
