@@ -261,6 +261,12 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       <div class="ar">›</div>
     </button>
 
+    <button class="ba" onclick="go('pg-wa')">
+      <div class="ai">✅</div>
+      <div><div class="at" data-i18n="wa_link">✅ WhatsApp-Versand</div><div class="as" data-i18n="wa_sub">Rapporte an Frau Peters abhaken</div></div>
+      <div class="ar">›</div>
+    </button>
+
     <button class="ba" onclick="go('pg-exp')">
       <div class="ai">📤</div>
       <div><div class="at" data-i18n="home_export_title">Export als Excel</div><div class="as" data-i18n="home_export_sub">Seith_Stunden + BV-Adressen</div></div>
@@ -490,6 +496,17 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
   </div>
 </div>
 
+
+<div class="pg" id="pg-wa">
+  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="wa_title">WhatsApp-Versand</div><div class="hs" data-i18n="wa_hs">Frau Peters</div></div></div>
+  <div class="sc">
+    <div style="padding:12px 16px 0;display:flex;align-items:center;gap:10px">
+      <div style="flex:1;font-size:13px;font-weight:700;color:var(--s)" id="wa-progress"></div>
+      <button class="qbtn" id="wa-filter-btn" onclick="toggleWaFilter()" style="white-space:nowrap"></button>
+    </div>
+    <div id="wacnt"><div style="height:24px"></div></div>
+  </div>
+</div>
 
 <div class="pg" id="pg-pin">
   <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="editor_pin_title">Editor-Modus</div><div class="hs" data-i18n="editor_pin_sub">PIN eingeben</div></div></div>
@@ -831,6 +848,16 @@ const I18N = {
     report_pick_date: "Datum wählen",
     report_pick_bv: "Baustelle wählen",
     report_no_entries: "Für diesen Tag und diese Baustelle liegen keine Einträge vor.",
+    wa_link: "✅ WhatsApp-Versand",
+    wa_sub: "Rapporte an Frau Peters abhaken",
+    wa_title: "WhatsApp-Versand",
+    wa_hs: "Frau Peters",
+    wa_empty: "Noch keine Rapporte vorhanden.",
+    wa_filter_open: "Nur ausstehende",
+    wa_filter_all: "Alle anzeigen",
+    wa_sent_label: "Gesendet",
+    wa_open_label: "Ausstehend",
+    wa_progress: "{done} von {total} gesendet",
     report_field_datum: "Datum",
     report_field_addr: "Adresse",
     report_field_bvnr: "BV-Nummer",
@@ -1028,6 +1055,16 @@ const I18N = {
     report_pick_date: "Tarih seç",
     report_pick_bv: "Şantiye seç",
     report_no_entries: "Bu tarih ve şantiye için kayıt yok.",
+    wa_link: "✅ WhatsApp Gönderimi",
+    wa_sub: "Bayan Peters'a gönderilenleri işaretle",
+    wa_title: "WhatsApp Gönderimi",
+    wa_hs: "Bayan Peters",
+    wa_empty: "Henüz rapor yok.",
+    wa_filter_open: "Sadece bekleyenler",
+    wa_filter_all: "Hepsini göster",
+    wa_sent_label: "Gönderildi",
+    wa_open_label: "Bekliyor",
+    wa_progress: "{total} raporun {done} tanesi gönderildi",
     report_field_datum: "Tarih",
     report_field_addr: "Adres",
     report_field_bvnr: "BV numarası",
@@ -1156,6 +1193,7 @@ function applyTranslations() {
 
 // ═══ STATE ═══
 let BV=[], MA=[], EN=[], BL=[];
+let WA=new Set(), waFilterOpen=false;
 let sBV=null, cD="", eGroupKey="", eBV=null, eMA=-1, eBL=-1, selC=-1, woff=0;
 let pstack=["pg-home"];
 let toastT=null;
@@ -1337,6 +1375,7 @@ async function boot(){
   MA=lsGet("ma",[]);
   EN=lsGet("en",[]);
   BL=lsGet("bl",[]);
+  WA=new Set(lsGet("wa",[]));
   
   go("pg-home");
   applyTranslations();
@@ -1360,22 +1399,25 @@ async function syncDown(first=false){
   syn("w",tr("sync_now"));
   await seedIfEmpty();
 
-  const [rbv,rma,ren,rbl]=await Promise.all([
+  const [rbv,rma,ren,rbl,rws]=await Promise.all([
     sbSel("bv","&order=nr.asc"),
     sbSel("ma","&order=sort_order.asc"),
     sbSel("en","&order=datum.asc"),
-    sbSel("bl","&order=name.asc")
+    sbSel("bl","&order=name.asc"),
+    sbSel("wa_sent","&order=key.asc")
   ]);
 
   if(rbv) BV=rbv;
   if(rma) MA=rma;
   if(ren) EN=ren;
   if(rbl) BL=rbl;
+  if(rws) WA=new Set(rws.map(r=>r.key));
 
   lsSet("bv",BV);
   lsSet("ma",MA);
   lsSet("en",EN);
   lsSet("bl",BL);
+  lsSet("wa",Array.from(WA));
 
   ustats();
   rwarn();
@@ -1388,6 +1430,7 @@ async function syncDown(first=false){
   if(document.getElementById("pg-ma")?.classList.contains("on")) rmam();
   if(document.getElementById("pg-bl")?.classList.contains("on")) rblm();
   if(document.getElementById("pg-woche")?.classList.contains("on")) rw();
+  if(document.getElementById("pg-wa")?.classList.contains("on")) rwaList();
 
   syn("",tr("sync_ok"));
   if(!first) toast(tr("toast_sync"));
@@ -1410,6 +1453,7 @@ function go(id){
   if(id==="pg-ma")rmam();
   if(id==="pg-bl")rblm();
   if(id==="pg-woche"){woff=0;rw();}
+  if(id==="pg-wa"){rwaList();syncDown();}
   setTimeout(()=>document.getElementById(cur)?.classList.remove("bk"),340);
 }
 function bk(to){
