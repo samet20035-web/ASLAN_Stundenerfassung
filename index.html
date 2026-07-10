@@ -442,18 +442,36 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 </div>
 
 <div class="pg" id="pg-rep-date">
-  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="report_title">Tagesbericht</div><div class="hs" data-i18n="report_pick_date">Datum wählen</div></div></div>
-  <div class="sc"><div style="padding:16px">
-    <input type="date" id="rep-d" style="font-size:19px;padding:15px">
-    <div class="qb"><button class="qbtn" onclick="repD0()" data-i18n="today_btn">📅 Heute</button><button class="qbtn" onclick="repD1()" data-i18n="yesterday_btn">◀ Gestern</button></div>
-    
-    <div style="margin-top:24px; padding-top:24px; border-top: 1px solid var(--b);">
-      <div class="lbl" style="margin:0 0 10px;">PDF-Rapport</div>
-      <button class="btn" onclick="generatePdfRapport()" style="background:#2d7a3a;">📄 PDFs für diesen Tag erstellen</button>
-      <div id="pdf-status" style="margin-top:10px;text-align:center;font-size:13px;color:var(--s);"></div>
+  <div class="hdr">
+    <button class="bck" onclick="bk('pg-home')">‹</button>
+    <div>
+        <div class="ht" data-i18n="report_title">Tagesbericht</div>
+        <div class="hs" data-i18n="report_pick_date">Datum wählen</div>
     </div>
-    
-  </div></div>
+  </div>
+
+  <div class="sc">
+    <div style="padding:16px">
+        
+        <label>Datum:</label>
+        <input type="date" id="rep-d" style="font-size:19px;padding:15px;width:100%;margin-bottom:15px;">
+
+        <div id="selection-container" style="margin-top: 10px;">
+            <button class="btn" onclick="showBvList()">Baustellen anzeigen</button>
+            <div id="bv-list" style="margin: 10px 0;"></div>
+            <button id="download-btn" class="btn" style="display:none; background:#2d7a3a;" onclick="generateSelectedPDFs()">Ausgewählte PDFs erstellen</button>
+        </div>
+
+        <div class="qb">
+            <button class="qbtn" onclick="repD0()" data-i18n="today_btn">📅 Heute</button>
+            <button class="qbtn" onclick="repD1()" data-i18n="yesterday_btn">◀ Gestern</button>
+        </div>
+        
+        <div id="pdf-status" style="margin-top:20px;text-align:center;font-size:13px;color:var(--s);"></div>
+        
+    </div>
+  </div>
+
   <div class="nav"><button class="btn" onclick="n2RepBv()" data-i18n="to_bv_btn">Zur Baustelle →</button></div>
 </div>
 
@@ -638,6 +656,25 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 </div>
 
 <script>
+// Hilfsfunktion: 0.5 -> 0,5
+const formatVal = (val) => {
+    if (val === null || val === undefined) return "";
+    return val.toString().replace('.', ',');
+};
+
+// Hilfsfunktion: 6:00 -> 6, 6:30 -> 6:30
+const formatTime = (t) => {
+    if (!t) return "";
+    if (t.toString().endsWith(":00")) return t.split(":")[0];
+    return t;
+};
+
+// Hilfsfunktion: 2026-07-10 -> 10.07.2026
+const formatDate = (d) => {
+    if (!d) return "";
+    const [y, m, day] = d.split('-');
+    return `${day}.${m}.${y}`;
+};
 // ═══ CONSTANTS ═══
 const SBU="https://orluvjqjkngjdmajtwvp.supabase.co";
 const SBK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ybHV2anFqa25namRtYWp0d3ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0NDkyNDYsImV4cCI6MjA5NzAyNTI0Nn0.DsNorH_TZlT4rMC0IBYXipiMEAybZia_KMM-tTiAsgk";
@@ -1165,51 +1202,54 @@ async function sbDel(t,id){
 }
 
 // ═══ PDF-RAPPORT GENERIERUNG ═══
-async function generatePdfRapport() {
+function showBvList() {
     const dateStr = document.getElementById("rep-d").value;
-    const statusEl = document.getElementById("pdf-status");
+    const listDiv = document.getElementById("bv-list");
+    listDiv.innerHTML = "";
+    
+    const entries = EN.filter(e => e.datum === dateStr && Number(e.stunden) > 0);
+    const uniqueBvIds = [...new Set(entries.map(e => e.bv_id))];
 
-    if (!dateStr) {
-        alert("Bitte zuerst ein Datum auswählen!");
+    if (uniqueBvIds.length === 0) {
+        listDiv.innerHTML = "Keine Daten für dieses Datum.";
+        document.getElementById("download-btn").style.display = "none";
         return;
     }
 
-    statusEl.textContent = "⏳ Lade Vorlage...";
+    uniqueBvIds.forEach(id => {
+        const bv = BV.find(x => x.id == id);
+        listDiv.innerHTML += `<div><input type="checkbox" value="${id}" class="bv-check"> BV ${bv.nr} - ${bv.name}</div>`;
+    });
+    document.getElementById("download-btn").style.display = "block";
+}
 
-    try {
-        // PDF-Datei aus dem Repository laden (muss im selben Ordner liegen wie index.html)
-        const response = await fetch('Rapport_Vorlage.pdf');
-        if (!response.ok) throw new Error("Die Datei 'Rapport_Vorlage.pdf' wurde nicht gefunden.");
-        
-        const arrayBuffer = await response.arrayBuffer();
-        const { PDFDocument } = PDFLib;
+// 2. Ausgewählte PDFs generieren
+async function generateSelectedPDFs() {
+    const dateStr = document.getElementById("rep-d").value;
+    const checkedBoxes = document.querySelectorAll('.bv-check:checked');
+    
+    if (checkedBoxes.length === 0) { alert("Bitte mindestens eine Baustelle auswählen!"); return; }
+
+    const response = await fetch('Rapport_Vorlage.pdf');
+    const arrayBuffer = await response.arrayBuffer();
+    const { PDFDocument } = PDFLib;
+
+    for (const box of checkedBoxes) {
+        const bvId = box.value;
         const pdfDoc = await PDFDocument.load(arrayBuffer);
         const form = pdfDoc.getForm();
+        
+        const bv = BV.find(x => x.id == bvId);
+        const bl = BL.find(x => x.id == bv.bl_id) || { name: "" };
+        const rows = EN.filter(e => e.datum === dateStr && e.bv_id == bvId);
 
-        // Daten für das Datum filtern
-        const entriesForDate = EN.filter(e => e.datum === dateStr && Number(e.stunden) > 0);
-        if (entriesForDate.length === 0) {
-            statusEl.textContent = "⚠️ Keine Daten für dieses Datum.";
-            return;
-        }
+        // Felder befüllen
+        form.getTextField('text_3').setText(bv.nr || "");
+        form.getTextField('text_0').setText(formatDate(dateStr)); // Nutzt neues Format
+        form.getTextField('text_111 (0)').setText(bv.name || "");
+        form.getTextField('text_9').setText(bl.name || "");
 
-        // Gruppierung nach Baustelle (BV)
-        const byBv = entriesForDate.reduce((acc, e) => {
-            if (!acc[e.bv_id]) acc[e.bv_id] = [];
-            acc[e.bv_id].push(e);
-            return acc;
-        }, {});
-
-        // Hilfsfunktion zum Befüllen (fängt Fehler ab, falls Felder fehlen)
-        const setText = (fieldName, value) => {
-            try {
-                form.getTextField(fieldName).setText(value?.toString() || "");
-            } catch (err) {
-                console.warn(`Feld "${fieldName}" nicht im PDF gefunden.`);
-            }
-        };
-
-        // Mapping für Mitarbeiter-Felder (passe diese Namen an dein PDF an!)
+        // Mitarbeiter-Schleife (Hier die Formatter anwenden)
         const empFields = [
             { name: 'text_13', start: 'text_31', end: 'text_36', pause: 'text_41', hours: 'text_58' },
             { name: 'text_15', start: 'text_32', end: 'text_37', pause: 'text_42', hours: 'text_59' },
@@ -1218,43 +1258,25 @@ async function generatePdfRapport() {
             { name: 'text_20', start: 'text_35', end: 'text_40', pause: 'text_45', hours: 'text_62' }
         ];
 
-        // Schleife pro Baustelle
-        for (const [bvId, rows] of Object.entries(byBv)) {
-            const bv = BV.find(x => x.id == bvId) || {};
-            const bl = BL.find(x => x.id == bv.bl_id) || { name: "" };
+    rows.slice(0, 5).forEach((row, i) => {
+            const f = empFields[i];
+            if (!f) return;
+            const ma = MA.find(x => x.id == row.ma_id) || { name: "" };
+            
+            form.getTextField(f.name).setText(ma.name);
+            form.getTextField(f.start).setText(formatTime(row.beginn));
+            form.getTextField(f.end).setText(formatTime(row.ende));
+            form.getTextField(f.pause).setText(formatVal(row.pause_min ? (row.pause_min / 60) : ""));
+            form.getTextField(f.hours).setText(formatVal(row.stunden));
+        });
 
-            // Allgemeine Felder
-            setText('text_3', bv.nr);
-            setText('text_0', dateStr);
-            setText('text_111 (0)', bv.name);
-            setText('text_9', bl.name);
-
-            // Mitarbeiter-Zeilen
-            rows.slice(0, 5).forEach((row, idx) => {
-                const ma = MA.find(x => x.id == row.ma_id) || { name: "" };
-                const f = empFields[idx];
-                if (f) {
-                    setText(f.name, ma.name);
-                    setText(f.start, row.beginn);
-                    setText(f.end, row.ende);
-                    setText(f.pause, row.pause_min ? (row.pause_min / 60) : "");
-                    setText(f.hours, row.stunden);
-                }
-            });
-
-            // Speichern und Download
-            const pdfBytes = await pdfDoc.save();
-            const blob = new Blob([pdfBytes], { type: "application/pdf" });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `Tagesbericht_${dateStr}_BV-${bv.nr}.pdf`;
-            link.click();
-        }
-
-        statusEl.textContent = "✅ PDF erfolgreich generiert.";
-    } catch (err) {
-        console.error(err);
-        statusEl.textContent = "❌ Fehler: " + err.message;
+        // Download
+        const pdfBytes = await pdfDoc.save();
+        const blob = new Blob([pdfBytes], { type: "application/pdf" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `Tagesbericht_${formatDate(dateStr)}_BV-${bv.nr}.pdf`;
+        link.click();
     }
 }
 
