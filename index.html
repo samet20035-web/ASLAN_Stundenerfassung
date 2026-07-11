@@ -1471,6 +1471,7 @@ function bk(to){
   if(to==="pg-ma")rmam();
   if(to==="pg-bl")rblm();
   if(to==="pg-woche")rw();
+  if(to==="pg-wa"){rwaList();syncDown();}
   if(to==="pg-editor")rEditor();
 }
 
@@ -1508,7 +1509,61 @@ function groupedEntries(){
   return Object.values(map).sort((a,b)=>a.datum.localeCompare(b.datum));
 }
 
-// ═══ BAULEITER SELECT RENDERER ═══
+// ═══ WHATSAPP-VERSAND CHECKLISTE ═══
+function toggleWaFilter(){
+  waFilterOpen=!waFilterOpen;
+  rwaList();
+}
+function rwaList(){
+  const c=document.getElementById("wacnt");
+  const btn=document.getElementById("wa-filter-btn");
+  const prog=document.getElementById("wa-progress");
+  if(!c)return;
+  if(btn) btn.textContent = waFilterOpen ? "📋 "+tr("wa_filter_all") : "🕓 "+tr("wa_filter_open");
+
+  let groups=groupedEntries().slice().sort((a,b)=>b.datum.localeCompare(a.datum));
+  const total=groups.length;
+  const done=groups.filter(g=>WA.has(g.key)).length;
+  if(prog) prog.textContent = total ? tr("wa_progress",{done,total}) : "";
+
+  if(waFilterOpen) groups=groups.filter(g=>!WA.has(g.key));
+
+  if(!groups.length){
+    c.innerHTML=`<div class="emp"><div class="eic">✅</div>${tr("wa_empty")}</div>`;
+    return;
+  }
+
+  c.innerHTML=`<div class="crd" style="margin:12px 16px">${
+    groups.map(g=>{
+      const bv=bvById(g.bv_id);
+      const sent=WA.has(g.key);
+      return `<div class="li">
+        <div class="tmcb ${sent?"on":""}" onclick="toggleWaSent('${g.key}')" style="margin-top:2px">${sent?"✓":""}</div>
+        <div class="lii" onclick="toggleWaSent('${g.key}')" style="cursor:pointer">
+          <div class="lid">${fd(g.datum)}</div>
+          <div class="lib">BV ${bv?.nr||"?"} · ${bv?.name||"—"}</div>
+          <div class="pills"><span class="pill" style="${sent?"":"opacity:.6"}">${sent?tr("wa_sent_label"):tr("wa_open_label")}</span></div>
+        </div>
+      </div>`;
+    }).join("")
+  }</div><div style="height:24px"></div>`;
+}
+async function toggleWaSent(key){
+  const wasSent=WA.has(key);
+  if(wasSent){
+    WA.delete(key);
+  }else{
+    WA.add(key);
+  }
+  lsSet("wa",Array.from(WA));
+  rwaList();
+  if(wasSent){
+    await sbFetch(`wa_sent?key=eq.${encodeURIComponent(key)}`,{method:"DELETE"});
+  }else{
+    await sbIns("wa_sent",[{key}]);
+  }
+}
+
 function rblSel() {
   const placeholder = LANG === "tr" ? "-- Şantiye Şefi --" : "-- Bauleiter --";
   const h = `<option value="">${placeholder}</option>` + BL.map(b => `<option value="${b.id}">${b.name}</option>`).join("");
