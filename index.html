@@ -185,6 +185,32 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 .cpc.sel{border-color:var(--g);}
 .qb{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
 .qbtn{padding:11px;border:.5px solid var(--bs);border-radius:var(--rs);background:var(--c);color:var(--t);font-size:15px;cursor:pointer;text-align:center;font-family:inherit;}
+.stattabs{display:flex;gap:6px;padding:10px 16px;background:var(--c);border-bottom:.5px solid var(--b);}
+.stattab{flex:1;padding:10px 6px;border:.5px solid var(--bs);border-radius:var(--rs);background:var(--bg);color:var(--t);font-size:13px;font-weight:700;cursor:pointer;text-align:center;font-family:inherit;}
+.stattab.on{background:var(--g);border-color:var(--g);color:#fff;}
+.statctrl{display:flex;align-items:center;gap:8px;padding:12px 16px 0;}
+.statctrl input[type=month]{flex:1;padding:11px 12px;font-size:15px;border:.5px solid var(--bs);border-radius:var(--rs);background:var(--c);color:var(--t);font-family:inherit;}
+.scopeb{padding:11px 14px;border:.5px solid var(--bs);border-radius:var(--rs);background:var(--c);color:var(--t);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.scopeb.on{background:var(--gl);border-color:var(--g);color:var(--gd);}
+.statrow{padding:13px 15px;border-bottom:.5px solid var(--b);}
+.statrow:last-child{border-bottom:none;}
+.statrh{display:flex;align-items:center;gap:10px;}
+.statrn{flex:1;font-size:15px;font-weight:700;}
+.statrv{font-size:15px;font-weight:800;color:var(--gd);}
+.statrsub{font-size:12px;color:var(--s);margin-top:2px;}
+.pbar{height:7px;border-radius:4px;background:var(--bg);overflow:hidden;margin-top:8px;border:.5px solid var(--b);}
+.pbar>div{height:100%;background:var(--g);}
+.pbar.over>div{background:#c0392b;}
+.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;padding:12px 16px;}
+.caldow{text-align:center;font-size:11px;font-weight:700;color:var(--s);padding-bottom:2px;}
+.calcell{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer;border:.5px solid var(--b);background:var(--c);color:var(--t);}
+.calcell.empty{visibility:hidden;cursor:default;}
+.calcell.h1{background:#c9e8cd;border-color:#c9e8cd;color:#1a4d23;}
+.calcell.h2{background:#8fd19e;border-color:#8fd19e;color:#0f331a;}
+.calcell.h3{background:#4fae63;border-color:#4fae63;color:#fff;}
+.calcell.h4{background:var(--gd);border-color:var(--gd);color:#fff;}
+.callegend{display:flex;align-items:center;justify-content:center;gap:6px;padding:0 16px 8px;font-size:11px;color:var(--s);}
+.callegend .calcell{width:16px;height:16px;aspect-ratio:unset;border-radius:4px;cursor:default;}
 #lang-switch{
   position:absolute;
   right:12px;
@@ -258,6 +284,12 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     <button class="ba" onclick="go('pg-rep-date')">
       <div class="ai">📝</div>
       <div><div class="at" data-i18n="report_link">📋 Tagesbericht</div><div class="as" data-i18n="report_sub">Rapport-Daten zum Kopieren</div></div>
+      <div class="ar">›</div>
+    </button>
+
+    <button class="ba" onclick="go('pg-stat')">
+      <div class="ai">📊</div>
+      <div><div class="at">📊 Auswertung</div><div class="as">Statistik pro Mitarbeiter, Baustelle & Kalender</div></div>
       <div class="ar">›</div>
     </button>
 
@@ -497,6 +529,36 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 </div>
 
 
+<div class="pg" id="pg-stat">
+  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht">Auswertung</div><div class="hs" id="stat-hs">—</div></div></div>
+  <div class="stattabs">
+    <button class="stattab" id="stt-ma" onclick="statSetTab('ma')">👷 Mitarbeiter</button>
+    <button class="stattab" id="stt-bv" onclick="statSetTab('bv')">🏗️ Baustellen</button>
+    <button class="stattab" id="stt-cal" onclick="statSetTab('cal')">📅 Kalender</button>
+  </div>
+  <div class="sc">
+    <div id="stat-ctrl-mabv" class="statctrl">
+      <input type="month" id="stat-period" onchange="statPeriodChange()">
+      <button class="scopeb" id="stat-scope-m" onclick="statSetScope('month')">Monat</button>
+      <button class="scopeb" id="stat-scope-y" onclick="statSetScope('year')">Jahr</button>
+    </div>
+    <div id="stat-ctrl-cal" class="kwnav" style="display:none">
+      <button class="kwb" onclick="calNav(-1)">◀</button>
+      <div style="font-size:16px;font-weight:700" id="cal-label">—</div>
+      <button class="kwb" onclick="calNav(1)">▶</button>
+    </div>
+    <div id="statbody" style="padding-bottom:24px"></div>
+  </div>
+</div>
+
+<div class="ov" id="ov-caldetail" onclick="clov('ov-caldetail',event)">
+  <div class="sh" onclick="event.stopPropagation()">
+    <div class="shh"></div><div class="sht" id="caldetail-t">Tag</div>
+    <div class="crd" id="caldetail-body" style="margin-bottom:14px"></div>
+    <button class="bto" onclick="cls('ov-caldetail')">Schliessen</button>
+  </div>
+</div>
+
 <div class="pg" id="pg-wa">
   <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="wa_title">WhatsApp-Versand</div><div class="hs" data-i18n="wa_hs">Frau Peters</div></div></div>
   <div class="sc">
@@ -574,6 +636,10 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     <div class="shh"></div><div class="sht" id="edbvt" data-i18n="editor_bv_edit">Baustelle bearbeiten</div>
     <div style="margin-bottom:12px"><div class="lbl" style="margin:0 0 6px" data-i18n="bv_nr">BV-Nr.</div><input type="text" id="edbv-nr" inputmode="numeric" maxlength="6"></div>
     <div style="margin-bottom:12px"><div class="lbl" style="margin:0 0 6px" data-i18n="bv_addr">Adresse</div><input type="text" id="edbv-name"></div>
+    <div style="display:flex;gap:10px;margin-bottom:12px">
+      <div style="flex:1"><div class="lbl" style="margin:0 0 6px">Stundensatz (CHF/h)</div><input type="number" id="edbv-rate" inputmode="decimal" step="0.05" placeholder="optional"></div>
+      <div style="flex:1"><div class="lbl" style="margin:0 0 6px">Soll-Stunden</div><input type="number" id="edbv-budget" inputmode="decimal" step="1" placeholder="optional"></div>
+    </div>
     <div style="margin-bottom:14px">
       <div class="toggle-row">
         <div class="lbl2" data-i18n="editor_warn_off">Warnung "Fehlende Angaben" für diese Baustelle deaktivieren</div>
@@ -1194,6 +1260,7 @@ function applyTranslations() {
 // ═══ STATE ═══
 let BV=[], MA=[], EN=[], BL=[];
 let WA=new Set(), waFilterOpen=false;
+let statTab="ma", statScope="month", statPeriod="", calMonth="";
 let sBV=null, cD="", eGroupKey="", eBV=null, eMA=-1, eBL=-1, selC=-1, woff=0;
 let pstack=["pg-home"];
 let toastT=null;
@@ -1431,6 +1498,7 @@ async function syncDown(first=false){
   if(document.getElementById("pg-bl")?.classList.contains("on")) rblm();
   if(document.getElementById("pg-woche")?.classList.contains("on")) rw();
   if(document.getElementById("pg-wa")?.classList.contains("on")) rwaList();
+  if(document.getElementById("pg-stat")?.classList.contains("on")) rStat();
 
   syn("",tr("sync_ok"));
   if(!first) toast(tr("toast_sync"));
@@ -1454,6 +1522,7 @@ function go(id){
   if(id==="pg-bl")rblm();
   if(id==="pg-woche"){woff=0;rw();}
   if(id==="pg-wa"){rwaList();syncDown();}
+  if(id==="pg-stat"){statSetTab(statTab);syncDown();}
   setTimeout(()=>document.getElementById(cur)?.classList.remove("bk"),340);
 }
 function bk(to){
@@ -1472,6 +1541,7 @@ function bk(to){
   if(to==="pg-bl")rblm();
   if(to==="pg-woche")rw();
   if(to==="pg-wa"){rwaList();syncDown();}
+  if(to==="pg-stat"){statSetTab(statTab);syncDown();}
   if(to==="pg-editor")rEditor();
 }
 
@@ -1562,6 +1632,184 @@ async function toggleWaSent(key){
   }else{
     await sbIns("wa_sent",[{key}]);
   }
+}
+
+// ═══ AUSWERTUNG ═══
+function fmtH(h){ return (Math.round(h*100)/100).toString().replace(".",",")+" h"; }
+function fmtCHF(v){ return "CHF "+(Math.round(v*100)/100).toLocaleString("de-CH",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function statInit(){
+  if(!statPeriod) statPeriod=td().slice(0,7);
+  if(!calMonth) calMonth=td().slice(0,7);
+  document.getElementById("stat-period").value=statPeriod;
+}
+function statSetTab(tab){
+  statTab=tab;
+  ["ma","bv","cal"].forEach(t=>document.getElementById("stt-"+t).classList.toggle("on",t===tab));
+  document.getElementById("stat-ctrl-mabv").style.display = tab==="cal" ? "none" : "flex";
+  document.getElementById("stat-ctrl-cal").style.display = tab==="cal" ? "flex" : "none";
+  rStat();
+}
+function statSetScope(scope){
+  statScope=scope;
+  rStat();
+}
+function statPeriodChange(){
+  statPeriod=document.getElementById("stat-period").value || statPeriod;
+  rStat();
+}
+function calNav(dir){
+  const [y,m]=calMonth.split("-").map(Number);
+  const d=new Date(y,m-1+dir,1);
+  calMonth=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+  rStat();
+}
+function rStat(){
+  statInit();
+  document.getElementById("stat-scope-m").classList.toggle("on",statScope==="month");
+  document.getElementById("stat-scope-y").classList.toggle("on",statScope==="year");
+  const hs=document.getElementById("stat-hs");
+  if(statTab==="cal"){
+    const [y,m]=calMonth.split("-").map(Number);
+    const mn=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"][m-1];
+    hs.textContent=`${mn} ${y}`;
+  } else {
+    const [y,m]=statPeriod.split("-").map(Number);
+    const mn=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"][m-1];
+    hs.textContent = statScope==="month" ? `${mn} ${y}` : `Jahr ${y}`;
+  }
+  if(statTab==="ma") rStatMa();
+  else if(statTab==="bv") rStatBv();
+  else rStatCal();
+}
+function statEntriesInPeriod(){
+  const prefix = statScope==="month" ? statPeriod : statPeriod.slice(0,4);
+  return EN.filter(e=>e.datum && e.datum.startsWith(prefix));
+}
+function rStatMa(){
+  const body=document.getElementById("statbody");
+  const rows=statEntriesInPeriod();
+  if(!rows.length){ body.innerHTML=`<div class="emp"><div class="eic">👷</div>Keine Stunden in diesem Zeitraum.</div>`; return; }
+
+  const byMa={};
+  rows.forEach(e=>{
+    if(!byMa[e.ma_id]) byMa[e.ma_id]={ h:0, days:new Set(), bv:{} };
+    const s=byMa[e.ma_id];
+    s.h+=Number(e.stunden)||0;
+    s.days.add(e.datum);
+    s.bv[e.bv_id]=(s.bv[e.bv_id]||0)+(Number(e.stunden)||0);
+  });
+
+  const list=MA.filter(m=>byMa[m.id]).sort((a,b)=>byMa[b.id].h-byMa[a.id].h);
+  if(!list.length){ body.innerHTML=`<div class="emp"><div class="eic">👷</div>Keine Stunden in diesem Zeitraum.</div>`; return; }
+
+  body.innerHTML=`<div class="crd" style="margin:12px 16px">${
+    list.map(m=>{
+      const s=byMa[m.id];
+      const bvLine=Object.entries(s.bv).sort((a,b)=>b[1]-a[1]).map(([bid,h])=>{
+        const bv=bvById(bid);
+        return `BV ${bv?.nr||"?"}: ${fmtH(h)}`;
+      }).join(" · ");
+      return `<div class="statrow">
+        <div class="statrh">
+          <div class="av" style="background:${m.bg||"#eee"};color:${m.tc||"#333"}">${m.k||"?"}</div>
+          <div class="statrn">${m.name}</div>
+          <div class="statrv">${fmtH(s.h)}</div>
+        </div>
+        <div class="statrsub">${s.days.size} Einsatztag${s.days.size===1?"":"e"} · ${bvLine}</div>
+      </div>`;
+    }).join("")
+  }</div><div style="height:24px"></div>`;
+}
+function rStatBv(){
+  const body=document.getElementById("statbody");
+  const rows=statEntriesInPeriod();
+  if(!rows.length){ body.innerHTML=`<div class="emp"><div class="eic">🏗️</div>Keine Stunden in diesem Zeitraum.</div>`; return; }
+
+  const byBv={};
+  rows.forEach(e=>{
+    if(!byBv[e.bv_id]) byBv[e.bv_id]={ h:0, days:new Set() };
+    byBv[e.bv_id].h+=Number(e.stunden)||0;
+    byBv[e.bv_id].days.add(e.datum);
+  });
+
+  const list=Object.keys(byBv).map(id=>({bv:bvById(id),id,...byBv[id]})).sort((a,b)=>b.h-a.h);
+
+  body.innerHTML=`<div class="crd" style="margin:12px 16px">${
+    list.map(x=>{
+      const bv=x.bv;
+      const rate=bv?.rate;
+      const budget=bv?.budget_h;
+      const cost = rate ? x.h*Number(rate) : null;
+      const pct = budget ? Math.min(100,Math.round(x.h/Number(budget)*100)) : null;
+      const over = budget && x.h>Number(budget);
+      return `<div class="statrow">
+        <div class="statrh">
+          <div class="statrn">BV ${bv?.nr||"?"} · ${bv?.name||"—"}</div>
+          <div class="statrv">${fmtH(x.h)}</div>
+        </div>
+        <div class="statrsub">${x.days.size} Tag${x.days.size===1?"":"e"}${cost!=null?` · ${fmtCHF(cost)}`:""}</div>
+        ${budget?`<div class="pbar ${over?"over":""}"><div style="width:${pct}%"></div></div><div class="statrsub" style="margin-top:4px">${fmtH(x.h)} von ${fmtH(Number(budget))} Soll${over?" · über Budget":""}</div>`:""}
+      </div>`;
+    }).join("")
+  }</div><div style="height:24px"></div>`;
+}
+function rStatCal(){
+  const body=document.getElementById("statbody");
+  const [y,m]=calMonth.split("-").map(Number);
+  document.getElementById("cal-label").textContent=`${["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"][m-1]} ${y}`;
+
+  const dayTotals={};
+  EN.forEach(e=>{
+    if(e.datum && e.datum.startsWith(calMonth)){
+      dayTotals[e.datum]=(dayTotals[e.datum]||0)+(Number(e.stunden)||0);
+    }
+  });
+
+  const first=new Date(y,m-1,1);
+  const startDow=(first.getDay()||7)-1; // Mo=0
+  const daysInMonth=new Date(y,m,0).getDate();
+  const dow=["Mo","Di","Mi","Do","Fr","Sa","So"];
+
+  function heatClass(h){
+    if(!h) return "";
+    if(h<4) return "h1";
+    if(h<8) return "h2";
+    if(h<12) return "h3";
+    return "h4";
+  }
+
+  let cells=dow.map(d=>`<div class="caldow">${d}</div>`).join("");
+  for(let i=0;i<startDow;i++) cells+=`<div class="calcell empty"></div>`;
+  for(let d=1;d<=daysInMonth;d++){
+    const ds=`${calMonth}-${String(d).padStart(2,"0")}`;
+    const h=dayTotals[ds]||0;
+    cells+=`<div class="calcell ${heatClass(h)}" onclick="openCalDay('${ds}')">${d}</div>`;
+  }
+
+  body.innerHTML=`<div class="calgrid">${cells}</div>
+    <div class="callegend">
+      <span>wenig</span>
+      <div class="calcell"></div><div class="calcell h1"></div><div class="calcell h2"></div><div class="calcell h3"></div><div class="calcell h4"></div>
+      <span>viel</span>
+    </div><div style="height:24px"></div>`;
+}
+function openCalDay(ds){
+  const rows=EN.filter(e=>e.datum===ds);
+  document.getElementById("caldetail-t").textContent=fd(ds);
+  const c=document.getElementById("caldetail-body");
+  if(!rows.length){
+    c.innerHTML=`<div class="statrow" style="text-align:center;color:var(--s)">Keine Einträge an diesem Tag.</div>`;
+  }else{
+    const tot=rows.reduce((a,e)=>a+(Number(e.stunden)||0),0);
+    c.innerHTML=rows.map(e=>{
+      const ma=maById(e.ma_id), bv=bvById(e.bv_id);
+      return `<div class="li"><div class="lii">
+        <div class="lib">${ma?.name||"—"}</div>
+        <div class="lid">BV ${bv?.nr||"?"} · ${bv?.name||"—"}</div>
+      </div><div class="statrv">${fmtH(Number(e.stunden)||0)}</div></div>`;
+    }).join("")+`<div class="li" style="background:var(--gl)"><div class="lii"><div class="lib">Total</div></div><div class="statrv">${fmtH(tot)}</div></div>`;
+  }
+  opov("ov-caldetail");
 }
 
 function rblSel() {
@@ -2674,6 +2922,8 @@ function opEdBv(id){
   document.getElementById("edbvt").textContent=`BV ${bv?.nr||"?"} ${tr("editor_bv_edit")}`;
   document.getElementById("edbv-nr").value=bv?.nr||"";
   document.getElementById("edbv-name").value=bv?.name||"";
+  document.getElementById("edbv-rate").value=bv?.rate??"";
+  document.getElementById("edbv-budget").value=bv?.budget_h??"";
   document.getElementById("edbv-warn-tgl").classList.toggle("on",!!bv?.warn_disabled);
   document.getElementById("edbv-arch-tgl").classList.toggle("on",!!bv?.archived);
   const inUse=EN.some(e=>e.bv_id===id);
@@ -2821,13 +3071,17 @@ async function svEdBv(){
   if(!edBVid)return;
   const nr=document.getElementById("edbv-nr").value.trim();
   const name=document.getElementById("edbv-name").value.trim();
+  const rateRaw=document.getElementById("edbv-rate").value;
+  const budgetRaw=document.getElementById("edbv-budget").value;
+  const rate=rateRaw===""?null:Number(rateRaw);
+  const budget_h=budgetRaw===""?null:Number(budgetRaw);
   const warnOff=document.getElementById("edbv-warn-tgl").classList.contains("on");
   const archived=document.getElementById("edbv-arch-tgl").classList.contains("on");
   if(!nr){ alert("BV-Nummer eingeben!"); return; }
   if(BV.find(b=>b.nr===nr && b.id!==edBVid)){ alert("BV-Nummer bereits vergeben!"); return; }
 
   const execSave = async () => {
-    await sbUpd("bv", edBVid, { nr, name: name || "—", warn_disabled: warnOff, archived: archived });
+    await sbUpd("bv", edBVid, { nr, name: name || "—", warn_disabled: warnOff, archived: archived, rate, budget_h });
     await syncDown();
     cls("ov-edbv");
     rEditor();
