@@ -289,7 +289,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 
     <button class="ba" onclick="go('pg-stat')">
       <div class="ai">📊</div>
-      <div><div class="at">📊 Auswertung</div><div class="as">Statistik pro Mitarbeiter, Baustelle & Kalender</div></div>
+      <div><div class="at" data-i18n="stat_link">📊 Auswertung</div><div class="as" data-i18n="stat_sub">Statistik pro Mitarbeiter, Baustelle & Kalender</div></div>
       <div class="ar">›</div>
     </button>
 
@@ -530,17 +530,17 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 
 
 <div class="pg" id="pg-stat">
-  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht">Auswertung</div><div class="hs" id="stat-hs">—</div></div></div>
+  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="stat_title">Auswertung</div><div class="hs" id="stat-hs">—</div></div></div>
   <div class="stattabs">
-    <button class="stattab" id="stt-ma" onclick="statSetTab('ma')">👷 Mitarbeiter</button>
-    <button class="stattab" id="stt-bv" onclick="statSetTab('bv')">🏗️ Baustellen</button>
-    <button class="stattab" id="stt-cal" onclick="statSetTab('cal')">📅 Kalender</button>
+    <button class="stattab" id="stt-ma" onclick="statSetTab('ma')" data-i18n="stat_tab_ma">👷 Mitarbeiter</button>
+    <button class="stattab" id="stt-bv" onclick="statSetTab('bv')" data-i18n="stat_tab_bv">🏗️ Baustellen</button>
+    <button class="stattab" id="stt-cal" onclick="statSetTab('cal')" data-i18n="stat_tab_cal">📅 Kalender</button>
   </div>
   <div class="sc">
     <div id="stat-ctrl-mabv" class="statctrl">
       <input type="month" id="stat-period" onchange="statPeriodChange()">
-      <button class="scopeb" id="stat-scope-m" onclick="statSetScope('month')">Monat</button>
-      <button class="scopeb" id="stat-scope-y" onclick="statSetScope('year')">Jahr</button>
+      <button class="scopeb" id="stat-scope-m" onclick="statSetScope('month')" data-i18n="stat_scope_month">Monat</button>
+      <button class="scopeb" id="stat-scope-y" onclick="statSetScope('year')" data-i18n="stat_scope_year">Jahr</button>
     </div>
     <div id="stat-ctrl-cal" class="kwnav" style="display:none">
       <button class="kwb" onclick="calNav(-1)">◀</button>
@@ -553,9 +553,9 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 
 <div class="ov" id="ov-caldetail" onclick="clov('ov-caldetail',event)">
   <div class="sh" onclick="event.stopPropagation()">
-    <div class="shh"></div><div class="sht" id="caldetail-t">Tag</div>
+    <div class="shh"></div><div class="sht" id="caldetail-t" data-i18n="stat_day">Tag</div>
     <div class="crd" id="caldetail-body" style="margin-bottom:14px"></div>
-    <button class="bto" onclick="cls('ov-caldetail')">Schliessen</button>
+    <button class="bto" onclick="cls('ov-caldetail')" data-i18n="stat_close">Schliessen</button>
   </div>
 </div>
 
@@ -637,8 +637,8 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     <div style="margin-bottom:12px"><div class="lbl" style="margin:0 0 6px" data-i18n="bv_nr">BV-Nr.</div><input type="text" id="edbv-nr" inputmode="numeric" maxlength="6"></div>
     <div style="margin-bottom:12px"><div class="lbl" style="margin:0 0 6px" data-i18n="bv_addr">Adresse</div><input type="text" id="edbv-name"></div>
     <div style="display:flex;gap:10px;margin-bottom:12px">
-      <div style="flex:1"><div class="lbl" style="margin:0 0 6px">Stundensatz (CHF/h)</div><input type="number" id="edbv-rate" inputmode="decimal" step="0.05" placeholder="optional"></div>
-      <div style="flex:1"><div class="lbl" style="margin:0 0 6px">Soll-Stunden</div><input type="number" id="edbv-budget" inputmode="decimal" step="1" placeholder="optional"></div>
+      <div style="flex:1"><div class="lbl" style="margin:0 0 6px" data-i18n="stat_rate_label">Stundensatz (CHF/h)</div><input type="number" id="edbv-rate" inputmode="decimal" step="0.05" placeholder="optional"></div>
+      <div style="flex:1"><div class="lbl" style="margin:0 0 6px" data-i18n="stat_budget_label">Soll-Stunden</div><input type="number" id="edbv-budget" inputmode="decimal" step="1" placeholder="optional"></div>
     </div>
     <div style="margin-bottom:14px">
       <div class="toggle-row">
@@ -693,7 +693,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
   <div class="sh" onclick="event.stopPropagation()">
     <div class="shh"></div><div class="sht" id="bvt" data-i18n="edit_bv">BV bearbeiten</div>
     <div style="margin-bottom:12px"><div class="lbl" style="margin:0 0 6px" data-i18n="bv_nr">BV-Nummer</div><input type="text" id="bven" readonly style="background:var(--bg);color:var(--s)"></div>
-    <div style="margin-bottom:12px"><div class="lbl" style="margin:0 0 6px">Bauleiter</div><select id="bvebl"></select></div>
+    <div style="margin-bottom:12px"><div class="lbl" style="margin:0 0 6px" data-i18n="bl_title">Bauleiter</div><select id="bvebl"></select></div>
     <div style="margin-bottom:12px"><div class="lbl" style="margin:0 0 6px" data-i18n="bv_addr">Adresse</div><input type="text" id="bvea" data-i18n-ph="bv_addr" placeholder="Adresse"></div>
     
     <button class="btn" onclick="svbv()" data-i18n="save_changes">✅ Speichern</button>
@@ -924,6 +924,53 @@ const I18N = {
     wa_sent_label: "Gesendet",
     wa_open_label: "Ausstehend",
     wa_progress: "{done} von {total} gesendet",
+
+    stat_link: "📊 Auswertung",
+    stat_sub: "Statistik pro Mitarbeiter, Baustelle & Kalender",
+    stat_title: "Auswertung",
+    stat_tab_ma: "👷 Mitarbeiter",
+    stat_tab_bv: "🏗️ Baustellen",
+    stat_tab_cal: "📅 Kalender",
+    stat_scope_month: "Monat",
+    stat_scope_year: "Jahr",
+    stat_close: "Schliessen",
+    stat_year_label: "Jahr {y}",
+    stat_no_hours: "Keine Stunden in diesem Zeitraum.",
+    stat_no_entries_day: "Keine Einträge an diesem Tag.",
+    stat_total: "Total",
+    stat_day: "Tag",
+    stat_days: "Tage",
+    stat_workday: "Einsatztag",
+    stat_workdays: "Einsatztage",
+    stat_over_budget: "über Budget",
+    stat_of_target: "{ist} von {soll} Soll",
+    stat_rate_label: "Stundensatz (CHF/h)",
+    stat_budget_label: "Soll-Stunden",
+    stat_heat_low: "wenig",
+    stat_heat_high: "viel",
+    month_01: "Januar", month_02: "Februar", month_03: "März", month_04: "April",
+    month_05: "Mai", month_06: "Juni", month_07: "Juli", month_08: "August",
+    month_09: "September", month_10: "Oktober", month_11: "November", month_12: "Dezember",
+    month_short_01: "Jan", month_short_02: "Feb", month_short_03: "Mär", month_short_04: "Apr",
+    month_short_05: "Mai", month_short_06: "Jun", month_short_07: "Jul", month_short_08: "Aug",
+    month_short_09: "Sep", month_short_10: "Okt", month_short_11: "Nov", month_short_12: "Dez",
+
+    pdf_no_data_for_date: "Keine Daten für dieses Datum.",
+    pdf_select_one_bv: "Bitte mindestens eine Baustelle auswählen!",
+    pdf_template_missing: "PDF-Vorlage nicht gefunden!",
+    pdf_created_ok: "PDFs erfolgreich erstellt!",
+    pdf_error_prefix: "Fehler: ",
+    push_not_supported: "Dein Browser unterstützt keine Benachrichtigungen.",
+    push_permission_denied: "Bitte Benachrichtigungen erlauben.",
+    pick_date_first: "Bitte Datum wählen!",
+    bv_nr_enter: "BV-Nummer eingeben!",
+    bv_nr_exists: "BV bereits vorhanden!",
+    bv_nr_taken: "BV-Nummer bereits vergeben!",
+    save_failed: "Speichern fehlgeschlagen.",
+    delete_failed: "Löschen fehlgeschlagen.",
+    name_and_initials_required: "Name und Kürzel ausfüllen!",
+    name_required: "Name eingeben!",
+    network_error_prefix: "Netzwerkfehler / Fetch-Fehler:\n",
     report_field_datum: "Datum",
     report_field_addr: "Adresse",
     report_field_bvnr: "BV-Nummer",
@@ -1131,6 +1178,53 @@ const I18N = {
     wa_sent_label: "Gönderildi",
     wa_open_label: "Bekliyor",
     wa_progress: "{total} raporun {done} tanesi gönderildi",
+
+    stat_link: "📊 Değerlendirme",
+    stat_sub: "Çalışan, şantiye ve takvim istatistikleri",
+    stat_title: "Değerlendirme",
+    stat_tab_ma: "👷 Çalışan",
+    stat_tab_bv: "🏗️ Şantiyeler",
+    stat_tab_cal: "📅 Takvim",
+    stat_scope_month: "Ay",
+    stat_scope_year: "Yıl",
+    stat_close: "Kapat",
+    stat_year_label: "{y} Yılı",
+    stat_no_hours: "Bu dönemde saat kaydı yok.",
+    stat_no_entries_day: "Bu günde kayıt yok.",
+    stat_total: "Toplam",
+    stat_day: "gün",
+    stat_days: "gün",
+    stat_workday: "çalışma günü",
+    stat_workdays: "çalışma günü",
+    stat_over_budget: "bütçe aşıldı",
+    stat_of_target: "{soll} hedeften {ist}",
+    stat_rate_label: "Saat ücreti (CHF/sa)",
+    stat_budget_label: "Hedef saat",
+    stat_heat_low: "az",
+    stat_heat_high: "çok",
+    month_01: "Ocak", month_02: "Şubat", month_03: "Mart", month_04: "Nisan",
+    month_05: "Mayıs", month_06: "Haziran", month_07: "Temmuz", month_08: "Ağustos",
+    month_09: "Eylül", month_10: "Ekim", month_11: "Kasım", month_12: "Aralık",
+    month_short_01: "Oca", month_short_02: "Şub", month_short_03: "Mar", month_short_04: "Nis",
+    month_short_05: "May", month_short_06: "Haz", month_short_07: "Tem", month_short_08: "Ağu",
+    month_short_09: "Eyl", month_short_10: "Eki", month_short_11: "Kas", month_short_12: "Ara",
+
+    pdf_no_data_for_date: "Bu tarih için veri yok.",
+    pdf_select_one_bv: "Lütfen en az bir şantiye seçin!",
+    pdf_template_missing: "PDF şablonu bulunamadı!",
+    pdf_created_ok: "PDF'ler başarıyla oluşturuldu!",
+    pdf_error_prefix: "Hata: ",
+    push_not_supported: "Tarayıcınız bildirimleri desteklemiyor.",
+    push_permission_denied: "Lütfen bildirimlere izin verin.",
+    pick_date_first: "Lütfen tarih seçin!",
+    bv_nr_enter: "Şantiye numarasını girin!",
+    bv_nr_exists: "Bu şantiye zaten mevcut!",
+    bv_nr_taken: "Bu şantiye numarası zaten kullanılıyor!",
+    save_failed: "Kaydetme başarısız oldu.",
+    delete_failed: "Silme başarısız oldu.",
+    name_and_initials_required: "Ad ve kısaltmayı doldurun!",
+    name_required: "Ad girin!",
+    network_error_prefix: "Ağ hatası / bağlantı hatası:\n",
     report_field_datum: "Tarih",
     report_field_addr: "Adres",
     report_field_bvnr: "BV numarası",
@@ -1292,7 +1386,7 @@ async function sbFetch(path,opts={}){
     return null;
   }catch(e){
     console.error("SUPABASE FETCH ERROR:", e);
-    alert("Netzwerkfehler / Fetch-Fehler:\n" + e.message);
+    alert(tr("network_error_prefix") + e.message);
     return null;
   }
 }
@@ -1326,7 +1420,7 @@ function showBvList() {
     const uniqueBvIds = [...new Set(entries.map(e => e.bv_id))];
 
     if (uniqueBvIds.length === 0) {
-        listDiv.innerHTML = "Keine Daten für dieses Datum.";
+        listDiv.innerHTML = tr("pdf_no_data_for_date");
         document.getElementById("download-btn").style.display = "none";
         return;
     }
@@ -1345,12 +1439,12 @@ async function generateSelectedPDFs() {
         const checkedBoxes = document.querySelectorAll('.bv-check:checked');
         
         if (checkedBoxes.length === 0) { 
-            alert("Bitte mindestens eine Baustelle auswählen!"); 
+            alert(tr("pdf_select_one_bv")); 
             return; 
         }
 
         const response = await fetch('Rapport_Vorlage.pdf');
-        if (!response.ok) throw new Error("PDF-Vorlage nicht gefunden!");
+        if (!response.ok) throw new Error(tr("pdf_template_missing"));
         
         const arrayBuffer = await response.arrayBuffer();
         const { PDFDocument } = PDFLib;
@@ -1398,10 +1492,10 @@ async function generateSelectedPDFs() {
             link.download = `Rapport_${shortYear}-${month}-${day}_BV-${bv.nr}.pdf`;
             link.click();
         }
-        alert("PDFs erfolgreich erstellt!");
+        alert(tr("pdf_created_ok"));
     } catch (e) {
         console.error("FEHLER:", e);
-        alert("Fehler: " + e.message);
+        alert(tr("pdf_error_prefix") + e.message);
     }
 }
 	
@@ -1670,12 +1764,12 @@ function rStat(){
   const hs=document.getElementById("stat-hs");
   if(statTab==="cal"){
     const [y,m]=calMonth.split("-").map(Number);
-    const mn=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"][m-1];
+    const mn=tr("month_"+String(m).padStart(2,"0"));
     hs.textContent=`${mn} ${y}`;
   } else {
     const [y,m]=statPeriod.split("-").map(Number);
-    const mn=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"][m-1];
-    hs.textContent = statScope==="month" ? `${mn} ${y}` : `Jahr ${y}`;
+    const mn=tr("month_"+String(m).padStart(2,"0"));
+    hs.textContent = statScope==="month" ? `${mn} ${y}` : tr("stat_year_label",{y});
   }
   if(statTab==="ma") rStatMa();
   else if(statTab==="bv") rStatBv();
@@ -1688,7 +1782,7 @@ function statEntriesInPeriod(){
 function rStatMa(){
   const body=document.getElementById("statbody");
   const rows=statEntriesInPeriod();
-  if(!rows.length){ body.innerHTML=`<div class="emp"><div class="eic">👷</div>Keine Stunden in diesem Zeitraum.</div>`; return; }
+  if(!rows.length){ body.innerHTML=`<div class="emp"><div class="eic">👷</div>${tr("stat_no_hours")}</div>`; return; }
 
   const byMa={};
   rows.forEach(e=>{
@@ -1700,7 +1794,7 @@ function rStatMa(){
   });
 
   const list=MA.filter(m=>byMa[m.id]).sort((a,b)=>byMa[b.id].h-byMa[a.id].h);
-  if(!list.length){ body.innerHTML=`<div class="emp"><div class="eic">👷</div>Keine Stunden in diesem Zeitraum.</div>`; return; }
+  if(!list.length){ body.innerHTML=`<div class="emp"><div class="eic">👷</div>${tr("stat_no_hours")}</div>`; return; }
 
   body.innerHTML=`<div class="crd" style="margin:12px 16px">${
     list.map(m=>{
@@ -1715,7 +1809,7 @@ function rStatMa(){
           <div class="statrn">${m.name}</div>
           <div class="statrv">${fmtH(s.h)}</div>
         </div>
-        <div class="statrsub">${s.days.size} Einsatztag${s.days.size===1?"":"e"} · ${bvLine}</div>
+        <div class="statrsub">${s.days.size} ${s.days.size===1?tr("stat_workday"):tr("stat_workdays")} · ${bvLine}</div>
       </div>`;
     }).join("")
   }</div><div style="height:24px"></div>`;
@@ -1723,7 +1817,7 @@ function rStatMa(){
 function rStatBv(){
   const body=document.getElementById("statbody");
   const rows=statEntriesInPeriod();
-  if(!rows.length){ body.innerHTML=`<div class="emp"><div class="eic">🏗️</div>Keine Stunden in diesem Zeitraum.</div>`; return; }
+  if(!rows.length){ body.innerHTML=`<div class="emp"><div class="eic">🏗️</div>${tr("stat_no_hours")}</div>`; return; }
 
   const byBv={};
   rows.forEach(e=>{
@@ -1747,8 +1841,8 @@ function rStatBv(){
           <div class="statrn">BV ${bv?.nr||"?"} · ${bv?.name||"—"}</div>
           <div class="statrv">${fmtH(x.h)}</div>
         </div>
-        <div class="statrsub">${x.days.size} Tag${x.days.size===1?"":"e"}${cost!=null?` · ${fmtCHF(cost)}`:""}</div>
-        ${budget?`<div class="pbar ${over?"over":""}"><div style="width:${pct}%"></div></div><div class="statrsub" style="margin-top:4px">${fmtH(x.h)} von ${fmtH(Number(budget))} Soll${over?" · über Budget":""}</div>`:""}
+        <div class="statrsub">${x.days.size} ${x.days.size===1?tr("stat_day"):tr("stat_days")}${cost!=null?` · ${fmtCHF(cost)}`:""}</div>
+        ${budget?`<div class="pbar ${over?"over":""}"><div style="width:${pct}%"></div></div><div class="statrsub" style="margin-top:4px">${tr("stat_of_target",{ist:fmtH(x.h),soll:fmtH(Number(budget))})}${over?" · "+tr("stat_over_budget"):""}</div>`:""}
       </div>`;
     }).join("")
   }</div><div style="height:24px"></div>`;
@@ -1756,7 +1850,7 @@ function rStatBv(){
 function rStatCal(){
   const body=document.getElementById("statbody");
   const [y,m]=calMonth.split("-").map(Number);
-  document.getElementById("cal-label").textContent=`${["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"][m-1]} ${y}`;
+  document.getElementById("cal-label").textContent=`${tr("month_short_"+String(m).padStart(2,"0"))} ${y}`;
 
   const dayTotals={};
   EN.forEach(e=>{
@@ -1788,9 +1882,9 @@ function rStatCal(){
 
   body.innerHTML=`<div class="calgrid">${cells}</div>
     <div class="callegend">
-      <span>wenig</span>
+      <span>${tr("stat_heat_low")}</span>
       <div class="calcell"></div><div class="calcell h1"></div><div class="calcell h2"></div><div class="calcell h3"></div><div class="calcell h4"></div>
-      <span>viel</span>
+      <span>${tr("stat_heat_high")}</span>
     </div><div style="height:24px"></div>`;
 }
 function openCalDay(ds){
@@ -1798,7 +1892,7 @@ function openCalDay(ds){
   document.getElementById("caldetail-t").textContent=fd(ds);
   const c=document.getElementById("caldetail-body");
   if(!rows.length){
-    c.innerHTML=`<div class="statrow" style="text-align:center;color:var(--s)">Keine Einträge an diesem Tag.</div>`;
+    c.innerHTML=`<div class="statrow" style="text-align:center;color:var(--s)">${tr("stat_no_entries_day")}</div>`;
   }else{
     const tot=rows.reduce((a,e)=>a+(Number(e.stunden)||0),0);
     c.innerHTML=rows.map(e=>{
@@ -1807,7 +1901,7 @@ function openCalDay(ds){
         <div class="lib">${ma?.name||"—"}</div>
         <div class="lid">BV ${bv?.nr||"?"} · ${bv?.name||"—"}</div>
       </div><div class="statrv">${fmtH(Number(e.stunden)||0)}</div></div>`;
-    }).join("")+`<div class="li" style="background:var(--gl)"><div class="lii"><div class="lib">Total</div></div><div class="statrv">${fmtH(tot)}</div></div>`;
+    }).join("")+`<div class="li" style="background:var(--gl)"><div class="lii"><div class="lib">${tr("stat_total")}</div></div><div class="statrv">${fmtH(tot)}</div></div>`;
   }
   opov("ov-caldetail");
 }
@@ -1925,9 +2019,9 @@ async function togglePush(){
   const t=document.getElementById("ptgl");
   const isOn=t.classList.contains("on");
   if(!isOn){
-    if(!("Notification" in window)){ alert("Dein Browser unterstützt keine Benachrichtigungen."); return; }
+    if(!("Notification" in window)){ alert(tr("push_not_supported")); return; }
     const p=await Notification.requestPermission();
-    if(p!=="granted"){ alert("Bitte Benachrichtigungen erlauben."); return; }
+    if(p!=="granted"){ alert(tr("push_permission_denied")); return; }
     t.classList.add("on");
     localStorage.setItem("apush","1");
     schPush();
@@ -1955,7 +2049,7 @@ function doNotify(){
 // ═══ BAUSTELLEN ═══
 function n2bv(){
   const d=document.getElementById("inp-d").value;
-  if(!d){alert("Bitte Datum wählen!");return;}
+  if(!d){alert(tr("pick_date_first"));return;}
   cD=d;
   document.getElementById("bvsub").textContent=fd(d);
   sBV=null;
@@ -2020,8 +2114,8 @@ async function handleAddBV(nrId, nmId, blIdId, autoSelect) {
   const nm = document.getElementById(nmId).value.trim();
   const blId = document.getElementById(blIdId).value;
 
-  if(!nr){ alert("BV-Nummer eingeben!"); return; }
-  if(BV.find(b=>b.nr===nr)){ alert("BV bereits vorhanden!"); return; }
+  if(!nr){ alert(tr("bv_nr_enter")); return; }
+  if(BV.find(b=>b.nr===nr)){ alert(tr("bv_nr_exists")); return; }
 
   const execAdd = async () => {
     syn("w", tr("sync_now"));
@@ -2276,7 +2370,7 @@ async function save(rows){
 
   if(!res){
     syn("e",tr("sync_error"));
-    alert("Speichern fehlgeschlagen.");
+    alert(tr("save_failed"));
     return;
   }
 
@@ -2719,7 +2813,7 @@ async function svma(){
   const m=MA[eMA];
   const name=document.getElementById("man").value.trim();
   const k=document.getElementById("mak").value.trim().toUpperCase().slice(0,2);
-  if(!name||!k){alert("Name und Kürzel ausfüllen!");return;}
+  if(!name||!k){alert(tr("name_and_initials_required"));return;}
   const c=selC>=0?CLRS[selC]:{bg:m.bg,tc:m.tc};
 
   await sbUpd("ma",m.id,{name,k,bg:c.bg,tc:c.tc,sort_order:eMA});
@@ -2731,7 +2825,7 @@ async function svma(){
 
 async function addMA(){
   const name=document.getElementById("nm-n").value.trim();
-  if(!name){alert("Name eingeben!");return;}
+  if(!name){alert(tr("name_required"));return;}
   const k=name.split(" ").map(w=>w[0]||"").join("").toUpperCase().slice(0,2)||"XX";
   const c=CLRS[MA.length%CLRS.length];
   await sbIns("ma",[{name,k,bg:c.bg,tc:c.tc,sort_order:MA.length}]);
@@ -2761,7 +2855,7 @@ async function svbl(){
   if(eBL<0)return;
   const b=BL[eBL];
   const name=document.getElementById("bln").value.trim();
-  if(!name){alert("Name eingeben!");return;}
+  if(!name){alert(tr("name_required"));return;}
 
   await sbUpd("bl",b.id,{name});
   await syncDown();
@@ -2771,7 +2865,7 @@ async function svbl(){
 
 async function addBL(){
   const name=document.getElementById("nb-bl-n").value.trim();
-  if(!name){alert("Name eingeben!");return;}
+  if(!name){alert(tr("name_required"));return;}
   await sbIns("bl",[{name}]);
   await syncDown();
   document.getElementById("nb-bl-n").value="";
@@ -2949,7 +3043,7 @@ async function delEdBv(){
     clco();
     const res=await sbDel("bv", edBVid);
     if(!res){
-      alert("Löschen fehlgeschlagen.");
+      alert(tr("delete_failed"));
       return;
     }
     await syncDown();
@@ -2970,7 +3064,7 @@ function repD1(){
 
 function n2RepBv(){
   const d=document.getElementById("rep-d").value;
-  if(!d){ alert("Bitte Datum wählen!"); return; }
+  if(!d){ alert(tr("pick_date_first")); return; }
   repD=d;
   repBV=null;
   rRepBvg();
@@ -3077,8 +3171,8 @@ async function svEdBv(){
   const budget_h=budgetRaw===""?null:Number(budgetRaw);
   const warnOff=document.getElementById("edbv-warn-tgl").classList.contains("on");
   const archived=document.getElementById("edbv-arch-tgl").classList.contains("on");
-  if(!nr){ alert("BV-Nummer eingeben!"); return; }
-  if(BV.find(b=>b.nr===nr && b.id!==edBVid)){ alert("BV-Nummer bereits vergeben!"); return; }
+  if(!nr){ alert(tr("bv_nr_enter")); return; }
+  if(BV.find(b=>b.nr===nr && b.id!==edBVid)){ alert(tr("bv_nr_taken")); return; }
 
   const execSave = async () => {
     await sbUpd("bv", edBVid, { nr, name: name || "—", warn_disabled: warnOff, archived: archived, rate, budget_h });
