@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -149,7 +150,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 .co.on{display:flex;}
 .cb{background:var(--c);border-radius:var(--r);padding:22px;width:100%;max-width:340px;}
 .cbt{font-size:18px;font-weight:800;margin-bottom:8px;}
-.cbm{font-size:15px;color:var(--s);margin-bottom:18px;line-height:1.5;}
+.cbm{font-size:15px;color:var(--s);margin-bottom:18px;line-height:1.5;white-space:pre-line;}
 .cbb{display:flex;gap:10px;}
 .cbb button{flex:1;padding:13px;border-radius:var(--rs);border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
 .cc{background:var(--bg);color:var(--t);}
@@ -819,7 +820,7 @@ const DMA=[
 ];
 
 // ═══ I18N ═══
-let LANG = localStorage.getItem("app_lang") || "de";
+let LANG = localStorage.getItem("app_lang") || "tr";
 
 const I18N = {
   de: {
@@ -985,6 +986,20 @@ const I18N = {
     name_and_initials_required: "Name und Kürzel ausfüllen!",
     name_required: "Name eingeben!",
     network_error_prefix: "Netzwerkfehler / Fetch-Fehler:\n",
+    duplicate_entry_error: "Für diesen Mitarbeiter existiert an diesem Tag auf dieser Baustelle bereits ein Eintrag. Bitte Seite neu laden und erneut versuchen.",
+    db_error_prefix: "Es gab ein Problem beim Speichern (Fehlercode {code}). Bitte erneut versuchen.",
+    edrow_employee: "Mitarbeiter",
+    edrow_start: "Start",
+    edrow_end: "Ende",
+    edrow_pause: "Pause (Min)",
+    edrow_time_invalid: "Ungültige Zeit",
+    print_rapport_title: "Rapport ausdrucken?",
+    print_rapport_msg: "Möchtest du eine Kopie zum Ausdrucken öffnen?",
+    print_rapport_yes: "Ja, öffnen",
+    safety_warning_title: "Bitte prüfen",
+    safety_warning_continue: "Trotzdem speichern",
+    safety_pause_warning: "{name}: {hours}h heute insgesamt, aber nur {pause} Min Pause erfasst (mind. {required} Min vorgeschrieben).",
+    safety_hours_warning: "{name}: {hours}h heute insgesamt – das ist sehr viel. Bitte prüfen, ob das stimmt.",
     report_field_datum: "Datum",
     report_field_addr: "Adresse",
     report_field_bvnr: "BV-Nummer",
@@ -1239,6 +1254,20 @@ const I18N = {
     name_and_initials_required: "Ad ve kısaltmayı doldurun!",
     name_required: "Ad girin!",
     network_error_prefix: "Ağ hatası / bağlantı hatası:\n",
+    duplicate_entry_error: "Bu çalışan için bu tarihte ve bu şantiyede zaten bir kayıt var. Lütfen sayfayı yenileyip tekrar deneyin.",
+    db_error_prefix: "Kaydederken bir sorun oluştu (hata kodu {code}). Lütfen tekrar deneyin.",
+    edrow_employee: "Çalışan",
+    edrow_start: "Başlangıç",
+    edrow_end: "Bitiş",
+    edrow_pause: "Mola (Dk)",
+    edrow_time_invalid: "Geçersiz saat",
+    print_rapport_title: "Rapor yazdırılsın mı?",
+    print_rapport_msg: "Yazdırmak için bir kopya açmak ister misin?",
+    print_rapport_yes: "Evet, aç",
+    safety_warning_title: "Lütfen kontrol et",
+    safety_warning_continue: "Yine de kaydet",
+    safety_pause_warning: "{name}: bugün toplam {hours} saat, ama sadece {pause} dk mola girildi (en az {required} dk gerekli).",
+    safety_hours_warning: "{name}: bugün toplam {hours} saat – bu çok fazla. Lütfen doğru olduğundan emin ol.",
     report_field_datum: "Tarih",
     report_field_addr: "Adres",
     report_field_bvnr: "BV numarası",
@@ -1396,7 +1425,14 @@ async function sbFetch(path,opts={}){
     const txt=await r.text();
     if(r.status===200||r.status===201) return txt ? JSON.parse(txt) : [];
     if(r.status===204) return [];
-    alert("Supabase Fehler " + r.status + "\n" + path + "\n" + txt);
+    let code=null;
+    try{ code=JSON.parse(txt)?.code; }catch(e){}
+    if(code==="23505"){
+      alert(tr("duplicate_entry_error"));
+    }else{
+      console.error("SUPABASE ERROR", r.status, path, txt);
+      alert(tr("db_error_prefix",{code:r.status}));
+    }
     return null;
   }catch(e){
     console.error("SUPABASE FETCH ERROR:", e);
@@ -1405,11 +1441,12 @@ async function sbFetch(path,opts={}){
   }
 }
 async function sbSel(t,q=""){ return sbFetch(`${t}?select=*${q}`); }
-async function sbIns(t,rows){
+async function sbIns(t,rows,onConflict=null){
   if(!rows?.length)return [];
-  return sbFetch(t,{
+  const path = onConflict ? `${t}?on_conflict=${encodeURIComponent(onConflict)}` : t;
+  return sbFetch(path,{
     method:"POST",
-    headers:{...SBH,Prefer:"return=representation,resolution=merge-duplicates"},
+    headers:{...SBH,Prefer:`return=representation,resolution=merge-duplicates`},
     body:JSON.stringify(rows)
   });
 }
@@ -1447,6 +1484,64 @@ function showBvList() {
 }
 
 // 2. Ausgewählte PDFs generieren
+function fillRapportPdf(form, dateStr, bvId){
+    const bv = BV.find(x => x.id == bvId);
+    const bl = BL.find(x => x.id == bv.bl_id) || { name: "" };
+    const rows = EN.filter(e => e.datum === dateStr && e.bv_id == bvId);
+
+    form.getTextField('text_3').setText(bv.nr || "");
+    form.getTextField('text_0').setText(formatDate(dateStr));
+    form.getTextField('text_111 (0)').setText(bv.name || "");
+    form.getTextField('text_9').setText(bl.name || "");
+
+    const empFields = [
+        { name: 'text_13', start: 'text_31', end: 'text_36', pause: 'text_41', hours: 'text_58' },
+        { name: 'text_15', start: 'text_32', end: 'text_37', pause: 'text_42', hours: 'text_59' },
+        { name: 'text_11', start: 'text_33', end: 'text_38', pause: 'text_43', hours: 'text_60' },
+        { name: 'text_18', start: 'text_34', end: 'text_39', pause: 'text_44', hours: 'text_61' },
+        { name: 'text_20', start: 'text_35', end: 'text_40', pause: 'text_45', hours: 'text_62' }
+    ];
+    rows.slice(0, 5).forEach((row, i) => {
+        const f = empFields[i];
+        if (!f) return;
+        const ma = MA.find(x => x.id == row.ma_id) || { name: "" };
+        form.getTextField(f.name).setText(ma.name);
+        form.getTextField(f.start).setText(formatTime(row.beginn));
+        form.getTextField(f.end).setText(formatTime(row.ende));
+        form.getTextField(f.pause).setText(formatVal(row.pause_min ? (row.pause_min / 60) : ""));
+        form.getTextField(f.hours).setText(formatVal(row.stunden));
+    });
+    return bv;
+}
+
+// Direkter Druck-Weg: nach dem Speichern der Stunden fragen, ob eine Kopie zum Ausdrucken gewünscht ist.
+function offerPrintRapport(dateStr, bvId){
+  conf(tr("print_rapport_title"), tr("print_rapport_msg"), ()=>{
+    clco();
+    openRapportPdf(dateStr, bvId);
+  }, tr("print_rapport_yes"));
+}
+async function openRapportPdf(dateStr, bvId){
+    const win = window.open("", "_blank");
+    try{
+        const response = await fetch('Rapport_Vorlage.pdf');
+        if (!response.ok) throw new Error(tr("pdf_template_missing"));
+        const arrayBuffer = await response.arrayBuffer();
+        const { PDFDocument } = PDFLib;
+        const pdfDoc = await PDFDocument.load(arrayBuffer);
+        const form = pdfDoc.getForm();
+        fillRapportPdf(form, dateStr, bvId);
+        const pdfBytes = await pdfDoc.save();
+        const blob = new Blob([pdfBytes], { type: "application/pdf" });
+        const url = URL.createObjectURL(blob);
+        if(win) win.location.href = url;
+        else { const a=document.createElement("a"); a.href=url; a.target="_blank"; a.click(); }
+    }catch(e){
+        if(win) win.close();
+        alert(tr("pdf_error_prefix") + e.message);
+    }
+}
+
 async function generateSelectedPDFs() {
     try {
         const dateStr = document.getElementById("rep-d").value;
@@ -1467,34 +1562,7 @@ async function generateSelectedPDFs() {
             const bvId = box.value;
             const pdfDoc = await PDFDocument.load(arrayBuffer);
             const form = pdfDoc.getForm();
-            
-            const bv = BV.find(x => x.id == bvId);
-            const bl = BL.find(x => x.id == bv.bl_id) || { name: "" };
-            const rows = EN.filter(e => e.datum === dateStr && e.bv_id == bvId);
-
-            form.getTextField('text_3').setText(bv.nr || "");
-            form.getTextField('text_0').setText(formatDate(dateStr)); 
-            form.getTextField('text_111 (0)').setText(bv.name || "");
-            form.getTextField('text_9').setText(bl.name || "");
-
-            const empFields = [
-                { name: 'text_13', start: 'text_31', end: 'text_36', pause: 'text_41', hours: 'text_58' },
-                { name: 'text_15', start: 'text_32', end: 'text_37', pause: 'text_42', hours: 'text_59' },
-                { name: 'text_11', start: 'text_33', end: 'text_38', pause: 'text_43', hours: 'text_60' },
-                { name: 'text_18', start: 'text_34', end: 'text_39', pause: 'text_44', hours: 'text_61' },
-                { name: 'text_20', start: 'text_35', end: 'text_40', pause: 'text_45', hours: 'text_62' }
-            ];
-
-            rows.slice(0, 5).forEach((row, i) => {
-                const f = empFields[i];
-                if (!f) return;
-                const ma = MA.find(x => x.id == row.ma_id) || { name: "" };
-                form.getTextField(f.name).setText(ma.name);
-                form.getTextField(f.start).setText(formatTime(row.beginn));
-                form.getTextField(f.end).setText(formatTime(row.ende));
-                form.getTextField(f.pause).setText(formatVal(row.pause_min ? (row.pause_min / 60) : ""));
-                form.getTextField(f.hours).setText(formatVal(row.stunden));
-            });
+            const bv = fillRapportPdf(form, dateStr, bvId);
 
             const pdfBytes = await pdfDoc.save();
             const blob = new Blob([pdfBytes], { type: "application/pdf" });
@@ -2362,6 +2430,35 @@ function normTime(v){
   return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
 }
 
+function checkDailySafety(rows){
+  const warnings=[];
+  const byMa={};
+  rows.forEach(r=>{
+    if(!byMa[r.ma_id]) byMa[r.ma_id]={ hours:0, pause:0 };
+    byMa[r.ma_id].hours+=r.stunden;
+    byMa[r.ma_id].pause+=r.pause_min||0;
+  });
+  Object.keys(byMa).forEach(maId=>{
+    const existing = EN.filter(e=>e.datum===cD && String(e.ma_id)===String(maId));
+    const existingHours = existing.reduce((a,e)=>a+(Number(e.stunden)||0),0);
+    const existingPause = existing.reduce((a,e)=>a+(Number(e.pause_min)||0),0);
+    const totalHours = existingHours + byMa[maId].hours;
+    const totalPause = existingPause + byMa[maId].pause;
+    const name = maById(maId)?.name?.split(" ")[0] || "?";
+
+    let requiredPause=0;
+    if(totalHours>9) requiredPause=45;
+    else if(totalHours>6) requiredPause=30;
+    if(requiredPause>0 && totalPause<requiredPause){
+      warnings.push(tr("safety_pause_warning",{name, hours:fmtH(totalHours), pause:totalPause, required:requiredPause}));
+    }
+    if(totalHours>12){
+      warnings.push(tr("safety_hours_warning",{name, hours:fmtH(totalHours)}));
+    }
+  });
+  return warnings;
+}
+
 function confirmAndSave(){
   const rows=buildRows();
   if(!rows||!rows.length){ alert(tr("warn_no_team_or_time")); return; }
@@ -2370,17 +2467,27 @@ function confirmAndSave(){
   const msg = sameTime
     ? tr("confirm_hours_msg",{hours:fmtH(tot/rows.length),names:namesTxt})
     : tr("confirm_hours_msg_multi",{names:namesTxt});
-  conf(tr("confirm_hours_title"), msg, async()=>{
-    clco();
-    await save(rows);
-  });
+
+  const proceedToConfirm = ()=>{
+    conf(tr("confirm_hours_title"), msg, async()=>{
+      clco();
+      await save(rows);
+    });
+  };
+
+  const warnings=checkDailySafety(rows);
+  if(warnings.length){
+    conf(tr("safety_warning_title"), warnings.join("\n\n"), ()=>{ clco(); proceedToConfirm(); }, tr("safety_warning_continue"));
+  }else{
+    proceedToConfirm();
+  }
 }
 
 async function save(rows){
   if(!rows||!rows.length)return;
 
   syn("w",tr("sync_now"));
-  const res = await sbIns("en", rows);
+  const res = await sbIns("en", rows, "datum,bv_id,ma_id");
 
   if(!res){
     syn("e",tr("sync_error"));
@@ -2395,6 +2502,8 @@ async function save(rows){
   const tot=rows.reduce((a,b)=>a+b.stunden,0);
   document.getElementById("okd").textContent=`BV ${sBV.nr} · ${fd(cD)}\n${txt.join(", ")} · ${fmtH(tot)}h`;
   go("pg-ok");
+  const savedDate=cD, savedBvId=sBV.id;
+  setTimeout(()=>offerPrintRapport(savedDate, savedBvId), 450);
 }
 function rsi(){ sBV=null; document.getElementById("bvnx").disabled=true; }
 
@@ -2690,15 +2799,46 @@ function edMoveChanged(){
 function rEdRows(){
   const rowsHtml=edRows.map((r,i)=>{
     const opts=MA.map(m=>`<option value="${m.id}" ${m.id===r.ma_id?"selected":""}>${m.name}</option>`).join("");
-    return `<div class="mr" style="padding:10px 0;border-bottom:.5px solid var(--b);gap:8px">
-      <select id="ed-ma-${i}" onchange="edRowMaChange(${i})" style="flex:1;min-width:0;padding:9px 8px;font-size:14px;border-radius:8px;border:.5px solid var(--bs);background:var(--c);color:var(--t)">${opts}</select>
-      <input type="number" class="hi" id="ed-h-${i}" value="${r.stunden}" min="0" max="24" step="0.5" inputmode="decimal">
-      <div class="hu">h</div>
-      <button class="eb" onclick="edRemoveRow(${i})" title="${tr("delete_entry")}">${ICON_TRASH}</button>
+    return `<div class="mr" style="flex-direction:column;align-items:stretch;padding:12px 0;border-bottom:.5px solid var(--b);gap:8px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="flex-shrink:0"><div class="lbl" style="margin:0 0 4px">${tr("edrow_employee")}</div>
+        <select id="ed-ma-${i}" onchange="edRowMaChange(${i})" style="width:100%;min-width:0;padding:9px 8px;font-size:15px;font-weight:700;border-radius:8px;border:.5px solid var(--bs);background:var(--c);color:var(--t)">${opts}</select></div>
+        <button class="eb" onclick="edRemoveRow(${i})" title="${tr("delete_entry")}" style="margin-top:20px">${ICON_TRASH}</button>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:8px">
+        <div style="flex:1;min-width:0"><div class="lbl" style="margin:0 0 4px">${tr("edrow_start")}</div>
+        <input type="text" id="ed-start-${i}" value="${r.beginn||""}" placeholder="07:00" inputmode="numeric" oninput="edRowTimeChange(${i})" style="width:100%;padding:9px 8px;font-size:15px;border-radius:8px;border:.5px solid var(--bs);background:var(--c);color:var(--t)"></div>
+        <div style="flex:1;min-width:0"><div class="lbl" style="margin:0 0 4px">${tr("edrow_end")}</div>
+        <input type="text" id="ed-end-${i}" value="${r.ende||""}" placeholder="16:00" inputmode="numeric" oninput="edRowTimeChange(${i})" style="width:100%;padding:9px 8px;font-size:15px;border-radius:8px;border:.5px solid var(--bs);background:var(--c);color:var(--t)"></div>
+        <div style="flex:1;min-width:0"><div class="lbl" style="margin:0 0 4px">${tr("edrow_pause")}</div>
+        <input type="number" id="ed-pause-${i}" value="${r.pause_min||0}" min="0" max="180" step="5" inputmode="numeric" oninput="edRowTimeChange(${i})" style="width:100%;padding:9px 8px;font-size:15px;border-radius:8px;border:.5px solid var(--bs);background:var(--c);color:var(--t)"></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px">
+        <div style="font-size:12px;color:var(--s)" id="ed-calc-note-${i}"></div>
+        <input type="number" class="hi" id="ed-h-${i}" value="${r.stunden}" min="0" max="24" step="0.25" inputmode="decimal" oninput="edRowHoursTouched(${i})">
+        <div class="hu">h</div>
+      </div>
     </div>`;
   }).join("");
   document.getElementById("ema").innerHTML = rowsHtml +
     `<button class="bto" onclick="edAddRow()" style="margin-top:10px" data-i18n="editor_add_row">Mitarbeiter hinzufügen</button>`;
+}
+function edRowTimeChange(i){
+  const sEl=document.getElementById("ed-start-"+i), eEl=document.getElementById("ed-end-"+i), pEl=document.getElementById("ed-pause-"+i);
+  const note=document.getElementById("ed-calc-note-"+i);
+  if(!sEl||!eEl)return;
+  const h=calcHours(sEl.value,eEl.value,parseInt(pEl?.value)||0);
+  if(h!==null){
+    const hEl=document.getElementById("ed-h-"+i);
+    if(hEl) hEl.value=h;
+    if(edRows[i]){ edRows[i].beginn=normTime(sEl.value); edRows[i].ende=normTime(eEl.value); edRows[i].pause_min=parseInt(pEl?.value)||0; }
+    if(note) note.textContent="";
+  }else if(note && (sEl.value||eEl.value)){
+    note.textContent=tr("edrow_time_invalid");
+  }
+}
+function edRowHoursTouched(i){
+  if(edRows[i]) edRows[i].manualHours=true;
 }
 function edRowMaChange(i){
   const el=document.getElementById("ed-ma-"+i);
@@ -2725,8 +2865,14 @@ async function svedit(){
   edRows.forEach((r,i)=>{
     const hEl=document.getElementById("ed-h-"+i);
     const mEl=document.getElementById("ed-ma-"+i);
+    const sEl=document.getElementById("ed-start-"+i);
+    const eEl=document.getElementById("ed-end-"+i);
+    const pEl=document.getElementById("ed-pause-"+i);
     r.stunden=parseFloat(hEl?.value)||0;
     if(mEl) r.ma_id=mEl.value;
+    r.beginn = sEl?.value ? normTime(sEl.value) : null;
+    r.ende = eEl?.value ? normTime(eEl.value) : null;
+    r.pause_min = parseInt(pEl?.value)||0;
   });
 
   for(const r of g.rows) await sbDel("en",r.id);
@@ -2741,7 +2887,7 @@ async function svedit(){
   });
   const rows=Object.values(merged);
 
-  if(rows.length) await sbIns("en",rows);
+  if(rows.length) await sbIns("en",rows,"datum,bv_id,ma_id");
   await syncDown();
   cls("ov-e");
   rverl();
@@ -2940,10 +3086,10 @@ function cDBL(){
 function opov(id){ document.getElementById(id).classList.add("on"); }
 function clov(id,ev){ if(ev&&ev.target!==document.getElementById(id))return; cls(id); }
 function cls(id){ document.getElementById(id).classList.remove("on"); eGroupKey=""; eBV=null; eMA=-1; eBL=-1; selC=-1; edBVid=null; }
-function conf(t,m,cb){
+function conf(t,m,cb,okLabel){
   document.getElementById("cft").textContent=t;
   document.getElementById("cfm").textContent=m;
-  document.getElementById("cfok").innerHTML=tr("confirm_ok"); // reset to standard text
+  document.getElementById("cfok").innerHTML=okLabel||tr("confirm_ok"); // reset to standard text
   document.getElementById("cfok").onclick=cb;
   document.getElementById("cof").classList.add("on");
 }
