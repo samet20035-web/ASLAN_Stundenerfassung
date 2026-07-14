@@ -527,6 +527,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
   <div class="sc" id="repviewcnt">
     <div style="height:24px"></div>
   </div>
+  <div class="nav" id="repviewnav" style="display:none"><button class="btn" onclick="printCurrentRapport()" data-i18n="report_print_btn">Rapport drucken</button></div>
 </div>
 
 
@@ -928,6 +929,10 @@ const I18N = {
     report_pick_date: "Datum wählen",
     report_pick_bv: "Baustelle wählen",
     report_no_entries: "Für diesen Tag und diese Baustelle liegen keine Einträge vor.",
+    report_print_btn: "Rapport drucken",
+    report_future_pick_ma: "Mitarbeiter auswählen",
+    report_future_show_btn: "Rapport anzeigen",
+    report_future_pick_one: "Bitte mindestens einen Mitarbeiter auswählen.",
     wa_link: "WhatsApp-Versand",
     wa_sub: "Rapporte an Frau Peters abhaken",
     wa_title: "WhatsApp-Versand",
@@ -975,6 +980,7 @@ const I18N = {
     pdf_created_ok: "PDFs erfolgreich erstellt!",
     pdf_error_prefix: "Fehler: ",
     push_not_supported: "Dein Browser unterstützt keine Benachrichtigungen.",
+    push_ios_add_home: "Auf dem iPhone funktionieren Benachrichtigungen nur, wenn die App zum Home-Bildschirm hinzugefügt wurde: In Safari auf \"Teilen\" und dann \"Zum Home-Bildschirm\" tippen. Danach die App von dort öffnen und Benachrichtigungen erneut aktivieren.",
     push_permission_denied: "Bitte Benachrichtigungen erlauben.",
     pick_date_first: "Bitte Datum wählen!",
     bv_nr_enter: "BV-Nummer eingeben!",
@@ -1196,6 +1202,10 @@ const I18N = {
     report_pick_date: "Tarih seç",
     report_pick_bv: "Şantiye seç",
     report_no_entries: "Bu tarih ve şantiye için kayıt yok.",
+    report_print_btn: "Raporu yazdır",
+    report_future_pick_ma: "Çalışan seç",
+    report_future_show_btn: "Raporu göster",
+    report_future_pick_one: "Lütfen en az bir çalışan seçin.",
     wa_link: "WhatsApp Gönderimi",
     wa_sub: "Bayan Peters'a gönderilenleri işaretle",
     wa_title: "WhatsApp Gönderimi",
@@ -1243,6 +1253,7 @@ const I18N = {
     pdf_created_ok: "PDF'ler başarıyla oluşturuldu!",
     pdf_error_prefix: "Hata: ",
     push_not_supported: "Tarayıcınız bildirimleri desteklemiyor.",
+    push_ios_add_home: "iPhone'da bildirimler yalnızca uygulama Ana Ekrana eklendiğinde çalışır: Safari'de \"Paylaş\" ve ardından \"Ana Ekrana Ekle\"ye dokunun. Sonra uygulamayı oradan açıp bildirimleri tekrar etkinleştirin.",
     push_permission_denied: "Lütfen bildirimlere izin verin.",
     pick_date_first: "Lütfen tarih seçin!",
     bv_nr_enter: "Şantiye numarasını girin!",
@@ -1395,7 +1406,7 @@ function applyTranslations() {
 
 // ═══ STATE ═══
 let BV=[], MA=[], EN=[], BL=[];
-let WA=new Set(), waFilterOpen=false;
+let WA=new Set(), waFilterOpen=true; // Standardmäßig nur offene (noch nicht abgehakte) Rapporte anzeigen
 let statTab="ma", statScope="month", statPeriod="", calMonth="";
 let sBV=null, cD="", eGroupKey="", eBV=null, eMA=-1, eBL=-1, selC=-1, woff=0;
 let pstack=["pg-home"];
@@ -1483,10 +1494,14 @@ function showBvList() {
 }
 
 // 2. Ausgewählte PDFs generieren
-function fillRapportPdf(form, dateStr, bvId){
+function fillRapportPdf(form, dateStr, bvId, futureMaIds){
     const bv = BV.find(x => x.id == bvId);
     const bl = BL.find(x => x.id == bv.bl_id) || { name: "" };
-    const rows = EN.filter(e => e.datum === dateStr && e.bv_id == bvId);
+    // futureMaIds: falls gesetzt (Array), wird ein leerer Rapport für die gewählten Mitarbeiter erzeugt
+    // (Anfang/Ende/Pause/Stunden bleiben leer) statt der gespeicherten Stundeneinträge.
+    const rows = (futureMaIds && futureMaIds.length)
+        ? futureMaIds.map(maId => ({ ma_id: maId, beginn: "", ende: "", pause_min: null, stunden: "" }))
+        : EN.filter(e => e.datum === dateStr && e.bv_id == bvId);
 
     form.getTextField('text_3').setText(bv.nr || "");
     form.getTextField('text_0').setText(formatDate(dateStr));
@@ -1547,11 +1562,17 @@ async function openRapportPdf(dateStr, bvId){
         const { PDFDocument } = PDFLib;
         const pdfDoc = await PDFDocument.load(arrayBuffer);
         const form = pdfDoc.getForm();
-        fillRapportPdf(form, dateStr, bvId);
+        fillRapportPdf(form, dateStr, bvId, repFutureMode ? [...repFutureMaSel] : null);
         const pdfBytes = await pdfDoc.save();
-        const dataUrl = `data:application/pdf;base64,${bytesToBase64(pdfBytes)}`;
-        if(win && !win.closed) win.location.href = dataUrl;
-        else { const a=document.createElement("a"); a.href=dataUrl; a.target="_blank"; a.click(); }
+        const blob = new Blob([pdfBytes], { type: "application/pdf" });
+        const blobUrl = URL.createObjectURL(blob);
+        if(win && !win.closed){
+            win.location.href = blobUrl;
+            setTimeout(()=>URL.revokeObjectURL(blobUrl), 60000);
+        } else {
+            const a=document.createElement("a"); a.href=blobUrl; a.target="_blank"; a.download=`Rapport_${dateStr}.pdf`; a.click();
+            setTimeout(()=>URL.revokeObjectURL(blobUrl), 60000);
+        }
     }catch(e){
         if(win && !win.closed) win.close();
         alert(tr("pdf_error_prefix") + e.message);
@@ -2113,11 +2134,22 @@ function initPush(){
   if(t)t.className="tgl"+(on?" on":"");
   if(on)schPush();
 }
+function isIOS(){
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+}
+function isStandalonePWA(){
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone===true;
+}
 async function togglePush(){
   const t=document.getElementById("ptgl");
   const isOn=t.classList.contains("on");
   if(!isOn){
-    if(!("Notification" in window)){ alert(tr("push_not_supported")); return; }
+    if(!("Notification" in window)){
+      // iOS Safari unterstützt Benachrichtigungen im normalen Browser-Tab grundsätzlich nicht.
+      // Erst wenn die Seite über "Zum Home-Bildschirm" als App installiert ist (iOS 16.4+), steht die API zur Verfügung.
+      if(isIOS() && !isStandalonePWA()){ alert(tr("push_ios_add_home")); return; }
+      alert(tr("push_not_supported")); return;
+    }
     const p=await Notification.requestPermission();
     if(p!=="granted"){ alert(tr("push_permission_denied")); return; }
     t.classList.add("on");
@@ -3231,6 +3263,8 @@ async function delEdBv(){
 
 // ═══ TAGESBERICHT / RAPPORT ═══
 let repD="", repBV=null;
+let repFutureMode=false;      // true = Rapport für Baustelle ohne Einträge (z.B. Zukunft) wird manuell zusammengestellt
+let repFutureMaSel=new Set(); // ausgewählte Mitarbeiter im Zukunfts-Modus
 
 function repD0(){ document.getElementById("rep-d").value=td(); }
 function repD1(){
@@ -3248,9 +3282,14 @@ function n2RepBv(){
 }
 
 function rRepBvg(){
-  // Nur Baustellen anzeigen, für die es an diesem Tag Einträge gibt
+  // Baustellen anzeigen, für die es an diesem Tag Einträge gibt.
+  // Gibt es an diesem Tag noch gar keine Einträge (z.B. Datum in der Zukunft),
+  // werden stattdessen alle aktiven Baustellen angezeigt, damit man einen
+  // Rapport im Voraus zusammenstellen kann.
   const bvIdsToday=new Set(EN.filter(e=>e.datum===repD).map(e=>e.bv_id));
-  const list=[...BV].filter(b=>bvIdsToday.has(b.id)).sort((a,b)=>a.nr.localeCompare(b.nr));
+  let list=[...BV].filter(b=>bvIdsToday.has(b.id));
+  if(!list.length) list=[...BV].filter(b=>!b.archived);
+  list=list.sort((a,b)=>a.nr.localeCompare(b.nr));
   if(!list.length){
     document.getElementById("repbvg").innerHTML=`<div style="padding:16px;color:var(--s);font-size:14px;grid-column:1/3">${tr("report_no_entries")}</div>`;
     return;
@@ -3264,12 +3303,19 @@ function opRepView(bvId){
   repBV=BV.find(b=>b.id===bvId);
   if(!repBV)return;
   const entries=EN.filter(e=>e.datum===repD && e.bv_id===bvId);
-  const dParts=repD.split("-"); // YYYY-MM-DD
-  const fnameDate=`${dParts[0].slice(2)}-${dParts[1]}-${dParts[2]}`;
-  const fname=`Rapport_${fnameDate}_BV-${repBV.nr}`;
-  document.getElementById("repviewt").textContent=fname;
+  if(!entries.length){
+    // Keine gespeicherten Stunden für diesen Tag/diese Baustelle -> Mitarbeiter manuell wählen (z.B. für die Zukunft)
+    repFutureMode=true;
+    repFutureMaSel=new Set();
+    rRepFutureSelect();
+    return;
+  }
+  repFutureMode=false;
+  rRepViewFromEntries(entries);
+}
 
-  let html=`<div class="repsec">
+function rRepHeaderHtml(){
+  return `<div class="repsec">
     <div class="repsec-h">${tr("report_title")}</div>
     <div class="crd">
       ${repFieldRow(tr("report_field_datum"), fd(repD), fd(repD))}
@@ -3278,8 +3324,18 @@ function opRepView(bvId){
       ${repFieldRow(tr("report_field_bauleiter"), blById(repBV.bl_id)?.name || tr("report_field_bauleiter_missing"), blById(repBV.bl_id)?.name || "")}
     </div>
   </div>`;
+}
 
-  entries.forEach((e,idx)=>{
+function rRepSetTitle(){
+  const dParts=repD.split("-"); // YYYY-MM-DD
+  const fnameDate=`${dParts[0].slice(2)}-${dParts[1]}-${dParts[2]}`;
+  document.getElementById("repviewt").textContent=`Rapport_${fnameDate}_BV-${repBV.nr}`;
+}
+
+function rRepViewFromEntries(entries){
+  rRepSetTitle();
+  let html=rRepHeaderHtml();
+  entries.forEach((e)=>{
     const ma=maById(e.ma_id);
     html+=`<div class="repsec">
       <div class="repsec-h">${ma?.name||"?"}</div>
@@ -3291,9 +3347,60 @@ function opRepView(bvId){
       </div>
     </div>`;
   });
-
   document.getElementById("repviewcnt").innerHTML=html+`<div style="height:24px"></div>`;
+  document.getElementById("repviewnav").style.display="";
   go("pg-rep-view");
+}
+
+// Mitarbeiter-Auswahl für einen Rapport ohne bestehende Stundeneinträge (z.B. Zukunft)
+function rRepFutureSelect(){
+  rRepSetTitle();
+  const html=rRepHeaderHtml()+`
+    <div class="repsec">
+      <div class="repsec-h">${tr("report_future_pick_ma")}</div>
+      <div class="crd" id="repfuturemal">
+        ${MA.map(m=>`
+        <div class="tmr">
+          <div class="tmcb ${repFutureMaSel.has(m.id)?"on":""}" onclick="toggleRepFutureMa('${m.id}')">${repFutureMaSel.has(m.id)?"✓":""}</div>
+          <div class="av" style="background:${m.bg};color:${m.tc};width:36px;height:36px;font-size:12px">${m.k||"?"}</div>
+          <div class="mn" style="font-size:14px">${m.name}</div>
+        </div>`).join("")}
+      </div>
+    </div>
+    <div style="padding:0 16px"><button class="btn" onclick="showRepFuture()">${tr("report_future_show_btn")}</button></div>`;
+  document.getElementById("repviewcnt").innerHTML=html+`<div style="height:24px"></div>`;
+  document.getElementById("repviewnav").style.display="none";
+  go("pg-rep-view");
+}
+function toggleRepFutureMa(id){
+  if(repFutureMaSel.has(id)) repFutureMaSel.delete(id); else repFutureMaSel.add(id);
+  rRepFutureSelect();
+}
+function showRepFuture(){
+  if(!repFutureMaSel.size){ alert(tr("report_future_pick_one")); return; }
+  rRepSetTitle();
+  let html=rRepHeaderHtml();
+  MA.filter(m=>repFutureMaSel.has(m.id)).forEach(m=>{
+    html+=`<div class="repsec">
+      <div class="repsec-h">${m.name}</div>
+      <div class="crd">
+        ${repFieldRow(tr("report_field_start"), "—", "")}
+        ${repFieldRow(tr("report_field_end"), "—", "")}
+        ${repFieldRow(tr("report_field_pause"), "—", "")}
+        ${repFieldRow(tr("report_field_duration"), "—", "")}
+      </div>
+    </div>`;
+  });
+  document.getElementById("repviewcnt").innerHTML=html+`<div style="height:24px"></div>`;
+  document.getElementById("repviewnav").style.display="";
+  go("pg-rep-view");
+}
+
+// Vom "Rapport drucken"-Button auf der Tagesbericht-Ansicht aufgerufen
+function printCurrentRapport(){
+  if(!repBV)return;
+  if(repFutureMode && !repFutureMaSel.size){ alert(tr("report_future_pick_one")); return; }
+  openRapportPdf(repD, repBV.id);
 }
 
 function fmtPauseH(min){
