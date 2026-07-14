@@ -306,15 +306,6 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       <div class="ar">›</div>
     </button>
 
-    <div class="pushb">
-      <div style="color:var(--gd)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 5-2 6-2 6h16s-2-1-2-6"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div>
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:700;color:var(--gd)" data-i18n="home_push_title">Erinnerung 18:00 Uhr</div>
-        <div id="psub" style="font-size:12px;color:var(--gd);opacity:.8;margin-top:2px" data-i18n="home_push_sub">Täglich wenn Stunden fehlen</div>
-      </div>
-      <button class="tgl" id="ptgl" onclick="togglePush()"></button>
-    </div>
-
     <div style="text-align:center;padding:18px 0 4px">
       <span onclick="requirePin('pg-editor')" style="font-size:12px;color:var(--s);opacity:.55;cursor:pointer;letter-spacing:.02em"><span style="display:inline-flex;vertical-align:middle;margin-right:4px"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span><span data-i18n="editor_link">Editor-Modus</span></span>
     </div>
@@ -619,6 +610,35 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 
     <div class="lbl" id="edbvl-arch-lbl" data-i18n="editor_bv_archived_list" style="display:none">Archivierte Baustellen</div>
     <div class="crd" id="edbvl-arch" style="margin-bottom:16px;display:none"></div>
+
+    <div class="lbl" data-i18n="push_settings_title">Benachrichtigungen</div>
+    <div class="crd" style="margin-bottom:16px">
+      <div style="padding:14px 16px">
+        <div class="toggle-row" style="margin-bottom:14px">
+          <div class="lbl2" data-i18n="push_master_title">Benachrichtigungen aktivieren</div>
+          <button class="tgl" id="ptgl" onclick="togglePush()"></button>
+        </div>
+
+        <div style="margin-bottom:14px"><div class="lbl" style="margin:0 0 6px" data-i18n="push_time_lbl">Erinnerungszeit, wenn Stunden fehlen</div><input type="time" id="push-time" value="18:00" onchange="savePushSettings()"></div>
+
+        <div class="toggle-row" style="margin-bottom:10px">
+          <div class="lbl2" data-i18n="push_entry_title">Benachrichtigung nach jedem Eintrag</div>
+          <button class="tgl" id="ptgl-entry" onclick="togglePushOpt('apush_entry','ptgl-entry')"></button>
+        </div>
+        <div class="toggle-row" style="margin-bottom:10px">
+          <div class="lbl2" data-i18n="push_safety_title">Warnung bei ungewöhnlicher Arbeitszeit / zu wenig Pause</div>
+          <button class="tgl" id="ptgl-safety" onclick="togglePushOpt('apush_safety','ptgl-safety')"></button>
+        </div>
+        <div class="toggle-row" style="margin-bottom:14px">
+          <div class="lbl2" data-i18n="push_budget_title">Warnung wenn Soll-Stunden einer Baustelle fast erreicht sind</div>
+          <button class="tgl" id="ptgl-budget" onclick="togglePushOpt('apush_budget','ptgl-budget')"></button>
+        </div>
+
+        <div style="margin-bottom:6px"><div class="lbl" style="margin:0 0 6px" data-i18n="push_wa_days_lbl">Erinnerung "Rapport nicht an Frau Peters geschickt" nach X Tagen (mehrere mit Komma, z.B. 2,7)</div><input type="text" id="push-wa-days" placeholder="2,7" value="2,7" onchange="savePushSettings()"></div>
+
+        <div style="font-size:11px;color:var(--s);opacity:.75;margin-top:12px" data-i18n="push_ios_hint">Hinweis iPhone: Benachrichtigungen funktionieren nur, wenn die Seite über Safari "Teilen → Zum Home-Bildschirm" installiert und von dort geöffnet wurde (ab iOS 16.4). Auf Android/Samsung funktioniert es direkt im Browser.</div>
+      </div>
+    </div>
 
     <div class="lbl" data-i18n="editor_pin_change_title">PIN ändern</div>
     <div class="crd" style="margin-bottom:16px">
@@ -1091,6 +1111,22 @@ const I18N = {
 
     notify_title: "⏰ ASLAN Stundenerfassung",
     notify_body: "Stunden für heute noch nicht eingetragen!",
+    push_settings_title: "Benachrichtigungen",
+    push_master_title: "Benachrichtigungen aktivieren",
+    push_time_lbl: "Erinnerungszeit, wenn Stunden fehlen",
+    push_entry_title: "Benachrichtigung nach jedem Eintrag",
+    push_safety_title: "Warnung bei ungewöhnlicher Arbeitszeit / zu wenig Pause",
+    push_budget_title: "Warnung wenn Soll-Stunden einer Baustelle fast erreicht sind",
+    push_wa_days_lbl: "Erinnerung \"Rapport nicht an Frau Peters geschickt\" nach X Tagen (mehrere mit Komma, z.B. 2,7)",
+    push_ios_hint: "Hinweis iPhone: Benachrichtigungen funktionieren nur, wenn die Seite über Safari \"Teilen → Zum Home-Bildschirm\" installiert und von dort geöffnet wurde (ab iOS 16.4). Auf Android/Samsung funktioniert es direkt im Browser.",
+    notify_entry_title: "✅ Eintrag gespeichert",
+    notify_entry_body: "BV {bv}: {names} · {hours}h",
+    notify_safety_title: "⚠️ Bitte prüfen",
+    notify_budget_title: "📊 Soll-Stunden Baustelle",
+    notify_budget_near: "BV {bv} ({name}): {used}h von {budget}h Soll-Stunden erreicht.",
+    notify_budget_over: "BV {bv} ({name}): Soll-Stunden überschritten – {used}h von {budget}h.",
+    notify_wa_title: "📋 Rapport noch offen",
+    notify_wa_body: "BV {bv} vom {date} ist seit {days} Tagen noch nicht an Frau Peters geschickt.",
 
     excel_build: "⏳ Excel wird erstellt…",
     excel_empty: "Keine Einträge.",
@@ -1364,6 +1400,22 @@ const I18N = {
 
     notify_title: "⏰ ASLAN Saat Takibi",
     notify_body: "Bugün için henüz saat girilmedi!",
+    push_settings_title: "Bildirimler",
+    push_master_title: "Bildirimleri etkinleştir",
+    push_time_lbl: "Saat girilmediyse hatırlatma zamanı",
+    push_entry_title: "Her kayıttan sonra bildirim",
+    push_safety_title: "Olağandışı çalışma süresi / az mola uyarısı",
+    push_budget_title: "Şantiye hedef saatine yaklaşınca uyar",
+    push_wa_days_lbl: "\"Rapor Frau Peters'e gönderilmedi\" hatırlatması X gün sonra (virgülle birden fazla, örn. 2,7)",
+    push_ios_hint: "iPhone notu: Bildirimler yalnızca sayfa Safari'de \"Paylaş → Ana Ekrana Ekle\" ile kurulup oradan açıldığında çalışır (iOS 16.4+). Android/Samsung'da doğrudan tarayıcıda çalışır.",
+    notify_entry_title: "✅ Kayıt tamamlandı",
+    notify_entry_body: "BV {bv}: {names} · {hours}sa",
+    notify_safety_title: "⚠️ Lütfen kontrol edin",
+    notify_budget_title: "📊 Şantiye hedef saatleri",
+    notify_budget_near: "BV {bv} ({name}): {budget}sa hedefin {used}sa'ine ulaşıldı.",
+    notify_budget_over: "BV {bv} ({name}): Hedef saat aşıldı – {used}sa / {budget}sa.",
+    notify_wa_title: "📋 Rapor hâlâ açık",
+    notify_wa_body: "BV {bv}, {date} tarihli rapor {days} gündür Frau Peters'e gönderilmedi.",
 
     excel_build: "⏳ Excel hazırlanıyor…",
     excel_empty: "Kayıt yok.",
@@ -2127,12 +2179,40 @@ function gofill(dt){
   go("pg-bv");
 }
 
-// ═══ PUSH REMINDER ═══
+// ═══ BENACHRICHTIGUNGEN (Editor-Modus) ═══
 function initPush(){
   const on=localStorage.getItem("apush")==="1";
   const t=document.getElementById("ptgl");
   if(t)t.className="tgl"+(on?" on":"");
-  if(on)schPush();
+
+  const timeEl=document.getElementById("push-time");
+  if(timeEl) timeEl.value=localStorage.getItem("apush_time")||"18:00";
+  const waEl=document.getElementById("push-wa-days");
+  if(waEl) waEl.value=localStorage.getItem("apush_wa_days")||"2,7";
+
+  setPushOptBtn("ptgl-entry","apush_entry",true);
+  setPushOptBtn("ptgl-safety","apush_safety",true);
+  setPushOptBtn("ptgl-budget","apush_budget",true);
+
+  if(on){ schPush(); }
+}
+function setPushOptBtn(btnId,key,def){
+  const el=document.getElementById(btnId);
+  if(!el)return;
+  const on = localStorage.getItem(key)==null ? def : localStorage.getItem(key)==="1";
+  el.className="tgl"+(on?" on":"");
+}
+function togglePushOpt(key,btnId){
+  const el=document.getElementById(btnId);
+  const on=el.classList.toggle("on");
+  localStorage.setItem(key, on?"1":"0");
+}
+function savePushSettings(){
+  const timeEl=document.getElementById("push-time");
+  if(timeEl && timeEl.value) localStorage.setItem("apush_time",timeEl.value);
+  const waEl=document.getElementById("push-wa-days");
+  if(waEl) localStorage.setItem("apush_wa_days", waEl.value.replace(/[^0-9,]/g,""));
+  if(localStorage.getItem("apush")==="1") schPush();
 }
 function isIOS(){
   return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
@@ -2160,20 +2240,98 @@ async function togglePush(){
     t.classList.remove("on");
     localStorage.setItem("apush","0");
     if(ptimer)clearTimeout(ptimer);
+    if(waCheckTimer)clearInterval(waCheckTimer);
     toast(tr("toast_push_off"));
   }
 }
+function pushEnabled(){
+  return localStorage.getItem("apush")==="1" && ("Notification" in window) && Notification.permission==="granted";
+}
+function pushOptOn(key,def){
+  const v=localStorage.getItem(key);
+  return v==null ? def : v==="1";
+}
+function sendNotify(title,body,tag){
+  if(!pushEnabled())return;
+  try{ new Notification(title,{body,tag}); }catch(e){}
+}
+
+// tägliche Erinnerung, wenn noch keine Stunden für heute erfasst wurden (Zeit einstellbar)
 function schPush(){
   if(ptimer)clearTimeout(ptimer);
+  const [hh,mm]=(localStorage.getItem("apush_time")||"18:00").split(":").map(Number);
   const now=new Date(),tgt=new Date();
-  tgt.setHours(18,0,0,0);
+  tgt.setHours(hh||18,mm||0,0,0);
   if(now>=tgt)tgt.setDate(tgt.getDate()+1);
   ptimer=setTimeout(()=>{doNotify();ptimer=setInterval(doNotify,86400000);},tgt-now);
+  schWaCheck();
 }
 function doNotify(){
-  if(localStorage.getItem("apush")!=="1"||Notification.permission!=="granted")return;
+  if(!pushEnabled())return;
   const has=EN.some(e=>e.datum===td()&&Number(e.stunden)>0);
-  if(!has)new Notification(tr("notify_title"),{body:tr("notify_body"),tag:"aslan"});
+  if(!has)sendNotify(tr("notify_title"),tr("notify_body"),"aslan-reminder");
+}
+
+// Bestätigung, sobald ein Eintrag gespeichert wurde
+function notifyEntrySaved(bv,rows){
+  if(!pushEnabled() || !pushOptOn("apush_entry",true))return;
+  const names=rows.map(r=>maById(r.ma_id)?.name?.split(" ")[0]||"?").join(", ");
+  const tot=rows.reduce((a,b)=>a+b.stunden,0);
+  sendNotify(tr("notify_entry_title"), tr("notify_entry_body",{bv:bv.nr,names,hours:fmtH(tot)}), "aslan-entry-"+Date.now());
+}
+
+// Warnungen (Arbeitszeit/Pause) zusätzlich als Benachrichtigung, nicht nur als Dialog
+function notifySafetyWarnings(warnings){
+  if(!pushEnabled() || !pushOptOn("apush_safety",true) || !warnings.length)return;
+  warnings.forEach((w,i)=>sendNotify(tr("notify_safety_title"), w, "aslan-safety-"+Date.now()+"-"+i));
+}
+
+// Soll-Stunden (Budget) einer Baustelle fast/ganz erreicht
+function checkBudgetWarnings(){
+  if(!pushEnabled() || !pushOptOn("apush_budget",true))return;
+  const notified=lsGet("budgetNotified",{});
+  const today=td();
+  BV.filter(b=>!b.archived && b.budget_h>0).forEach(b=>{
+    const totalH=EN.filter(e=>e.bv_id===b.id).reduce((a,e)=>a+(Number(e.stunden)||0),0);
+    const pct=totalH/Number(b.budget_h);
+    if(pct>=0.9){
+      const key=b.id+"_"+(pct>=1?"over":"90")+"_"+today;
+      if(notified[key])return;
+      sendNotify(tr("notify_budget_title"), tr(pct>=1?"notify_budget_over":"notify_budget_near",{bv:b.nr,name:b.name,used:fmtH(totalH),budget:fmtH(Number(b.budget_h))}), "aslan-budget-"+b.id);
+      notified[key]=true;
+      lsSet("budgetNotified",notified);
+    }
+  });
+}
+
+// Mehrstufige Erinnerung: Rapport (WhatsApp) nach X Tagen immer noch nicht abgehakt
+let waCheckTimer=null;
+function schWaCheck(){
+  if(waCheckTimer)clearInterval(waCheckTimer);
+  checkWaEscalation();
+  waCheckTimer=setInterval(checkWaEscalation,3*3600000); // alle 3h prüfen reicht
+}
+function checkWaEscalation(){
+  if(!pushEnabled())return;
+  const daysList=(localStorage.getItem("apush_wa_days")||"2,7").split(",").map(s=>parseInt(s.trim(),10)).filter(n=>n>0);
+  if(!daysList.length)return;
+  const notified=lsGet("waNotified",{});
+  const now=new Date();
+  groupedEntries().forEach(g=>{
+    if(WA.has(g.key))return; // bereits abgehakt
+    const entryDate=new Date(g.datum+"T00:00:00");
+    const diffDays=Math.floor((now-entryDate)/86400000);
+    daysList.forEach(d=>{
+      if(diffDays<d)return;
+      const key=g.key+"_"+d;
+      if(notified[key])return;
+      const bv=bvById(g.bv_id);
+      sendNotify(tr("notify_wa_title"), tr("notify_wa_body",{bv:bv?.nr||"?",date:fd(g.datum),days:d}), "aslan-wa-"+key);
+      notified[key]=true;
+    });
+  });
+  lsSet("waNotified",notified);
+  checkBudgetWarnings();
 }
 
 // ═══ BAUSTELLEN ═══
@@ -2525,6 +2683,7 @@ function confirmAndSave(){
 
   const warnings=checkDailySafety(rows);
   if(warnings.length){
+    notifySafetyWarnings(warnings);
     conf(tr("safety_warning_title"), warnings.join("\n\n"), ()=>{ clco(); proceedToConfirm(); }, tr("safety_warning_continue"));
   }else{
     proceedToConfirm();
@@ -2550,6 +2709,7 @@ async function save(rows){
   const tot=rows.reduce((a,b)=>a+b.stunden,0);
   document.getElementById("okd").textContent=`BV ${sBV.nr} · ${fd(cD)}\n${txt.join(", ")} · ${fmtH(tot)}h`;
   go("pg-ok");
+  notifyEntrySaved(sBV, rows);
   const savedDate=cD, savedBvId=sBV.id;
   setTimeout(()=>offerPrintRapport(savedDate, savedBvId), 450);
 }
