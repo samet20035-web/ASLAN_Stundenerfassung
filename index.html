@@ -251,6 +251,18 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       <div class="syn"><div class="sd" id="sd"></div><span id="sl">—</span></div>
     </div>
 
+    <div class="sts" id="sts2" style="margin-top:10px">
+      <div class="stc" id="dc-invopen"><div class="stn money" id="s-ro">0 €</div><div class="stl">Offene Rechnungen</div></div>
+      <div class="stc" id="dc-invover"><div class="stn money" id="s-ru">0 €</div><div class="stl">Überfällig</div></div>
+      <div class="stc" id="dc-invtotal"><div class="stn money" id="s-rt">0 €</div><div class="stl">Umsatz gesamt</div></div>
+      <div class="stc" id="dc-invnext"><div class="stn" id="s-rf">–</div><div class="stl">Nächste Frist</div></div>
+    </div>
+
+    <div id="dc-deadlines" style="padding:0 16px;margin-top:14px">
+      <div class="lbl" style="margin:0 0 8px">Fristen Sammelrechnungen</div>
+      <div class="crd" id="rg-dash-list" style="padding:12px"></div>
+    </div>
+
     <div id="warn" style="display:none"></div>
 
     <div id="miss-info-cnt" style="display:none; margin:16px 16px 0;">
@@ -279,6 +291,12 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     <button class="ba" onclick="go('pg-bvm')">
       <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v17M12 21V9a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v12M4 21h16M7 7h1M7 11h1M7 15h1"/></svg></div>
       <div><div class="at" data-i18n="home_bv_title">Baustellen verwalten</div><div class="as" data-i18n="home_bv_sub">BV-Adressen bearbeiten</div></div>
+      <div class="ar">›</div>
+    </button>
+
+    <button class="ba" onclick="openEmptyRep()">
+      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z"/><path d="M14 3v5h5"/><circle cx="12" cy="15" r="2.5" stroke-dasharray="2 2"/></svg></div>
+      <div><div class="at">Leer-Rapport erstellen</div><div class="as">Datum, Bauleiter, Mitarbeiter – Stunden bleiben leer</div></div>
       <div class="ar">›</div>
     </button>
 
@@ -394,6 +412,24 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     <button class="btn" onclick="go('pg-datum');rsi()" data-i18n="more_bv_btn">Weitere Baustelle</button>
     <button class="bto" onclick="go('pg-home')" data-i18n="home_btn">Zur Startseite</button>
   </div>
+</div>
+
+<div class="pg" id="pg-empty">
+  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht">Leer-Rapport erstellen</div><div class="hs">Datum · Baustelle · Mitarbeiter</div></div></div>
+  <div class="sc"><div style="padding:16px">
+    <div class="lbl" style="margin:0 0 6px">Datum</div>
+    <input type="date" id="er-datum" style="margin-bottom:16px">
+
+    <div class="lbl" style="margin:0 0 6px">Baustelle</div>
+    <select id="er-bv" onchange="erBvChanged()" style="margin-bottom:6px"></select>
+    <div style="font-size:12px;color:var(--s);margin-bottom:16px" id="er-bl-info">Bauleiter: —</div>
+
+    <div class="lbl" style="margin:0 0 8px">Mitarbeiter</div>
+    <div class="crd" id="er-tml" style="margin-bottom:20px"></div>
+
+    <button class="btn" onclick="saveEmptyRep()">Leer-Rapport speichern</button>
+    <div style="height:24px"></div>
+  </div></div>
 </div>
 
 <div class="pg" id="pg-woche">
@@ -617,6 +653,32 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     <div class="lbl" id="edbvl-arch-lbl" data-i18n="editor_bv_archived_list" style="display:none">Archivierte Baustellen</div>
     <div class="crd" id="edbvl-arch" style="margin-bottom:16px;display:none"></div>
 
+    <div class="lbl">Dashboard-Statistiken</div>
+    <div class="crd" style="margin-bottom:16px">
+      <div style="padding:14px 16px">
+        <div class="toggle-row" style="margin-bottom:10px">
+          <div class="lbl2">Offene Rechnungen anzeigen</div>
+          <button class="tgl" id="dtgl-invopen" onclick="toggleDashStat('invopen','dtgl-invopen')"></button>
+        </div>
+        <div class="toggle-row" style="margin-bottom:10px">
+          <div class="lbl2">Überfällige Rechnungen anzeigen</div>
+          <button class="tgl" id="dtgl-invover" onclick="toggleDashStat('invover','dtgl-invover')"></button>
+        </div>
+        <div class="toggle-row" style="margin-bottom:10px">
+          <div class="lbl2">Gesamtumsatz anzeigen</div>
+          <button class="tgl" id="dtgl-invtotal" onclick="toggleDashStat('invtotal','dtgl-invtotal')"></button>
+        </div>
+        <div class="toggle-row" style="margin-bottom:10px">
+          <div class="lbl2">Nächste Frist anzeigen</div>
+          <button class="tgl" id="dtgl-invnext" onclick="toggleDashStat('invnext','dtgl-invnext')"></button>
+        </div>
+        <div class="toggle-row">
+          <div class="lbl2">Fristen-Liste (Sammelrechnungen) anzeigen</div>
+          <button class="tgl" id="dtgl-deadlines" onclick="toggleDashStat('deadlines','dtgl-deadlines')"></button>
+        </div>
+      </div>
+    </div>
+
     <div class="lbl" data-i18n="push_settings_title">Benachrichtigungen</div>
     <div class="crd" style="margin-bottom:16px">
       <div style="padding:14px 16px">
@@ -638,6 +700,11 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
         <div class="toggle-row" style="margin-bottom:14px">
           <div class="lbl2" data-i18n="push_budget_title">Warnung wenn Soll-Stunden einer Baustelle fast erreicht sind</div>
           <button class="tgl" id="ptgl-budget" onclick="togglePushOpt('apush_budget','ptgl-budget')"></button>
+        </div>
+
+        <div class="toggle-row" style="margin-bottom:14px">
+          <div class="lbl2">Benachrichtigung bei überfälligen Rechnungen</div>
+          <button class="tgl" id="ptgl-invoice" onclick="togglePushOpt('apush_invoice','ptgl-invoice')"></button>
         </div>
 
         <div style="margin-bottom:6px"><div class="lbl" style="margin:0 0 6px" data-i18n="push_wa_days_lbl">Erinnerung "Rapport nicht an Frau Peters geschickt" nach X Tagen (mehrere mit Komma, z.B. 2,7)</div><input type="text" id="push-wa-days" placeholder="2,7" value="2,7" onchange="savePushSettings()"></div>
@@ -704,7 +771,21 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
   <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht">Rechnungen</div><div class="hs">Übersicht & Zahlungsziel (14 Tage)</div></div></div>
   <div class="sc"><div style="padding:16px">
 
-    <div class="lbl" style="margin:0 0 8px">Aus Excel einfügen</div>
+    <div class="lbl" style="margin:0 0 8px">Filter</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <select id="rg-filter" onchange="rRech()" style="flex:1">
+        <option value="alle">Alle</option>
+        <option value="offen">Offen</option>
+        <option value="ueberfaellig">Überfällig</option>
+        <option value="bezahlt">Bezahlt</option>
+      </select>
+    </div>
+
+    <div class="lbl" style="margin:0 0 8px">Übersicht</div>
+    <div id="rg-list"></div>
+
+    <div style="height:8px"></div>
+    <div class="lbl" style="margin:20px 0 8px">Aus Excel einfügen</div>
     <div class="crd" style="padding:12px">
       <textarea id="rg-paste" rows="4" placeholder="Zeilen aus deiner Rechnungstabelle hier einfügen (Tab-getrennt, wie beim Kopieren aus Excel)…" style="width:100%;font-size:14px;padding:10px;border:.5px solid var(--bs);border-radius:var(--rs);background:var(--c);color:var(--t);font-family:inherit;resize:vertical"></textarea>
       <button class="btn" style="margin-top:10px" onclick="rgImport()">Einfügen &amp; übernehmen</button>
@@ -724,19 +805,6 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       </div>
       <button class="bto" style="margin-top:10px" onclick="rgAddManual()">Hinzufügen</button>
     </div>
-
-    <div class="lbl" style="margin:20px 0 8px">Filter</div>
-    <div style="display:flex;gap:8px;margin-bottom:14px">
-      <select id="rg-filter" onchange="rRech()" style="flex:1">
-        <option value="alle">Alle</option>
-        <option value="offen">Offen</option>
-        <option value="ueberfaellig">Überfällig</option>
-        <option value="bezahlt">Bezahlt</option>
-      </select>
-    </div>
-
-    <div class="lbl" style="margin:0 0 8px">Übersicht</div>
-    <div id="rg-list"></div>
 
     <div style="height:24px"></div>
   </div></div>
@@ -1761,10 +1829,11 @@ function rgSplitLine(line){
   return cols.map(c=>c.trim()).filter(c=>c!=="");
 }
 
-function rgImport(){
+async function rgImport(){
   const raw=document.getElementById("rg-paste").value;
   const lines=raw.split(/\r?\n/).map(l=>l.trim()).filter(l=>l!=="");
   let added=0, skipped=0;
+  const newRows=[];
   for(const line of lines){
     const cols=rgSplitLine(line);
     if(cols.length<2){ skipped++; continue; }
@@ -1777,49 +1846,69 @@ function rgImport(){
     const firma=cols.length>=3?cols[2]:(cols[1]||"");
     const rgnr=cols.length>=4?cols[3]:"";
     const text=cols.length>=5?cols.slice(4,cols.length-1).join(" "):"";
-    RG.push({id:rgUid(),datum,firma,rgnr,text,betrag,bezahltAm:null});
+    newRows.push({id:rgUid(),datum,firma,rgnr,text,betrag,bezahltAm:null});
     added++;
   }
-  rgSave();
+  if(newRows.length){
+    syn("w",tr("sync_now"));
+    const res=await sbIns("rg",newRows,"id");
+    if(!res){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
+    await syncDown();
+    syn("",tr("sync_saved"));
+  }
   document.getElementById("rg-import-st").textContent=
     added+" Zeile(n) übernommen"+(skipped?`, ${skipped} übersprungen (Format nicht erkannt)`:"");
   document.getElementById("rg-paste").value="";
   rRech();
 }
 
-function rgAddManual(){
+async function rgAddManual(){
   const datum=document.getElementById("rg-m-datum").value;
   const firma=document.getElementById("rg-m-firma").value.trim();
   const rgnr=document.getElementById("rg-m-rgnr").value.trim();
   const text=document.getElementById("rg-m-text").value.trim();
   const betrag=rgParseBetrag(document.getElementById("rg-m-betrag").value);
   if(!datum||!firma){ toast("Bitte Datum und Firma angeben"); return; }
-  RG.push({id:rgUid(),datum,firma,rgnr,text,betrag,bezahltAm:null});
-  rgSave();
+  const row={id:rgUid(),datum,firma,rgnr,text,betrag,bezahltAm:null};
+  syn("w",tr("sync_now"));
+  const res=await sbIns("rg",[row],"id");
+  if(!res){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
+  await syncDown();
+  syn("",tr("sync_saved"));
   ["rg-m-datum","rg-m-firma","rg-m-rgnr","rg-m-text","rg-m-betrag"].forEach(id=>document.getElementById(id).value="");
   rRech();
 }
 
-function rgDelete(id){
-  RG=RG.filter(r=>r.id!==id);
-  rgSave();
+async function rgDelete(id){
+  syn("w",tr("sync_now"));
+  const res=await sbDel("rg",id);
+  if(res===null){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
+  await syncDown();
+  syn("",tr("sync_saved"));
   rRech();
 }
 
-function rgToggleBezahlt(id){
+async function rgToggleBezahlt(id){
   const r=RG.find(x=>x.id===id);
   if(!r) return;
-  r.bezahltAm = r.bezahltAm ? null : new Date().toISOString().slice(0,10);
-  rgSave();
+  const bezahltAm = r.bezahltAm ? null : new Date().toISOString().slice(0,10);
+  syn("w",tr("sync_now"));
+  const res=await sbUpd("rg",id,{bezahltAm});
+  if(!res){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
+  await syncDown();
+  syn("",tr("sync_saved"));
   rRech();
 }
 
 function rgGroupKey(r){ return r.datum+"|"+r.firma; }
 
-function rgGroupPayAll(key, pay){
+async function rgGroupPayAll(key, pay){
   const stamp = pay ? new Date().toISOString().slice(0,10) : null;
-  RG.filter(r=>rgGroupKey(r)===key).forEach(r=>r.bezahltAm=stamp);
-  rgSave();
+  const rows=RG.filter(r=>rgGroupKey(r)===key);
+  syn("w",tr("sync_now"));
+  await Promise.all(rows.map(r=>sbUpd("rg",r.id,{bezahltAm:stamp})));
+  await syncDown();
+  syn("",tr("sync_saved"));
   rRech();
 }
 
@@ -1969,12 +2058,13 @@ async function syncDown(first=false){
   syn("w",tr("sync_now"));
   await seedIfEmpty();
 
-  const [rbv,rma,ren,rbl,rws]=await Promise.all([
+  const [rbv,rma,ren,rbl,rws,rrg]=await Promise.all([
     sbSel("bv","&order=nr.asc"),
     sbSel("ma","&order=sort_order.asc"),
     sbSel("en","&order=datum.asc"),
     sbSel("bl","&order=name.asc"),
-    sbSel("wa_sent","&order=key.asc")
+    sbSel("wa_sent","&order=key.asc"),
+    sbSel("rg","&order=datum.desc")
   ]);
 
   if(rbv) BV=rbv;
@@ -1982,12 +2072,14 @@ async function syncDown(first=false){
   if(ren) EN=ren;
   if(rbl) BL=rbl;
   if(rws) WA=new Set(rws.map(r=>r.key));
+  if(rrg) RG=rrg;
 
   lsSet("bv",BV);
   lsSet("ma",MA);
   lsSet("en",EN);
   lsSet("bl",BL);
   lsSet("wa",Array.from(WA));
+  lsSet("rg",RG);
 
   ustats();
   rwarn();
@@ -2002,6 +2094,7 @@ async function syncDown(first=false){
   if(document.getElementById("pg-woche")?.classList.contains("on")) rw();
   if(document.getElementById("pg-wa")?.classList.contains("on")) rwaList();
   if(document.getElementById("pg-stat")?.classList.contains("on")) rStat();
+  if(document.getElementById("pg-rg")?.classList.contains("on")) rRech();
 
   syn("",tr("sync_ok"));
   if(!first) toast(tr("toast_sync"));
@@ -2026,7 +2119,7 @@ function go(id){
   if(id==="pg-woche"){woff=0;rw();}
   if(id==="pg-wa"){rwaList();syncDown();}
   if(id==="pg-stat"){statSetTab(statTab);syncDown();}
-  if(id==="pg-rg"){rRech();}
+  if(id==="pg-rg"){rRech();syncDown();}
   setTimeout(()=>document.getElementById(cur)?.classList.remove("bk"),340);
 }
 function bk(to){
@@ -2433,6 +2526,7 @@ function initPush(){
   setPushOptBtn("ptgl-entry","apush_entry",true);
   setPushOptBtn("ptgl-safety","apush_safety",true);
   setPushOptBtn("ptgl-budget","apush_budget",true);
+  setPushOptBtn("ptgl-invoice","apush_invoice",true);
 
   if(on){ schPush(); }
 }
@@ -2572,6 +2666,31 @@ function checkWaEscalation(){
   });
   lsSet("waNotified",notified);
   checkBudgetWarnings();
+  checkInvoiceOverdue();
+}
+
+// Benachrichtigung bei überfälligen Rechnungen (Zahlungsziel 14 Tage überschritten)
+function checkInvoiceOverdue(){
+  if(!pushEnabled() || !pushOptOn("apush_invoice",true))return;
+  if(typeof RG==="undefined" || !RG.length)return;
+  const notified=lsGet("invoiceNotified",{});
+  const today=td();
+  const groups={};
+  RG.forEach(r=>{ const k=rgGroupKey(r); (groups[k]=groups[k]||[]).push(r); });
+  Object.keys(groups).forEach(key=>{
+    const rows=groups[key];
+    const openRows=rows.filter(r=>rgStatus(r)==="ueberfaellig");
+    if(!openRows.length)return;
+    const key2=key+"_"+today;
+    if(notified[key2])return;
+    const sum=openRows.reduce((a,r)=>a+r.betrag,0);
+    const [datum,firma]=key.split("|");
+    const ziel=new Date(datum); ziel.setDate(ziel.getDate()+14);
+    const days=Math.round((new Date(today)-ziel)/86400000);
+    sendNotify("Rechnung überfällig", `${firma}: ${rgFmtMoney(sum)} · seit ${days} Tag(en) überfällig`, "aslan-invoice-"+key);
+    notified[key2]=true;
+  });
+  lsSet("invoiceNotified",notified);
 }
 
 // ═══ BAUSTELLEN ═══
@@ -2955,11 +3074,52 @@ async function save(rows){
 }
 function rsi(){ sBV=null; document.getElementById("bvnx").disabled=true; }
 
-// ═══ STATS ═══
-function maRate(id){
-  const ma=maById(id);
-  return (ma?.name||"").trim().toLowerCase()==="sayim aslan" ? 37 : 35;
+// ═══ LEER-RAPPORT (Datum/Bauleiter/Mitarbeiter ohne Stunden) ═══
+let erTeamSel=new Set();
+function openEmptyRep(){
+  document.getElementById("er-datum").value=td();
+  erTeamSel=new Set();
+  const sel=document.getElementById("er-bv");
+  const active=[...BV].filter(b=>!b.archived).sort((a,b)=>a.nr.localeCompare(b.nr));
+  sel.innerHTML=active.map(b=>`<option value="${b.id}">BV ${b.nr} – ${b.name||"—"}</option>`).join("");
+  erBvChanged();
+  rErTeam();
+  go("pg-empty");
 }
+function erBvChanged(){
+  const b=BV.find(x=>x.id===document.getElementById("er-bv").value);
+  const bl=b?blById(b.bl_id):null;
+  document.getElementById("er-bl-info").textContent="Bauleiter: "+(bl?bl.name:"—");
+}
+function rErTeam(){
+  document.getElementById("er-tml").innerHTML=MA.map(m=>`
+    <div class="tmr">
+      <div class="tmcb ${erTeamSel.has(m.id)?"on":""}" onclick="toggleErTeam('${m.id}')">${erTeamSel.has(m.id)?"✓":""}</div>
+      <div class="av" style="background:${m.bg};color:${m.tc};width:36px;height:36px;font-size:12px">${m.k||"?"}</div>
+      <div class="mn" style="font-size:14px">${m.name}</div>
+    </div>`).join("");
+}
+function toggleErTeam(id){
+  if(erTeamSel.has(id)) erTeamSel.delete(id); else erTeamSel.add(id);
+  rErTeam();
+}
+async function saveEmptyRep(){
+  const datum=document.getElementById("er-datum").value;
+  const bvId=document.getElementById("er-bv").value;
+  if(!datum||!bvId){ toast("Bitte Datum und Baustelle wählen"); return; }
+  if(erTeamSel.size===0){ toast("Bitte mind. einen Mitarbeiter wählen"); return; }
+
+  const rows=[...erTeamSel].map(id=>({ datum, bv_id:bvId, ma_id:id, stunden:null, beginn:null, ende:null, pause_min:null }));
+  syn("w",tr("sync_now"));
+  const res=await sbIns("en", rows, "datum,bv_id,ma_id");
+  if(!res){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
+  await syncDown();
+  syn("",tr("sync_saved"));
+  toast("Leer-Rapport gespeichert");
+  go("pg-home");
+}
+
+// ═══ STATS ═══
 function fmtEUR(v){
   const n=Math.round((Number(v)||0)*100)/100;
   return n.toLocaleString("de-DE",{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2})+" €";
@@ -2988,6 +3148,85 @@ function ustats(){
   document.getElementById("s-w").textContent=hW;
   document.getElementById("s-e").textContent=EN.length;
   document.getElementById("s-u").textContent=fmtEUR(uW);
+
+  rgDashStats();
+}
+
+// ═══ DASHBOARD-STATISTIKEN RECHNUNGEN ═══
+function dashToggles(){
+  return Object.assign({
+    invopen:true, invover:true, invtotal:true, invnext:true, deadlines:true
+  }, lsGet("dashToggles",{}));
+}
+function saveDashToggles(t){ lsSet("dashToggles",t); applyDashToggles(); }
+function applyDashToggles(){
+  const t=dashToggles();
+  const map={invopen:"dc-invopen",invover:"dc-invover",invtotal:"dc-invtotal",invnext:"dc-invnext",deadlines:"dc-deadlines"};
+  Object.keys(map).forEach(k=>{
+    const el=document.getElementById(map[k]);
+    if(el) el.style.display = t[k]===false ? "none" : "";
+  });
+}
+function rgDashStats(){
+  applyDashToggles();
+  const today=new Date(); today.setHours(0,0,0,0);
+  let openSum=0, overSum=0, totalSum=0, overCount=0;
+  const groups={};
+  RG.forEach(r=>{
+    totalSum+=r.betrag;
+    if(rgStatus(r)!=="bezahlt"){
+      openSum+=r.betrag;
+      if(rgStatus(r)==="ueberfaellig"){ overSum+=r.betrag; overCount++; }
+    }
+    const k=rgGroupKey(r);
+    (groups[k]=groups[k]||[]).push(r);
+  });
+
+  const roEl=document.getElementById("s-ro"); if(roEl) roEl.textContent=rgFmtMoney(openSum);
+  const ruEl=document.getElementById("s-ru"); if(ruEl) ruEl.textContent=rgFmtMoney(overSum);
+  const rtEl=document.getElementById("s-rt"); if(rtEl) rtEl.textContent=rgFmtMoney(totalSum);
+
+  // Sammelrechnungen / Fristen je Gruppe (Datum+Firma), nur offene
+  const deadlineRows=[];
+  Object.keys(groups).forEach(key=>{
+    const rows=groups[key];
+    const anyOpen=rows.some(r=>rgStatus(r)!=="bezahlt");
+    if(!anyOpen) return;
+    const sum=rows.filter(r=>rgStatus(r)!=="bezahlt").reduce((a,r)=>a+r.betrag,0);
+    const [datum,firma]=key.split("|");
+    const ziel=new Date(datum); ziel.setDate(ziel.getDate()+14);
+    const days=Math.round((ziel-today)/86400000);
+    deadlineRows.push({firma,datum,sum,days,isSammel:rows.length>1});
+  });
+  deadlineRows.sort((a,b)=>a.days-b.days);
+
+  const rfEl=document.getElementById("s-rf");
+  if(rfEl){
+    if(deadlineRows.length===0) rfEl.textContent="–";
+    else {
+      const d=deadlineRows[0];
+      rfEl.textContent = d.days<0 ? `${Math.abs(d.days)} Tg. überf.` : (d.days===0?"heute":`in ${d.days} Tg.`);
+    }
+  }
+
+  const listEl=document.getElementById("rg-dash-list");
+  if(listEl){
+    if(deadlineRows.length===0){
+      listEl.innerHTML=`<div style="text-align:center;color:var(--s);font-size:13px">Keine offenen Rechnungen.</div>`;
+    } else {
+      listEl.innerHTML=deadlineRows.slice(0,8).map(d=>{
+        const color = d.days<0 ? "#c0392b" : (d.days<=3?"#e67e22":"var(--t)");
+        const label = d.days<0 ? `${Math.abs(d.days)} Tage überfällig` : (d.days===0?"heute fällig":`noch ${d.days} Tage`);
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:.5px solid var(--b)">
+          <div>
+            <div style="font-size:13px;font-weight:600">${d.firma}${d.isSammel?" · Sammelrechnung":""}</div>
+            <div style="font-size:11px;color:${color}">${label}</div>
+          </div>
+          <div style="font-size:13px;font-weight:700">${rgFmtMoney(d.sum)}</div>
+        </div>`;
+      }).join("");
+    }
+  }
 }
 
 // ═══ WOCHE ═══
@@ -3162,7 +3401,8 @@ function rverl(){
       const bv=bvById(g.bv_id);
       const pills=g.rows.map(r=>{
         const ma=maById(r.ma_id);
-        return `<span class="pill">${ma?.name?.split(" ")[0]||"?"}: ${r.stunden}h</span>`;
+        const hLbl = (r.stunden===null||r.stunden===undefined||r.stunden==="") ? "offen" : `${r.stunden}h`;
+        return `<span class="pill">${ma?.name?.split(" ")[0]||"?"}: ${hLbl}</span>`;
       }).join("");
       const checked=bulkSel.has(g.key);
 
@@ -3263,7 +3503,7 @@ function rEdRows(){
       </div>
       <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px">
         <div style="font-size:12px;color:var(--s)" id="ed-calc-note-${i}"></div>
-        <input type="number" class="hi" id="ed-h-${i}" value="${r.stunden}" min="0" max="24" step="0.25" inputmode="decimal" oninput="edRowHoursTouched(${i})">
+        <input type="number" class="hi" id="ed-h-${i}" value="${r.stunden===null||r.stunden===undefined?"":r.stunden}" min="0" max="24" step="0.25" inputmode="decimal" oninput="edRowHoursTouched(${i})">
         <div class="hu">h</div>
       </div>
     </div>`;
@@ -3590,7 +3830,20 @@ function rPinDots(){
   }
 }
 
+function toggleDashStat(key,btnId){
+  const t=dashToggles();
+  t[key] = !(t[key]!==false);
+  saveDashToggles(t);
+  document.getElementById(btnId)?.classList.toggle("on", t[key]!==false);
+}
+function initDashTogglesUI(){
+  const t=dashToggles();
+  [["invopen","dtgl-invopen"],["invover","dtgl-invover"],["invtotal","dtgl-invtotal"],["invnext","dtgl-invnext"],["deadlines","dtgl-deadlines"]].forEach(([k,id])=>{
+    document.getElementById(id)?.classList.toggle("on", t[k]!==false);
+  });
+}
 function rEditor(){
+  initDashTogglesUI();
   const active=[...BV].filter(b=>!b.archived).sort((a,b)=>a.nr.localeCompare(b.nr));
   const archived=[...BV].filter(b=>b.archived).sort((a,b)=>a.nr.localeCompare(b.nr));
 
