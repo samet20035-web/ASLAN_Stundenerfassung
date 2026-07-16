@@ -246,20 +246,20 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
         <div class="stc"><div class="stn" id="s-h">0</div><div class="stl" data-i18n="stat_today">Heute h</div></div>
         <div class="stc"><div class="stn" id="s-w">0</div><div class="stl" data-i18n="stat_week">Woche h</div></div>
         <div class="stc"><div class="stn" id="s-e">0</div><div class="stl" data-i18n="stat_entries">Einträge</div></div>
-        <div class="stc"><div class="stn money" id="s-u">0 €</div><div class="stl" data-i18n="stat_revenue">Umsatz Woche</div></div>
+        <div class="stc"><div class="stn money" id="s-u" style="color:var(--g)">0 €</div><div class="stl" data-i18n="stat_revenue">Umsatz Woche</div></div>
       </div>
       <div class="syn"><div class="sd" id="sd"></div><span id="sl">—</span></div>
     </div>
 
     <div class="sts" id="sts2" style="margin-top:10px">
-      <div class="stc" id="dc-invopen"><div class="stn money" id="s-ro">0 €</div><div class="stl">Offene Rechnungen</div></div>
-      <div class="stc" id="dc-invover"><div class="stn money" id="s-ru">0 €</div><div class="stl">Überfällig</div></div>
-      <div class="stc" id="dc-invtotal"><div class="stn money" id="s-rt">0 €</div><div class="stl">Umsatz gesamt</div></div>
-      <div class="stc" id="dc-invnext"><div class="stn" id="s-rf">–</div><div class="stl">Nächste Frist</div></div>
+      <div class="stc" id="dc-invopen"><div class="stn money" id="s-ro">0 €</div><div class="stl" data-i18n="dash_inv_open">Offene Rechnungen</div></div>
+      <div class="stc" id="dc-invover"><div class="stn money" id="s-ru">0 €</div><div class="stl" data-i18n="dash_inv_over">Überfällig</div></div>
+      <div class="stc" id="dc-invtotal"><div class="stn money" id="s-rt">0 €</div><div class="stl" data-i18n="dash_inv_total">Umsatz gesamt</div></div>
+      <div class="stc" id="dc-invnext"><div class="stn" id="s-rf">–</div><div class="stl" data-i18n="dash_inv_next">Nächste Frist</div></div>
     </div>
 
     <div id="dc-deadlines" style="padding:0 16px;margin-top:14px">
-      <div class="lbl" style="margin:0 0 8px">Fristen Sammelrechnungen</div>
+      <div class="lbl" style="margin:0 0 8px" data-i18n="dash_inv_deadlines_title">Fristen Sammelrechnungen</div>
       <div class="crd" id="rg-dash-list" style="padding:12px"></div>
     </div>
 
@@ -296,7 +296,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 
     <button class="ba" onclick="openEmptyRep()">
       <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z"/><path d="M14 3v5h5"/><circle cx="12" cy="15" r="2.5" stroke-dasharray="2 2"/></svg></div>
-      <div><div class="at">Leer-Rapport erstellen</div><div class="as">Datum, Bauleiter, Mitarbeiter – Stunden bleiben leer</div></div>
+      <div><div class="at" data-i18n="home_empty_title">Leer-Rapport erstellen</div><div class="as" data-i18n="home_empty_sub">Datum, Bauleiter, Mitarbeiter – Stunden bleiben leer</div></div>
       <div class="ar">›</div>
     </button>
 
@@ -415,19 +415,19 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 </div>
 
 <div class="pg" id="pg-empty">
-  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht">Leer-Rapport erstellen</div><div class="hs">Datum · Baustelle · Mitarbeiter</div></div></div>
+  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="empty_rep_title">Leer-Rapport erstellen</div><div class="hs" data-i18n="empty_rep_sub">Datum · Baustelle · Mitarbeiter</div></div></div>
   <div class="sc"><div style="padding:16px">
-    <div class="lbl" style="margin:0 0 6px">Datum</div>
+    <div class="lbl" style="margin:0 0 6px" data-i18n="empty_rep_date">Datum</div>
     <input type="date" id="er-datum" style="margin-bottom:16px">
 
-    <div class="lbl" style="margin:0 0 6px">Baustelle</div>
+    <div class="lbl" style="margin:0 0 6px" data-i18n="empty_rep_bv">Baustelle</div>
     <select id="er-bv" onchange="erBvChanged()" style="margin-bottom:6px"></select>
-    <div style="font-size:12px;color:var(--s);margin-bottom:16px" id="er-bl-info">Bauleiter: —</div>
+    <div style="font-size:12px;color:var(--s);margin-bottom:16px" id="er-bl-info">—</div>
 
-    <div class="lbl" style="margin:0 0 8px">Mitarbeiter</div>
+    <div class="lbl" style="margin:0 0 8px" data-i18n="empty_rep_team">Mitarbeiter</div>
     <div class="crd" id="er-tml" style="margin-bottom:20px"></div>
 
-    <button class="btn" onclick="saveEmptyRep()">Leer-Rapport speichern</button>
+    <button class="btn" onclick="saveEmptyRep()" data-i18n="empty_rep_save">Leer-Rapport speichern</button>
     <div style="height:24px"></div>
   </div></div>
 </div>
@@ -653,27 +653,27 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     <div class="lbl" id="edbvl-arch-lbl" data-i18n="editor_bv_archived_list" style="display:none">Archivierte Baustellen</div>
     <div class="crd" id="edbvl-arch" style="margin-bottom:16px;display:none"></div>
 
-    <div class="lbl">Dashboard-Statistiken</div>
+    <div class="lbl" data-i18n="editor_dash_stats_title">Dashboard-Statistiken</div>
     <div class="crd" style="margin-bottom:16px">
       <div style="padding:14px 16px">
         <div class="toggle-row" style="margin-bottom:10px">
-          <div class="lbl2">Offene Rechnungen anzeigen</div>
+          <div class="lbl2" data-i18n="editor_dash_invopen">Offene Rechnungen anzeigen</div>
           <button class="tgl" id="dtgl-invopen" onclick="toggleDashStat('invopen','dtgl-invopen')"></button>
         </div>
         <div class="toggle-row" style="margin-bottom:10px">
-          <div class="lbl2">Überfällige Rechnungen anzeigen</div>
+          <div class="lbl2" data-i18n="editor_dash_invover">Überfällige Rechnungen anzeigen</div>
           <button class="tgl" id="dtgl-invover" onclick="toggleDashStat('invover','dtgl-invover')"></button>
         </div>
         <div class="toggle-row" style="margin-bottom:10px">
-          <div class="lbl2">Gesamtumsatz anzeigen</div>
+          <div class="lbl2" data-i18n="editor_dash_invtotal">Gesamtumsatz anzeigen</div>
           <button class="tgl" id="dtgl-invtotal" onclick="toggleDashStat('invtotal','dtgl-invtotal')"></button>
         </div>
         <div class="toggle-row" style="margin-bottom:10px">
-          <div class="lbl2">Nächste Frist anzeigen</div>
+          <div class="lbl2" data-i18n="editor_dash_invnext">Nächste Frist anzeigen</div>
           <button class="tgl" id="dtgl-invnext" onclick="toggleDashStat('invnext','dtgl-invnext')"></button>
         </div>
         <div class="toggle-row">
-          <div class="lbl2">Fristen-Liste (Sammelrechnungen) anzeigen</div>
+          <div class="lbl2" data-i18n="editor_dash_deadlines">Fristen-Liste (Sammelrechnungen) anzeigen</div>
           <button class="tgl" id="dtgl-deadlines" onclick="toggleDashStat('deadlines','dtgl-deadlines')"></button>
         </div>
       </div>
@@ -703,7 +703,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
         </div>
 
         <div class="toggle-row" style="margin-bottom:14px">
-          <div class="lbl2">Benachrichtigung bei überfälligen Rechnungen</div>
+          <div class="lbl2" data-i18n="push_invoice_title">Benachrichtigung bei überfälligen Rechnungen</div>
           <button class="tgl" id="ptgl-invoice" onclick="togglePushOpt('apush_invoice','ptgl-invoice')"></button>
         </div>
 
@@ -1247,7 +1247,67 @@ const I18N = {
 
     excel_build: "⏳ Excel wird erstellt…",
     excel_empty: "Keine Einträge.",
-    excel_done: "Datei heruntergeladen!"
+    excel_done: "Datei heruntergeladen!",
+
+    dash_inv_open: "Offene Rechnungen",
+    dash_inv_over: "Überfällig",
+    dash_inv_total: "Umsatz gesamt",
+    dash_inv_next: "Nächste Frist",
+    dash_inv_deadlines_title: "Fristen Sammelrechnungen",
+    dash_inv_none: "Keine offenen Rechnungen.",
+    dash_inv_sammel: "Sammelrechnung",
+    dash_inv_today: "heute",
+    dash_inv_today_due: "heute fällig",
+    dash_inv_in_days: "in {days} Tg.",
+    dash_inv_days_left: "noch {days} Tage",
+    dash_inv_overdue_days: "{days} Tg. überfällig",
+
+    editor_dash_stats_title: "Dashboard-Statistiken",
+    editor_dash_invopen: "Offene Rechnungen anzeigen",
+    editor_dash_invover: "Überfällige Rechnungen anzeigen",
+    editor_dash_invtotal: "Gesamtumsatz anzeigen",
+    editor_dash_invnext: "Nächste Frist anzeigen",
+    editor_dash_deadlines: "Fristen-Liste (Sammelrechnungen) anzeigen",
+
+    home_empty_title: "Leer-Rapport erstellen",
+    home_empty_sub: "Datum, Bauleiter, Mitarbeiter – Stunden bleiben leer",
+    empty_rep_title: "Leer-Rapport erstellen",
+    empty_rep_sub: "Datum · Baustelle · Mitarbeiter",
+    empty_rep_date: "Datum",
+    empty_rep_bv: "Baustelle",
+    empty_rep_bl_prefix: "Bauleiter",
+    empty_rep_team: "Mitarbeiter",
+    empty_rep_save: "Leer-Rapport speichern",
+    empty_rep_missing: "Bitte Datum und Baustelle wählen",
+    empty_rep_missing_team: "Bitte mind. einen Mitarbeiter wählen",
+    empty_rep_saved: "Leer-Rapport gespeichert",
+    entry_hours_open: "offen",
+
+    push_invoice_title: "Benachrichtigung bei überfälligen Rechnungen",
+    notify_invoice_title: "Rechnung überfällig",
+    notify_invoice_body: "{firma}: {sum} · seit {days} Tag(en) überfällig",
+
+    rg_filter_all: "Alle",
+    rg_filter_open: "Offen",
+    rg_filter_overdue: "Überfällig",
+    rg_filter_paid: "Bezahlt",
+    rg_overview: "Übersicht",
+    rg_import_title: "Aus Excel einfügen",
+    rg_import_btn: "Einfügen & übernehmen",
+    rg_manual_title: "Manuell hinzufügen",
+    rg_manual_btn: "Hinzufügen",
+    rg_filter_label: "Filter",
+    rg_none: "Noch keine Rechnungen erfasst.",
+    rg_none_filter: "Keine Einträge für diesen Filter.",
+    rg_status_paid: "Bezahlt",
+    rg_status_overdue: "Überfällig",
+    rg_status_open: "Offen",
+    rg_paid_on: "bezahlt am {date}",
+    rg_pay_group_on: "Ganze Sammelrechnung als bezahlt markieren",
+    rg_pay_group_off: "Ganze Sammelrechnung als offen markieren",
+    rg_btn_paid: "Bezahlt",
+    rg_btn_undo: "Rückgängig",
+    rg_sammel: "Sammelrechnung ({count})"
   },
   tr: {
     title: "ASLAN · Saat Takibi",
@@ -1536,7 +1596,67 @@ const I18N = {
 
     excel_build: "⏳ Excel hazırlanıyor…",
     excel_empty: "Kayıt yok.",
-    excel_done: "Dosya indirildi!"
+    excel_done: "Dosya indirildi!",
+
+    dash_inv_open: "Açık faturalar",
+    dash_inv_over: "Vadesi geçmiş",
+    dash_inv_total: "Toplam ciro",
+    dash_inv_next: "Sonraki vade",
+    dash_inv_deadlines_title: "Toplu fatura vadeleri",
+    dash_inv_none: "Açık fatura yok.",
+    dash_inv_sammel: "Toplu fatura",
+    dash_inv_today: "bugün",
+    dash_inv_today_due: "bugün vadesi doluyor",
+    dash_inv_in_days: "{days} gün sonra",
+    dash_inv_days_left: "{days} gün kaldı",
+    dash_inv_overdue_days: "{days} gün gecikti",
+
+    editor_dash_stats_title: "Panel istatistikleri",
+    editor_dash_invopen: "Açık faturaları göster",
+    editor_dash_invover: "Vadesi geçmiş faturaları göster",
+    editor_dash_invtotal: "Toplam ciroyu göster",
+    editor_dash_invnext: "Sonraki vadeyi göster",
+    editor_dash_deadlines: "Vade listesini göster (toplu faturalar)",
+
+    home_empty_title: "Boş rapor oluştur",
+    home_empty_sub: "Tarih, şantiye şefi, çalışan – saatler boş kalır",
+    empty_rep_title: "Boş rapor oluştur",
+    empty_rep_sub: "Tarih · Şantiye · Çalışan",
+    empty_rep_date: "Tarih",
+    empty_rep_bv: "Şantiye",
+    empty_rep_bl_prefix: "Şantiye şefi",
+    empty_rep_team: "Çalışanlar",
+    empty_rep_save: "Boş raporu kaydet",
+    empty_rep_missing: "Lütfen tarih ve şantiye seçin",
+    empty_rep_missing_team: "Lütfen en az bir çalışan seçin",
+    empty_rep_saved: "Boş rapor kaydedildi",
+    entry_hours_open: "açık",
+
+    push_invoice_title: "Vadesi geçen faturalarda bildirim",
+    notify_invoice_title: "Fatura vadesi geçti",
+    notify_invoice_body: "{firma}: {sum} · {days} gündür vadesi geçmiş",
+
+    rg_filter_all: "Tümü",
+    rg_filter_open: "Açık",
+    rg_filter_overdue: "Vadesi geçmiş",
+    rg_filter_paid: "Ödendi",
+    rg_overview: "Genel bakış",
+    rg_import_title: "Excel'den yapıştır",
+    rg_import_btn: "Yapıştır ve aktar",
+    rg_manual_title: "Elle ekle",
+    rg_manual_btn: "Ekle",
+    rg_filter_label: "Filtre",
+    rg_none: "Henüz fatura yok.",
+    rg_none_filter: "Bu filtre için kayıt yok.",
+    rg_status_paid: "Ödendi",
+    rg_status_overdue: "Vadesi geçmiş",
+    rg_status_open: "Açık",
+    rg_paid_on: "{date} tarihinde ödendi",
+    rg_pay_group_on: "Tüm toplu faturayı ödendi olarak işaretle",
+    rg_pay_group_off: "Tüm toplu faturayı açık olarak işaretle",
+    rg_btn_paid: "Ödendi",
+    rg_btn_undo: "Geri al",
+    rg_sammel: "Toplu fatura ({count})"
   }
 };
 
@@ -3182,9 +3302,16 @@ function rgDashStats(){
     (groups[k]=groups[k]||[]).push(r);
   });
 
-  const roEl=document.getElementById("s-ro"); if(roEl) roEl.textContent=rgFmtMoney(openSum);
-  const ruEl=document.getElementById("s-ru"); if(ruEl) ruEl.textContent=rgFmtMoney(overSum);
-  const rtEl=document.getElementById("s-rt"); if(rtEl) rtEl.textContent=rgFmtMoney(totalSum);
+  const roEl=document.getElementById("s-ro"); if(roEl){ roEl.textContent=rgFmtMoney(openSum); roEl.style.color="#e67e22"; }
+  const ruEl=document.getElementById("s-ru"); if(ruEl){ ruEl.textContent=rgFmtMoney(overSum); ruEl.style.color="#c0392b"; }
+  const rtEl=document.getElementById("s-rt"); if(rtEl){ rtEl.textContent=rgFmtMoney(totalSum); rtEl.style.color="var(--g)"; }
+
+  // Überfällig-Kachel nur zeigen, wenn wirklich etwas überfällig ist
+  const dcOver=document.getElementById("dc-invover");
+  if(dcOver){
+    const toggledOn = dashToggles().invover!==false;
+    dcOver.style.display = (toggledOn && overSum>0) ? "" : "none";
+  }
 
   // Sammelrechnungen / Fristen je Gruppe (Datum+Firma), nur offene
   const deadlineRows=[];
@@ -3202,25 +3329,26 @@ function rgDashStats(){
 
   const rfEl=document.getElementById("s-rf");
   if(rfEl){
-    if(deadlineRows.length===0) rfEl.textContent="–";
+    if(deadlineRows.length===0){ rfEl.textContent="–"; rfEl.style.color=""; }
     else {
       const d=deadlineRows[0];
-      rfEl.textContent = d.days<0 ? `${Math.abs(d.days)} Tg. überf.` : (d.days===0?"heute":`in ${d.days} Tg.`);
+      rfEl.textContent = d.days<0 ? tr("dash_inv_overdue_days",{days:Math.abs(d.days)}) : (d.days===0?tr("dash_inv_today"):tr("dash_inv_in_days",{days:d.days}));
+      rfEl.style.color = d.days<0 ? "#c0392b" : (d.days<=3?"#e67e22":"var(--t)");
     }
   }
 
   const listEl=document.getElementById("rg-dash-list");
   if(listEl){
     if(deadlineRows.length===0){
-      listEl.innerHTML=`<div style="text-align:center;color:var(--s);font-size:13px">Keine offenen Rechnungen.</div>`;
+      listEl.innerHTML=`<div style="text-align:center;color:var(--s);font-size:13px">${tr("dash_inv_none")}</div>`;
     } else {
       listEl.innerHTML=deadlineRows.slice(0,8).map(d=>{
         const color = d.days<0 ? "#c0392b" : (d.days<=3?"#e67e22":"var(--t)");
-        const label = d.days<0 ? `${Math.abs(d.days)} Tage überfällig` : (d.days===0?"heute fällig":`noch ${d.days} Tage`);
+        const label = d.days<0 ? tr("dash_inv_overdue_days",{days:Math.abs(d.days)}) : (d.days===0?tr("dash_inv_today_due"):tr("dash_inv_days_left",{days:d.days}));
         return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:.5px solid var(--b)">
           <div>
-            <div style="font-size:13px;font-weight:600">${d.firma}${d.isSammel?" · Sammelrechnung":""}</div>
-            <div style="font-size:11px;color:${color}">${label}</div>
+            <div style="font-size:13px;font-weight:600">${d.firma}${d.isSammel?" · "+tr("dash_inv_sammel"):""}</div>
+            <div style="font-size:11px;color:${color};font-weight:700">${label}</div>
           </div>
           <div style="font-size:13px;font-weight:700">${rgFmtMoney(d.sum)}</div>
         </div>`;
