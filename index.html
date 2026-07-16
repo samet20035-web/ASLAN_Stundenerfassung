@@ -306,6 +306,12 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       <div class="ar">›</div>
     </button>
 
+    <button class="ba" onclick="go('pg-rg')">
+      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l2 2 4-4"/><path d="M5 3h9l5 5v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/></svg></div>
+      <div><div class="at">Rechnungen</div><div class="as">Übersicht &amp; Zahlungsziel</div></div>
+      <div class="ar">›</div>
+    </button>
+
     <div style="text-align:center;padding:18px 0 4px">
       <span onclick="requirePin('pg-editor')" style="font-size:12px;color:var(--s);opacity:.55;cursor:pointer;letter-spacing:.02em"><span style="display:inline-flex;vertical-align:middle;margin-right:4px"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span><span data-i18n="editor_link">Editor-Modus</span></span>
     </div>
@@ -694,6 +700,48 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
   </div></div>
 </div>
 
+<div class="pg" id="pg-rg">
+  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht">Rechnungen</div><div class="hs">Übersicht & Zahlungsziel (14 Tage)</div></div></div>
+  <div class="sc"><div style="padding:16px">
+
+    <div class="lbl" style="margin:0 0 8px">Aus Excel einfügen</div>
+    <div class="crd" style="padding:12px">
+      <textarea id="rg-paste" rows="4" placeholder="Zeilen aus deiner Rechnungstabelle hier einfügen (Tab-getrennt, wie beim Kopieren aus Excel)…" style="width:100%;font-size:14px;padding:10px;border:.5px solid var(--bs);border-radius:var(--rs);background:var(--c);color:var(--t);font-family:inherit;resize:vertical"></textarea>
+      <button class="btn" style="margin-top:10px" onclick="rgImport()">Einfügen &amp; übernehmen</button>
+      <div id="rg-import-st" style="margin-top:8px;font-size:13px;color:var(--s)"></div>
+    </div>
+
+    <div class="lbl" style="margin:20px 0 8px">Manuell hinzufügen</div>
+    <div class="crd" style="padding:12px">
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="date" id="rg-m-datum" style="flex:1">
+        <input type="text" id="rg-m-betrag" inputmode="decimal" placeholder="Betrag €" style="width:110px">
+      </div>
+      <input type="text" id="rg-m-firma" placeholder="Firma" style="margin-bottom:8px">
+      <div style="display:flex;gap:8px">
+        <input type="text" id="rg-m-rgnr" placeholder="Rechnungs-Nr" style="flex:1">
+        <input type="text" id="rg-m-text" placeholder="Text (z.B. Rechnung BV 6558)" style="flex:1">
+      </div>
+      <button class="bto" style="margin-top:10px" onclick="rgAddManual()">Hinzufügen</button>
+    </div>
+
+    <div class="lbl" style="margin:20px 0 8px">Filter</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <select id="rg-filter" onchange="rRech()" style="flex:1">
+        <option value="alle">Alle</option>
+        <option value="offen">Offen</option>
+        <option value="ueberfaellig">Überfällig</option>
+        <option value="bezahlt">Bezahlt</option>
+      </select>
+    </div>
+
+    <div class="lbl" style="margin:0 0 8px">Übersicht</div>
+    <div id="rg-list"></div>
+
+    <div style="height:24px"></div>
+  </div></div>
+</div>
+
 <div class="ov" id="ov-e" onclick="clov('ov-e',event)">
   <div class="sh" onclick="event.stopPropagation()">
     <div class="shh"></div><div class="sht" id="et" data-i18n="edit_entry">Eintrag bearbeiten</div>
@@ -729,6 +777,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     <div style="margin-bottom:12px"><div class="lbl" style="margin:0 0 6px" data-i18n="full_name">Name</div><input type="text" id="man" data-i18n-ph="full_name" placeholder="Vollständiger Name"></div>
     <div style="margin-bottom:12px"><div class="lbl" style="margin:0 0 6px" data-i18n="short_code">Kürzel (2 Buchstaben)</div><input type="text" id="mak" data-i18n-ph="short_code" placeholder="z.B. SA" maxlength="3" style="text-transform:uppercase"></div>
     <div style="margin-bottom:14px"><div class="lbl" style="margin:0 0 8px" data-i18n="color">Farbe</div><div class="cpick" id="cpick"></div></div>
+    <div style="margin-bottom:14px"><div class="lbl" style="margin:0 0 6px">Stundensatz (€/h)</div><input type="number" id="mar" inputmode="decimal" step="0.5" placeholder="z.B. 35"></div>
     <button class="btn" onclick="svma()" data-i18n="save_changes">Speichern</button>
     <button class="btd" onclick="cDM()" data-i18n="delete_ma">Mitarbeiter löschen</button>
     <button class="bto" onclick="cls('ov-ma')" data-i18n="cancel_btn">Abbrechen</button>
@@ -1681,6 +1730,193 @@ function lsSet(k,v){
   try{ localStorage.setItem(LS+k,JSON.stringify(v)); }catch(e){}
 }
 
+// ═══ RECHNUNGEN ═══
+let RG=[];
+function rgSave(){ lsSet("rg",RG); }
+function rgUid(){ return "rg_"+Date.now()+"_"+Math.random().toString(36).slice(2,8); }
+
+function rgParseDatum(s){
+  s=(s||"").trim();
+  let m=s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/);
+  if(m){
+    let [,d,mo,y]=m;
+    if(y.length===2) y="20"+y;
+    return `${y}-${mo.padStart(2,"0")}-${d.padStart(2,"0")}`;
+  }
+  m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(m) return s;
+  return null;
+}
+function rgParseBetrag(s){
+  s=(s||"").toString().trim();
+  s=s.replace(/[€\s]/g,"");
+  s=s.replace(/\.(?=\d{3}(?:\D|$))/g,"");
+  s=s.replace(",",".");
+  const n=parseFloat(s);
+  return isNaN(n)?0:n;
+}
+function rgSplitLine(line){
+  let cols=line.split("\t");
+  if(cols.length<3) cols=line.split(/\s{2,}/);
+  return cols.map(c=>c.trim()).filter(c=>c!=="");
+}
+
+function rgImport(){
+  const raw=document.getElementById("rg-paste").value;
+  const lines=raw.split(/\r?\n/).map(l=>l.trim()).filter(l=>l!=="");
+  let added=0, skipped=0;
+  for(const line of lines){
+    const cols=rgSplitLine(line);
+    if(cols.length<2){ skipped++; continue; }
+    // Erwartetes Format (wie beim Kopieren aus der Excel-Tabelle):
+    // Datum | Kundennr | Firma | Rechnungsnr(Jahr) | Text | Betrag
+    const datum=rgParseDatum(cols[0]);
+    if(!datum){ skipped++; continue; }
+    const betragRaw=cols[cols.length-1];
+    const betrag=rgParseBetrag(betragRaw);
+    const firma=cols.length>=3?cols[2]:(cols[1]||"");
+    const rgnr=cols.length>=4?cols[3]:"";
+    const text=cols.length>=5?cols.slice(4,cols.length-1).join(" "):"";
+    RG.push({id:rgUid(),datum,firma,rgnr,text,betrag,bezahltAm:null});
+    added++;
+  }
+  rgSave();
+  document.getElementById("rg-import-st").textContent=
+    added+" Zeile(n) übernommen"+(skipped?`, ${skipped} übersprungen (Format nicht erkannt)`:"");
+  document.getElementById("rg-paste").value="";
+  rRech();
+}
+
+function rgAddManual(){
+  const datum=document.getElementById("rg-m-datum").value;
+  const firma=document.getElementById("rg-m-firma").value.trim();
+  const rgnr=document.getElementById("rg-m-rgnr").value.trim();
+  const text=document.getElementById("rg-m-text").value.trim();
+  const betrag=rgParseBetrag(document.getElementById("rg-m-betrag").value);
+  if(!datum||!firma){ toast("Bitte Datum und Firma angeben"); return; }
+  RG.push({id:rgUid(),datum,firma,rgnr,text,betrag,bezahltAm:null});
+  rgSave();
+  ["rg-m-datum","rg-m-firma","rg-m-rgnr","rg-m-text","rg-m-betrag"].forEach(id=>document.getElementById(id).value="");
+  rRech();
+}
+
+function rgDelete(id){
+  RG=RG.filter(r=>r.id!==id);
+  rgSave();
+  rRech();
+}
+
+function rgToggleBezahlt(id){
+  const r=RG.find(x=>x.id===id);
+  if(!r) return;
+  r.bezahltAm = r.bezahltAm ? null : new Date().toISOString().slice(0,10);
+  rgSave();
+  rRech();
+}
+
+function rgGroupKey(r){ return r.datum+"|"+r.firma; }
+
+function rgGroupPayAll(key, pay){
+  const stamp = pay ? new Date().toISOString().slice(0,10) : null;
+  RG.filter(r=>rgGroupKey(r)===key).forEach(r=>r.bezahltAm=stamp);
+  rgSave();
+  rRech();
+}
+
+function rgStatus(r){
+  if(r.bezahltAm) return "bezahlt";
+  const ziel=new Date(r.datum); ziel.setDate(ziel.getDate()+14);
+  const today=new Date(); today.setHours(0,0,0,0);
+  return today>ziel ? "ueberfaellig" : "offen";
+}
+
+function rgFmtMoney(n){ return n.toLocaleString("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2})+" €"; }
+function rgFmtDatum(iso){ const [y,m,d]=iso.split("-"); return `${d}.${m}.${y.slice(2)}`; }
+
+function rRech(){
+  const cnt=document.getElementById("rg-list");
+  if(!cnt) return;
+  const filter=document.getElementById("rg-filter")?.value||"alle";
+
+  const groups={};
+  RG.forEach(r=>{
+    const k=rgGroupKey(r);
+    (groups[k]=groups[k]||[]).push(r);
+  });
+
+  const keys=Object.keys(groups).sort((a,b)=>b.localeCompare(a));
+  if(keys.length===0){
+    cnt.innerHTML=`<div class="crd" style="padding:16px;text-align:center;color:var(--s);font-size:14px">Noch keine Rechnungen erfasst.</div>`;
+    return;
+  }
+
+  let html="";
+  for(const key of keys){
+    const rows=groups[key];
+    const anyOpen=rows.some(r=>rgStatus(r)!=="bezahlt");
+    const statuses=rows.map(rgStatus);
+    const groupStatus = statuses.every(s=>s==="bezahlt") ? "bezahlt" : (statuses.some(s=>s==="ueberfaellig")?"ueberfaellig":"offen");
+    if(filter!=="alle" && !rows.some(r=>rgStatus(r)===filter)) continue;
+
+    const sum=rows.reduce((a,r)=>a+r.betrag,0);
+    const isSammel=rows.length>1;
+    const [datum,firma]=key.split("|");
+    const color = groupStatus==="bezahlt" ? "var(--g)" : groupStatus==="ueberfaellig" ? "#c0392b" : "#e67e22";
+    const label = groupStatus==="bezahlt" ? "Bezahlt" : groupStatus==="ueberfaellig" ? "Überfällig" : "Offen";
+
+    html+=`<div class="crd" style="margin-bottom:12px">
+      <div style="padding:12px 15px;border-bottom:.5px solid var(--b);display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <div>
+          <div style="font-weight:700;font-size:15px">${firma}</div>
+          <div style="font-size:12px;color:var(--s);margin-top:2px">${rgFmtDatum(datum)}${isSammel?` · Sammelrechnung (${rows.length})`:""}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-weight:800;font-size:16px">${rgFmtMoney(sum)}</div>
+          <div style="font-size:11px;font-weight:700;color:${color}">${label}</div>
+        </div>
+      </div>`;
+
+    rows.forEach(r=>{
+      const st=rgStatus(r);
+      const c = st==="bezahlt" ? "var(--g)" : st==="ueberfaellig" ? "#c0392b" : "#e67e22";
+      const l = st==="bezahlt" ? "bezahlt am "+rgFmtDatum(r.bezahltAm) : st==="ueberfaellig" ? "überfällig" : "offen";
+      html+=`<div class="mr">
+        <div style="flex:1">
+          <div style="font-size:14px">${r.rgnr?r.rgnr+" · ":""}${r.text||"—"}</div>
+          <div style="font-size:11px;color:${c};margin-top:2px">${l}</div>
+        </div>
+        <div style="font-size:14px;font-weight:600;margin-right:8px">${rgFmtMoney(r.betrag)}</div>
+        <button class="bto" style="width:auto;margin:0;padding:8px 10px;font-size:12px" onclick="rgToggleBezahlt('${r.id}')">${r.bezahltAm?"Rückgängig":"Bezahlt"}</button>
+        <button class="btd" style="width:auto;margin:0 0 0 6px;padding:8px 10px;font-size:12px" onclick="rgDelete('${r.id}')">✕</button>
+      </div>`;
+    });
+
+    if(isSammel){
+      html+=`<div style="padding:10px 15px">
+        <button class="btn" style="margin:0" onclick="rgGroupPayAll('${key.replace(/'/g,"\\'")}',${anyOpen})">${anyOpen?"Ganze Sammelrechnung als bezahlt markieren":"Ganze Sammelrechnung als offen markieren"}</button>
+      </div>`;
+    }
+    html+=`</div>`;
+  }
+  cnt.innerHTML=html || `<div class="crd" style="padding:16px;text-align:center;color:var(--s);font-size:14px">Keine Einträge für diesen Filter.</div>`;
+}
+
+// ═══ MITARBEITER-STUNDENSÄTZE (lokal, nicht Supabase-synchronisiert) ═══
+let MA_RATES={};
+function maRatesLoad(){ MA_RATES=lsGet("ma_rates",{}); }
+function maRatesSave(){ lsSet("ma_rates",MA_RATES); }
+function maDefaultRate(m){ return (m && m.name==="Sayim Aslan") ? 37 : 35; }
+function maRate(id){
+  if(MA_RATES[id]!=null && MA_RATES[id]!=="") return Number(MA_RATES[id]);
+  const m=maById(id);
+  return maDefaultRate(m);
+}
+function maRateSet(id, val){
+  if(val===""||val==null){ delete MA_RATES[id]; }
+  else { MA_RATES[id]=Number(val); }
+  maRatesSave();
+}
+
 // ═══ TOAST ═══
 function toast(msg,dur=2000){
   const el=document.getElementById("toast");
@@ -1708,6 +1944,8 @@ async function boot(){
   EN=lsGet("en",[]);
   BL=lsGet("bl",[]);
   WA=new Set(lsGet("wa",[]));
+  RG=lsGet("rg",[]);
+  maRatesLoad();
   
   go("pg-home");
   applyTranslations();
@@ -1788,6 +2026,7 @@ function go(id){
   if(id==="pg-woche"){woff=0;rw();}
   if(id==="pg-wa"){rwaList();syncDown();}
   if(id==="pg-stat"){statSetTab(statTab);syncDown();}
+  if(id==="pg-rg"){rRech();}
   setTimeout(()=>document.getElementById(cur)?.classList.remove("bk"),340);
 }
 function bk(to){
@@ -1992,9 +2231,11 @@ function rStatBv(){
 
   const byBv={};
   rows.forEach(e=>{
-    if(!byBv[e.bv_id]) byBv[e.bv_id]={ h:0, days:new Set() };
-    byBv[e.bv_id].h+=Number(e.stunden)||0;
+    if(!byBv[e.bv_id]) byBv[e.bv_id]={ h:0, days:new Set(), umsatz:0 };
+    const h=Number(e.stunden)||0;
+    byBv[e.bv_id].h+=h;
     byBv[e.bv_id].days.add(e.datum);
+    byBv[e.bv_id].umsatz+=h*maRate(e.ma_id);
   });
 
   const list=Object.keys(byBv).map(id=>({bv:bvById(id),id,...byBv[id]})).sort((a,b)=>b.h-a.h);
@@ -2002,9 +2243,8 @@ function rStatBv(){
   body.innerHTML=`<div class="crd" style="margin:12px 16px">${
     list.map(x=>{
       const bv=x.bv;
-      const rate=bv?.rate;
       const budget=bv?.budget_h;
-      const cost = rate ? x.h*Number(rate) : null;
+      const cost = x.umsatz;
       const pct = budget ? Math.min(100,Math.round(x.h/Number(budget)*100)) : null;
       const over = budget && x.h>Number(budget);
       return `<div class="statrow">
@@ -2012,7 +2252,7 @@ function rStatBv(){
           <div class="statrn">BV ${bv?.nr||"?"} · ${bv?.name||"—"}</div>
           <div class="statrv">${fmtH(x.h)}</div>
         </div>
-        <div class="statrsub">${x.days.size} ${x.days.size===1?tr("stat_day"):tr("stat_days")}${cost!=null?` · ${fmtCHF(cost)}`:""}</div>
+        <div class="statrsub">${x.days.size} ${x.days.size===1?tr("stat_day"):tr("stat_days")} · Umsatz: ${fmtEUR(cost)}</div>
         ${budget?`<div class="pbar ${over?"over":""}"><div style="width:${pct}%"></div></div><div class="statrsub" style="margin-top:4px">${tr("stat_of_target",{ist:fmtH(x.h),soll:fmtH(Number(budget))})}${over?" · "+tr("stat_over_budget"):""}</div>`:""}
       </div>`;
     }).join("")
@@ -3165,6 +3405,7 @@ function opma(i){
   document.getElementById("mat").textContent=`${m.name}`;
   document.getElementById("man").value=m.name||"";
   document.getElementById("mak").value=m.k||"";
+  document.getElementById("mar").value=maRate(m.id);
   selC=-1;
   document.getElementById("cpick").innerHTML=CLRS.map((c,ci)=>`
     <div class="cpc ${m.bg===c.bg?"sel":""}" id="cp${ci}" onclick="pkc(${ci})" style="background:${c.bg}">
@@ -3185,6 +3426,7 @@ async function svma(){
   const c=selC>=0?CLRS[selC]:{bg:m.bg,tc:m.tc};
 
   await sbUpd("ma",m.id,{name,k,bg:c.bg,tc:c.tc,sort_order:eMA});
+  maRateSet(m.id, document.getElementById("mar").value.trim());
   await syncDown();
   cls("ov-ma");
   rmam();
