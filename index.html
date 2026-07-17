@@ -813,9 +813,8 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     <div style="margin-bottom:12px"><div class="lbl" style="margin:0 0 6px" data-i18n="bv_nr">BV-Nr.</div><input type="text" id="edbv-nr" inputmode="numeric" maxlength="6"></div>
     <div style="margin-bottom:12px"><div class="lbl" style="margin:0 0 6px" data-i18n="bv_addr">Adresse</div><input type="text" id="edbv-name"></div>
     <div style="display:flex;gap:10px;margin-bottom:12px">
-      <div style="flex:1"><div class="lbl" style="margin:0 0 6px" data-i18n="stat_rate_label">Stundensatz (CHF/h)</div><input type="number" id="edbv-rate" inputmode="decimal" step="0.05" placeholder="optional"></div>
-      <div style="flex:1"><div class="lbl" style="margin:0 0 6px" data-i18n="stat_budget_label">Soll-Stunden</div><input type="number" id="edbv-budget" inputmode="decimal" step="1" placeholder="optional"></div>
-    </div>
+  		<div style="flex:1"><div class="lbl" style="margin:0 0 6px" data-i18n="stat_budget_label">Soll-Stunden</div><input type="number" id="edbv-budget" inputmode="decimal" step="1" placeholder="optional"></div>
+	</div>
     <div style="margin-bottom:14px">
       <div class="toggle-row">
         <div class="lbl2" data-i18n="editor_warn_off">Warnung "Fehlende Angaben" für diese Baustelle deaktivieren</div>
@@ -2546,12 +2545,6 @@ function rStat(){
     if(statTab==="cal"){ sumEl.innerHTML=""; }
     else{
       const rows=statEntriesInPeriod();
-      const byDay={};
-      rows.forEach(e=>{
-        if(!byDay[e.datum]) byDay[e.datum]={ma:new Set(),verdienst:0};
-        byDay[e.datum].ma.add(e.ma_id);
-        byDay[e.datum].verdienst+=(Number(e.stunden)||0)*maRate(e.ma_id);
-      });
       const days=Object.keys(byDay);
       const avgMa = days.length ? (days.reduce((a,d)=>a+byDay[d].ma.size,0)/days.length) : 0;
       const avgVerdienstTag = days.length ? (days.reduce((a,d)=>a+byDay[d].verdienst,0)/days.length) : 0;
@@ -2560,9 +2553,6 @@ function rStat(){
       const avgVerdienstWoche = weeks.size ? (totalVerdienst/weeks.size) : 0;
       sumEl.innerHTML=`<div class="sts" style="padding:0 16px 4px">
         <div class="stc"><div class="stn">${avgMa.toFixed(1)}</div><div class="stl">Ø Mitarbeiter/Tag</div></div>
-        <div class="stc"><div class="stn money">${fmtEUR(avgVerdienstTag)}</div><div class="stl">Ø Verdienst/Tag</div></div>
-        <div class="stc"><div class="stn money">${fmtEUR(avgVerdienstWoche)}</div><div class="stl">Ø Verdienst/Woche</div></div>
-        <div class="stc"><div class="stn money">${fmtEUR(totalVerdienst)}</div><div class="stl">Verdienst gesamt</div></div>
       </div>`;
     }
   }
@@ -2616,11 +2606,10 @@ function rStatBv(){
 
   const byBv={};
   rows.forEach(e=>{
-    if(!byBv[e.bv_id]) byBv[e.bv_id]={ h:0, days:new Set(), umsatz:0 };
+	if(!byBv[e.bv_id]) byBv[e.bv_id]={ h:0, days:new Set() };
     const h=Number(e.stunden)||0;
     byBv[e.bv_id].h+=h;
     byBv[e.bv_id].days.add(e.datum);
-    byBv[e.bv_id].umsatz+=h*maRate(e.ma_id);
   });
 
   const list=Object.keys(byBv).map(id=>({bv:bvById(id),id,...byBv[id]})).sort((a,b)=>b.h-a.h);
@@ -2629,7 +2618,6 @@ function rStatBv(){
     list.map(x=>{
       const bv=x.bv;
       const budget=bv?.budget_h;
-      const cost = x.umsatz;
       const pct = budget ? Math.min(100,Math.round(x.h/Number(budget)*100)) : null;
       const over = budget && x.h>Number(budget);
       return `<div class="statrow">
@@ -2637,8 +2625,8 @@ function rStatBv(){
           <div class="statrn">BV ${bv?.nr||"?"} · ${bv?.name||"—"}</div>
           <div class="statrv">${fmtH(x.h)}</div>
         </div>
-        <div class="statrsub">${x.days.size} ${x.days.size===1?tr("stat_day"):tr("stat_days")} · Umsatz: ${fmtEUR(cost)}</div>
-        ${budget?`<div class="pbar ${over?"over":""}"><div style="width:${pct}%"></div></div><div class="statrsub" style="margin-top:4px">${tr("stat_of_target",{ist:fmtH(x.h),soll:fmtH(Number(budget))})}${over?" · "+tr("stat_over_budget"):""}</div>`:""}
+		<div class="statrsub">${x.days.size} ${x.days.size===1?tr("stat_day"):tr("stat_days")}</div>        
+		${budget?`<div class="pbar ${over?"over":""}"><div style="width:${pct}%"></div></div><div class="statrsub" style="margin-top:4px">${tr("stat_of_target",{ist:fmtH(x.h),soll:fmtH(Number(budget))})}${over?" · "+tr("stat_over_budget"):""}</div>`:""}
       </div>`;
     }).join("")
   }</div><div style="height:24px"></div>`;
@@ -3583,21 +3571,18 @@ function ustats(){
   weDate.setDate(dw.getDate()+4);
   const we=weDate.toISOString().split("T")[0];
 
-  let hH=0,hW=0,uW=0;
-  EN.forEach(e=>{
+	let hH=0,hW=0;  
+	EN.forEach(e=>{
     const h=Number(e.stunden)||0;
     if(e.datum===t)hH+=h;
     if(e.datum>=ws&&e.datum<=we){
       hW+=h;
-      uW+=h*maRate(e.ma_id);
     }
   });
 
   document.getElementById("s-h").textContent=hH;
   document.getElementById("s-w").textContent=hW;
   document.getElementById("s-e").textContent=EN.length;
-  document.getElementById("s-u").textContent=fmtEUR(uW);
-
   rgDashStats();
 }
 
@@ -4363,7 +4348,6 @@ function opEdBv(id){
   document.getElementById("edbvt").textContent=`BV ${bv?.nr||"?"} ${tr("editor_bv_edit")}`;
   document.getElementById("edbv-nr").value=bv?.nr||"";
   document.getElementById("edbv-name").value=bv?.name||"";
-  document.getElementById("edbv-rate").value=bv?.rate??"";
   document.getElementById("edbv-budget").value=bv?.budget_h??"";
   document.getElementById("edbv-warn-tgl").classList.toggle("on",!!bv?.warn_disabled);
   document.getElementById("edbv-arch-tgl").classList.toggle("on",!!bv?.archived);
@@ -4587,9 +4571,7 @@ async function svEdBv(){
   if(!edBVid)return;
   const nr=document.getElementById("edbv-nr").value.trim();
   const name=document.getElementById("edbv-name").value.trim();
-  const rateRaw=document.getElementById("edbv-rate").value;
   const budgetRaw=document.getElementById("edbv-budget").value;
-  const rate=rateRaw===""?null:Number(rateRaw);
   const budget_h=budgetRaw===""?null:Number(budgetRaw);
   const warnOff=document.getElementById("edbv-warn-tgl").classList.contains("on");
   const archived=document.getElementById("edbv-arch-tgl").classList.contains("on");
@@ -4597,8 +4579,7 @@ async function svEdBv(){
   if(BV.find(b=>b.nr===nr && b.id!==edBVid)){ alert(tr("bv_nr_taken")); return; }
 
   const execSave = async () => {
-    await sbUpd("bv", edBVid, { nr, name: name || "—", warn_disabled: warnOff, archived: archived, rate, budget_h });
-    await syncDown();
+	await sbUpd("bv", edBVid, { nr, name: name || "—", warn_disabled: warnOff, archived: archived, budget_h });    await syncDown();
     cls("ov-edbv");
     rEditorBv();
     toast(tr("toast_updated"));
