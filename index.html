@@ -3328,44 +3328,7 @@ function ustats(){
   document.getElementById("s-w").textContent=hW;
   document.getElementById("s-e").textContent=EN.length;
   document.getElementById("s-u").textContent=fmtEUR(uW);
-function getLastInvoiceDateForBv(bv){
-  if(!bv) return null;
 
-  // 1. zuerst alle Rechnungen mit direkter BV-Zuordnung
-  let matches = RG.filter(r => r.bv_id === bv.id);
-
-  // 2. Fallback nur für alte Rechnungen ohne bv_id
-  if(!matches.length){
-    const nrRegex = bv.nr
-      ? new RegExp(`(^|\\D)${String(bv.nr).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\D|$)`)
-      : null;
-
-    matches = RG.filter(r => {
-      if(r.bv_id) return false; // schon fest einer anderen BV zugeordnet
-
-      const hay = `${r.firma || ""} ${r.rgnr || ""} ${r.text || ""}`;
-
-      const byNr = nrRegex ? nrRegex.test(hay) : false;
-      const byName =
-        bv.name &&
-        bv.name.trim().length >= 4 &&
-        hay.toLowerCase().includes(bv.name.toLowerCase());
-
-      return byNr || byName;
-    });
-  }
-
-  if(!matches.length) return null;
-
-  // nur gültige Datumswerte
-  const dates = matches
-    .map(r => r.datum)
-    .filter(Boolean)
-    .sort();
-
-  return dates.length ? dates[dates.length - 1] : null;
-}
-	
   rgDashStats();
 }
 
@@ -3408,26 +3371,24 @@ function rgDashStats(){
   // einschließlich diesem Datum gelten als abgerechnet, alles danach (bzw. alles,
   // falls noch nie abgerechnet wurde) zählt als noch nicht abgerechnet.
   // Der Stundensatz kommt pro Mitarbeiter (nicht pro Baustelle).
-let unbilledSum = 0;
-
-BV.filter(b => !b.archived).forEach(b => {
-  const lastInvoiceDate = getLastInvoiceDateForBv(b);
-
-  const unbilledEntries = EN.filter(e => {
-    if(e.bv_id !== b.id) return false;
-
-    // nie abgerechnet -> alles offen
-    if(!lastInvoiceDate) return true;
-
-    // nur Einträge NACH letzter Rechnung
-    return e.datum > lastInvoiceDate;
+  let unbilledSum=0;
+  BV.filter(b=>!b.archived).forEach(b=>{
+    // Bevorzugt: Rechnungen, die explizit dieser Baustelle zugeordnet sind (bv_id).
+    // Fallback für alte Rechnungen ohne bv_id: Text-/Firmensuche.
+    let matches = RG.filter(r=>r.bv_id===b.id);
+    if(!matches.length){
+      matches = RG.filter(r=>{
+        if(r.bv_id) return false; // Rechnung ist einer anderen BV fest zugeordnet
+        const hay=((r.firma||"")+" "+(r.text||"")).toLowerCase();
+        return (b.nr && hay.includes(b.nr.toLowerCase())) || (b.name && hay.includes(b.name.toLowerCase()));
+      });
+    }
+    const lastInvoiceDate = matches.length ? matches.reduce((max,r)=>r.datum>max?r.datum:max, matches[0].datum) : null;
+    const entries = EN.filter(e=>e.bv_id===b.id && (!lastInvoiceDate || e.datum>lastInvoiceDate));
+    entries.forEach(e=>{
+      unbilledSum += (Number(e.stunden)||0) * maRate(e.ma_id);
+    });
   });
-
-  unbilledEntries.forEach(e => {
-    unbilledSum += (Number(e.stunden) || 0) * maRate(e.ma_id);
-  });
-});
-	
   const ubEl=document.getElementById("s-ub"); if(ubEl){ ubEl.textContent=rgFmtMoney(unbilledSum); }
 
   // Überfällig-Kachel nur zeigen, wenn wirklich etwas überfällig ist
