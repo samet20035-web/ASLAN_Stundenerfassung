@@ -3328,7 +3328,44 @@ function ustats(){
   document.getElementById("s-w").textContent=hW;
   document.getElementById("s-e").textContent=EN.length;
   document.getElementById("s-u").textContent=fmtEUR(uW);
+function getLastInvoiceDateForBv(bv){
+  if(!bv) return null;
 
+  // 1. zuerst alle Rechnungen mit direkter BV-Zuordnung
+  let matches = RG.filter(r => r.bv_id === bv.id);
+
+  // 2. Fallback nur für alte Rechnungen ohne bv_id
+  if(!matches.length){
+    const nrRegex = bv.nr
+      ? new RegExp(`(^|\\D)${String(bv.nr).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\D|$)`)
+      : null;
+
+    matches = RG.filter(r => {
+      if(r.bv_id) return false; // schon fest einer anderen BV zugeordnet
+
+      const hay = `${r.firma || ""} ${r.rgnr || ""} ${r.text || ""}`;
+
+      const byNr = nrRegex ? nrRegex.test(hay) : false;
+      const byName =
+        bv.name &&
+        bv.name.trim().length >= 4 &&
+        hay.toLowerCase().includes(bv.name.toLowerCase());
+
+      return byNr || byName;
+    });
+  }
+
+  if(!matches.length) return null;
+
+  // nur gültige Datumswerte
+  const dates = matches
+    .map(r => r.datum)
+    .filter(Boolean)
+    .sort();
+
+  return dates.length ? dates[dates.length - 1] : null;
+}
+	
   rgDashStats();
 }
 
