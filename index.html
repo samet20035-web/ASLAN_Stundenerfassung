@@ -2147,49 +2147,42 @@ async function rgImport(){
     });
     addedAbr++;
 
-    const k=block || rgnr;
-    if(!rgMap[k]){
-      rgMap[k]={
-        id: rgUid(),
-        datum,
-        firma: "Seith Energietechnik GmbH & Co. KG",
-        rgnr,
-        text: `Rechnung BV ${bv_nr}`,
-        betrag: 0,
-        bezahltAm: null,
-        bv_id
-      };
-      addedRg++;
-    }
+const k = block || rgnr;
 
-	if(!rgMap[k]){
-		rgMap[k]={
-    	id: rgUid(),
-    	datum,
-   		firma: "Seith Energietechnik GmbH & Co. KG",
-    	rgnr: block ? null : rgnr,
-    	text: block || `Rechnung BV ${bv_nr}`,
-    	betrag: 0,
-    	bezahltAm: null,
-    	bv_id: null,
-    	block
-  	};
- 	 addedRg++;
-	}
+if(!rgMap[k]){
+  rgMap[k]={
+    id: rgUid(),
+    datum,
+    firma: "Seith Energietechnik GmbH & Co. KG",
+    rgnr: block ? null : rgnr,
+    text: block || `Rechnung BV ${bv_nr}`,
+    betrag: 0,
+    bezahltAm: null,
+    bv_id: bv_id || null,
+    block: block || null
+  };
+  addedRg++;
+}
 
-    rgMap[k].betrag += stunden * (ma_name==="Sayim Aslan" ? 37 : 35);
+rgMap[k].betrag += stunden * (ma_name==="Sayim Aslan" ? 37 : 35);
 
-    if(rgMap[k].bv_id && bv_id && rgMap[k].bv_id !== bv_id){
-      rgMap[k].bv_id = null;
-    }
-  }
+// wenn innerhalb derselben Sammelrechnung mehrere BVs vorkommen,
+// dann keine einzelne BV-Zuordnung am Kopf behalten
+if(rgMap[k].bv_id && bv_id && rgMap[k].bv_id !== bv_id){
+  rgMap[k].bv_id = null;
+}
+
+// für eine Sammelrechnung das neueste Datum merken
+if(datum > rgMap[k].datum){
+  rgMap[k].datum = datum;
+}
 
   const newRgRows=Object.values(rgMap);
 
   syn("w",tr("sync_now"));
 
   if(newRgRows.length){
-    const resRg=await sbIns("rg",newRgRows,"rgnr");
+    const resRg=await sbIns("rg",newRgRows);
     if(!resRg){
       syn("e",tr("sync_error"));
       alert(tr("save_failed"));
@@ -2325,9 +2318,16 @@ function rRech(){
 
     const sum=rows.reduce((a,r)=>a+r.betrag,0);
     const isSammel=rows.length>1;
-    const [datum,firma]=key.split("|");
-    const color = groupStatus==="bezahlt" ? "var(--g)" : groupStatus==="ueberfaellig" ? "#c0392b" : "#e67e22";
-    const label = groupStatus==="bezahlt" ? "Bezahlt" : groupStatus==="ueberfaellig" ? "Überfällig" : "Offen";
+let datum="", firma="", blockLabel="";
+if(key.startsWith("block|")){
+  blockLabel = key.slice(6);
+  firma = rows[0]?.firma || "";
+  datum = rows.map(r=>r.datum).sort().slice(-1)[0] || "";
+}else{
+  [datum,firma] = key.split("|");
+}
+const color = groupStatus==="bezahlt" ? "var(--g)" : groupStatus==="ueberfaellig" ? "#c0392b" : "#e67e22";
+const label = groupStatus==="bezahlt" ? "Bezahlt" : groupStatus==="ueberfaellig" ? "Überfällig" : "Offen";
 
     const gid="rgg_"+key.replace(/[^a-zA-Z0-9]/g,"_");
     const opened=rgOpenGroups.has(key);
@@ -2335,7 +2335,9 @@ function rRech(){
       <div style="padding:12px 15px;${opened?"border-bottom:.5px solid var(--b);":""}display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer" onclick="rgToggleGroup('${key.replace(/'/g,"\\'")}')">
         <div>
           <div style="font-weight:700;font-size:15px">${firma}</div>
-          <div style="font-size:12px;color:var(--s);margin-top:2px">${rgFmtDatum(datum)}${isSammel?` · Sammelrechnung (${rows.length})`:""}</div>
+         <div style="font-size:12px;color:var(--s);margin-top:2px">
+  ${blockLabel ? `${blockLabel}${isSammel?` · Sammelrechnung (${rows.length})`:""}` : `${rgFmtDatum(datum)}${isSammel?` · Sammelrechnung (${rows.length})`:""}`}
+</div>
         </div>
         <div style="text-align:right;display:flex;align-items:center;gap:8px">
           <div>
@@ -3784,8 +3786,15 @@ let unbilledSum=0;
     const anyOpen=rows.some(r=>rgStatus(r)!=="bezahlt");
     if(!anyOpen) return;
     const sum=rows.filter(r=>rgStatus(r)!=="bezahlt").reduce((a,r)=>a+r.betrag,0);
-    const [datum,firma]=key.split("|");
-    const ziel=new Date(datum); ziel.setDate(ziel.getDate()+14);
+    let datum="", firma="";
+if(key.startsWith("block|")){
+  firma = rows[0]?.firma || "";
+  datum = rows.map(r=>r.datum).sort().slice(-1)[0] || "";
+}else{
+  [datum,firma]=key.split("|");
+}
+const ziel=new Date(datum); 
+ziel.setDate(ziel.getDate()+14);
     const days=Math.round((ziel-today)/86400000);
     deadlineRows.push({firma,datum,sum,days,isSammel:rows.length>1});
   });
