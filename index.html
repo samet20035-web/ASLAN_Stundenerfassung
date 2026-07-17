@@ -2033,8 +2033,18 @@ function rgParseBetrag(s){
   return isNaN(n)?0:n;
 }
 function rgSplitLine(line){
+  line=(line||"").trim();
+
+  if(/^(\|\s*:?-+:?\s*)+\|?$/.test(line)) return [];
+
+  if(line.includes("|")){
+    return line.split("|").map(c=>c.trim()).filter(c=>c!=="");
+  }
+
   let cols=line.split("\t");
-  if(cols.length<3) cols=line.split(/\s{2,}/);
+  if(cols.length<6){
+    cols=line.split(/\s{2,}/);
+  }
   return cols.map(c=>c.trim()).filter(c=>c!=="");
 }
 // Erkennt die Baustelle zuverlässig über die BV-Nr. als eigenständige Zahl
@@ -2094,18 +2104,19 @@ function abrMatchesEntry(entry, abr){
 	
 async function rgImport(){
   const raw=document.getElementById("rg-paste").value;
-  const lines=raw.split(/\r?\n/).map(l=>l.trim()).filter(l=>l!=="");
-  let addedRg=0, addedAbr=0, skipped=0;
+  const lines=raw
+    .split(/\r?\n/)
+    .map(l=>l.trim())
+    .filter(l=>l!=="" && !/^(\|\s*:?-+:?\s*)+\|?$/.test(l));
 
-  const rgMap={};     // Rechnungsübersicht
-  const abrRows=[];   // Abgerechnete Stundenpositionen
+  let addedRg=0, addedAbr=0, skipped=0;
+  const rgMap={};
+  const abrRows=[];
 
   for(const line of lines){
     const cols=rgSplitLine(line);
-    if(cols.length < 6){ skipped++; continue; }
+    if(!cols || cols.length < 6){ skipped++; continue; }
 
-    // Erwartetes Format deiner Excel:
-    // Datum | BV_NR | Mitarbeiter | Stunden | Rechnungsnr | Block/Text
     const datum=rgParseDatum(cols[0]);
     if(!datum){ skipped++; continue; }
 
@@ -2115,10 +2126,14 @@ async function rgImport(){
     const rgnr=String(cols[4]||"").trim();
     const block=String(cols[5]||"").trim();
 
+    if(!bv_nr || !ma_name || !rgnr || !stunden){
+      skipped++;
+      continue;
+    }
+
     const bv=BV.find(b=>String(b.nr||"").trim()===bv_nr);
     const bv_id=bv ? bv.id : null;
 
-    // ABR-Zeile speichern
     abrRows.push({
       id: "abr_"+Date.now()+"_"+Math.random().toString(36).slice(2,10),
       datum,
@@ -2132,7 +2147,6 @@ async function rgImport(){
     });
     addedAbr++;
 
-    // RG-Sammelübersicht aufbauen (pro Rechnungsnummer)
     const k=rgnr;
     if(!rgMap[k]){
       rgMap[k]={
@@ -2147,9 +2161,9 @@ async function rgImport(){
       };
       addedRg++;
     }
+
     rgMap[k].betrag += stunden * (ma_name==="Sayim Aslan" ? 37 : 35);
 
-    // falls die Rechnung mehrere BVs hat, bv_id nur setzen wenn eindeutig
     if(rgMap[k].bv_id && bv_id && rgMap[k].bv_id !== bv_id){
       rgMap[k].bv_id = null;
     }
@@ -2161,20 +2175,28 @@ async function rgImport(){
 
   if(newRgRows.length){
     const resRg=await sbIns("rg",newRgRows,"rgnr");
-    if(!resRg){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
+    if(!resRg){
+      syn("e",tr("sync_error"));
+      alert(tr("save_failed"));
+      return;
+    }
   }
 
   if(abrRows.length){
-    const resAbr=await sbIns("abr",abrRows,"datum,bv_nr,ma_name,stunden,rgnr");
-    if(!resAbr){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
+    const resAbr=await sbIns("abr",abrRows);
+    if(!resAbr){
+      syn("e",tr("sync_error"));
+      alert(tr("save_failed"));
+      return;
+    }
   }
 
   await syncDown();
   syn("",tr("sync_saved"));
 
-  document.getElementById("rg-import-st").textContent=
-    `${addedRg} Rechnung(en), ${addedAbr} Abrechnungszeile(n) übernommen`+
-    (skipped?`, ${skipped} übersprungen`:"");
+  document.getElementById("rg-import-st").textContent =
+    `${addedRg} Rechnung(en), ${addedAbr} Abrechnungszeile(n) übernommen` +
+    (skipped ? `, ${skipped} übersprungen` : "");
 
   document.getElementById("rg-paste").value="";
   rRech();
