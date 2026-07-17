@@ -3411,40 +3411,23 @@ function rgDashStats(){
 let unbilledSum = 0;
 
 BV.filter(b => !b.archived).forEach(b => {
-  let matches = RG.filter(r => r.bv_id === b.id);
+  const lastInvoiceDate = getLastInvoiceDateForBv(b);
 
-  // Fallback nur für alte Rechnungen ohne bv_id
-  if (!matches.length) {
-    const nrRegex = b.nr
-      ? new RegExp(`(^|\\D)${String(b.nr).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\D|$)`)
-      : null;
+  const unbilledEntries = EN.filter(e => {
+    if(e.bv_id !== b.id) return false;
 
-    matches = RG.filter(r => {
-      if (r.bv_id) return false;
+    // nie abgerechnet -> alles offen
+    if(!lastInvoiceDate) return true;
 
-      const hay = `${r.firma || ""} ${r.text || ""}`;
-      const byNr = nrRegex ? nrRegex.test(hay) : false;
-      const byName = b.name && b.name.trim().length >= 4
-        ? hay.toLowerCase().includes(b.name.toLowerCase())
-        : false;
-
-      return byNr || byName;
-    });
-  }
-
-  const lastInvoiceDate = matches.length
-    ? matches.map(r => r.datum).sort().slice(-1)[0]
-    : null;
-
-  const unbilledEntries = EN.filter(e =>
-    e.bv_id === b.id &&
-    (!lastInvoiceDate || e.datum > lastInvoiceDate)
-  );
+    // nur Einträge NACH letzter Rechnung
+    return e.datum > lastInvoiceDate;
+  });
 
   unbilledEntries.forEach(e => {
     unbilledSum += (Number(e.stunden) || 0) * maRate(e.ma_id);
   });
 });
+	
   const ubEl=document.getElementById("s-ub"); if(ubEl){ ubEl.textContent=rgFmtMoney(unbilledSum); }
 
   // Überfällig-Kachel nur zeigen, wenn wirklich etwas überfällig ist
