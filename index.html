@@ -2147,7 +2147,7 @@ async function rgImport(){
     });
     addedAbr++;
 
-    const k=rgnr;
+    const k=block || rgnr;
     if(!rgMap[k]){
       rgMap[k]={
         id: rgUid(),
@@ -2161,6 +2161,21 @@ async function rgImport(){
       };
       addedRg++;
     }
+
+	if(!rgMap[k]){
+		rgMap[k]={
+    	id: rgUid(),
+    	datum,
+   		firma: "Seith Energietechnik GmbH & Co. KG",
+    	rgnr: block ? null : rgnr,
+    	text: block || `Rechnung BV ${bv_nr}`,
+    	betrag: 0,
+    	bezahltAm: null,
+    	bv_id: null,
+    	block
+  	};
+ 	 addedRg++;
+	}
 
     rgMap[k].betrag += stunden * (ma_name==="Sayim Aslan" ? 37 : 35);
 
@@ -2258,8 +2273,11 @@ function rgToggleGroup(key){
   rRech();
 }
 
-function rgGroupKey(r){ return r.datum+"|"+r.firma; }
-
+function rgGroupKey(r){
+  if(r.block) return "block|" + r.block;
+  return r.datum + "|" + r.firma;
+}
+	
 async function rgGroupPayAll(key, pay){
   const stamp = pay ? new Date().toISOString().slice(0,10) : null;
   const rows=RG.filter(r=>rgGroupKey(r)===key);
