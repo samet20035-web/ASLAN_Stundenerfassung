@@ -3371,24 +3371,43 @@ function rgDashStats(){
   // einschließlich diesem Datum gelten als abgerechnet, alles danach (bzw. alles,
   // falls noch nie abgerechnet wurde) zählt als noch nicht abgerechnet.
   // Der Stundensatz kommt pro Mitarbeiter (nicht pro Baustelle).
-  let unbilledSum=0;
-  BV.filter(b=>!b.archived).forEach(b=>{
-    // Bevorzugt: Rechnungen, die explizit dieser Baustelle zugeordnet sind (bv_id).
-    // Fallback für alte Rechnungen ohne bv_id: Text-/Firmensuche.
-    let matches = RG.filter(r=>r.bv_id===b.id);
-    if(!matches.length){
-      matches = RG.filter(r=>{
-        if(r.bv_id) return false; // Rechnung ist einer anderen BV fest zugeordnet
-        const hay=((r.firma||"")+" "+(r.text||"")).toLowerCase();
-        return (b.nr && hay.includes(b.nr.toLowerCase())) || (b.name && hay.includes(b.name.toLowerCase()));
-      });
-    }
-    const lastInvoiceDate = matches.length ? matches.reduce((max,r)=>r.datum>max?r.datum:max, matches[0].datum) : null;
-    const entries = EN.filter(e=>e.bv_id===b.id && (!lastInvoiceDate || e.datum>lastInvoiceDate));
-    entries.forEach(e=>{
-      unbilledSum += (Number(e.stunden)||0) * maRate(e.ma_id);
+let unbilledSum = 0;
+
+BV.filter(b => !b.archived).forEach(b => {
+  let matches = RG.filter(r => r.bv_id === b.id);
+
+  // Fallback nur für alte Rechnungen ohne bv_id
+  if (!matches.length) {
+    const nrRegex = b.nr
+      ? new RegExp(`(^|\\D)${String(b.nr).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\D|$)`)
+      : null;
+
+    matches = RG.filter(r => {
+      if (r.bv_id) return false;
+
+      const hay = `${r.firma || ""} ${r.text || ""}`;
+      const byNr = nrRegex ? nrRegex.test(hay) : false;
+      const byName = b.name && b.name.trim().length >= 4
+        ? hay.toLowerCase().includes(b.name.toLowerCase())
+        : false;
+
+      return byNr || byName;
     });
+  }
+
+  const lastInvoiceDate = matches.length
+    ? matches.map(r => r.datum).sort().slice(-1)[0]
+    : null;
+
+  const unbilledEntries = EN.filter(e =>
+    e.bv_id === b.id &&
+    (!lastInvoiceDate || e.datum > lastInvoiceDate)
+  );
+
+  unbilledEntries.forEach(e => {
+    unbilledSum += (Number(e.stunden) || 0) * maRate(e.ma_id);
   });
+});
   const ubEl=document.getElementById("s-ub"); if(ubEl){ ubEl.textContent=rgFmtMoney(unbilledSum); }
 
   // Überfällig-Kachel nur zeigen, wenn wirklich etwas überfällig ist
