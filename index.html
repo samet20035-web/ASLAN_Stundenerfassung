@@ -265,6 +265,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     </div>
 
     <div id="warn" style="display:none"></div>
+    <div id="warn-ma" style="display:none"></div>
 
     <div id="miss-info-cnt" style="display:none; margin:16px 16px 0;">
       <div class="lbl" style="margin:0 0 8px; color:#c0392b;" data-i18n="missing_info">Fehlende Angaben</div>
@@ -346,12 +347,25 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     <input type="date" id="inp-d" style="font-size:19px;padding:15px">
     <div class="qb"><button class="qbtn" onclick="sd0()" data-i18n="today_btn">Heute</button><button class="qbtn" onclick="sd1()" data-i18n="yesterday_btn">◀ Gestern</button></div>
   </div></div>
-  <div class="nav"><button class="btn" onclick="n2bv()" data-i18n="to_bv_btn">Zur Baustelle →</button></div>
+  <div class="nav"><button class="btn" onclick="n2anw()" data-i18n="to_bv_btn">Zur Baustelle →</button></div>
+</div>
+
+<div class="pg" id="pg-anw">
+  <div class="hdr"><button class="bck" onclick="bk('pg-datum')">‹</button><div><div class="ht">Schritt 2 – Wer war da?</div><div class="hs" id="anwsub">—</div></div></div>
+  <div class="stp"><div class="sp dn"></div><div class="sp on"></div><div class="sp"></div><div class="sp"></div></div>
+  <div class="sc">
+    <div style="padding:12px 16px 0;display:flex;gap:8px">
+      <button class="qbtn" onclick="anwSetAll(true)">Alle da</button>
+      <button class="qbtn" onclick="anwSetAll(false)">Keiner da</button>
+    </div>
+    <div class="crd" id="anwl" style="margin:12px 16px 16px"></div>
+  </div>
+  <div class="nav"><button class="btn" onclick="n2bv()">Weiter zur Baustelle →</button></div>
 </div>
 
 <div class="pg" id="pg-bv">
-  <div class="hdr"><button class="bck" onclick="bk('pg-datum')">‹</button><div><div class="ht" data-i18n="step2_title">Schritt 2 – Baustelle</div><div class="hs" id="bvsub">—</div></div></div>
-  <div class="stp"><div class="sp dn"></div><div class="sp on"></div><div class="sp"></div></div>
+  <div class="hdr"><button class="bck" onclick="bk('pg-anw')">‹</button><div><div class="ht" data-i18n="step2_title">Schritt 3 – Baustelle</div><div class="hs" id="bvsub">—</div></div></div>
+  <div class="stp"><div class="sp dn"></div><div class="sp dn"></div><div class="sp on"></div><div class="sp"></div></div>
   <div class="sc">
     <div class="nbv">
       <div style="font-size:13px;font-weight:700;color:var(--gd);text-transform:uppercase;letter-spacing:.06em" data-i18n="new_bv">Neue Baustelle</div>
@@ -370,8 +384,8 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 </div>
 
 <div class="pg" id="pg-st">
-  <div class="hdr"><button class="bck" onclick="bk('pg-bv')">‹</button><div><div class="ht" data-i18n="step3_title">Schritt 3 – Stunden</div><div class="hs" id="stsub">—</div></div></div>
-  <div class="stp"><div class="sp dn"></div><div class="sp dn"></div><div class="sp on"></div></div>
+  <div class="hdr"><button class="bck" onclick="bk('pg-bv')">‹</button><div><div class="ht" data-i18n="step3_title">Schritt 4 – Stunden</div><div class="hs" id="stsub">—</div></div></div>
+  <div class="stp"><div class="sp dn"></div><div class="sp dn"></div><div class="sp dn"></div><div class="sp on"></div></div>
   <div class="sc">
     <div class="lbl" data-i18n="team_label">Wer hat mitgearbeitet?</div>
     <div class="crd" id="tml" style="margin-bottom:8px"></div>
@@ -410,7 +424,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 <div class="pg" id="pg-ok">
   <div class="sw"><div class="sc2" style="color:var(--g)"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9"/></svg></div><div style="font-size:24px;font-weight:800;margin-bottom:7px;text-align:center" data-i18n="saved_title">Gespeichert!</div><div id="okd" style="font-size:14px;color:var(--s);text-align:center;line-height:1.55">—</div></div>
   <div style="padding:18px 16px;padding-bottom:calc(var(--sb)+18px)">
-    <button class="btn" onclick="go('pg-datum');rsi()" data-i18n="more_bv_btn">Weitere Baustelle</button>
+    <button class="btn" onclick="rsi();rbvg();go('pg-bv')" data-i18n="more_bv_btn">Weitere Baustelle</button>
     <button class="bto" onclick="go('pg-home')" data-i18n="home_btn">Zur Startseite</button>
   </div>
 </div>
@@ -494,6 +508,60 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     </div>
     <div class="lbl" data-i18n="bl_list">Bauleiterliste</div>
     <div class="crd" id="blml" style="margin-bottom:16px"></div>
+  </div>
+</div>
+
+<div class="pg" id="pg-abw">
+  <div class="hdr"><button class="bck" onclick="bk('pg-editor')">‹</button><div><div class="ht">Abwesenheiten & Urlaub</div><div class="hs">Fehltage, Urlaub, Feiertage</div></div></div>
+  <div class="sc">
+    <div class="nbv" style="margin-top:12px">
+      <div style="font-size:13px;font-weight:700;color:var(--gd);text-transform:uppercase;letter-spacing:.06em">Einzelne Abwesenheit (Tag)</div>
+      <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px">
+        <select id="abw-ma"></select>
+        <input type="date" id="abw-datum">
+        <input type="text" id="abw-grund" placeholder="Grund (optional)">
+        <button class="btn" onclick="addAbsence()">Abwesenheit hinzufügen</button>
+      </div>
+    </div>
+    <div class="lbl">Erfasste Abwesenheiten</div>
+    <div class="crd" id="abw-list" style="margin-bottom:16px"></div>
+
+    <div class="nbv">
+      <div style="font-size:13px;font-weight:700;color:var(--gd);text-transform:uppercase;letter-spacing:.06em">Urlaub / Feiertag (Zeitraum)</div>
+      <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px">
+        <select id="lv-scope" onchange="document.getElementById('lv-ma').style.display=this.value==='firma'?'none':'block'">
+          <option value="firma">Ganze Firma</option>
+          <option value="einzeln">Einzelner Mitarbeiter</option>
+        </select>
+        <select id="lv-ma" style="display:none"></select>
+        <select id="lv-type">
+          <option value="urlaub">Urlaub</option>
+          <option value="feiertag">Feiertag</option>
+          <option value="krankheit">Krankheit</option>
+          <option value="sonstiges">Sonstiges</option>
+        </select>
+        <div style="display:flex;gap:8px">
+          <input type="date" id="lv-start" style="flex:1">
+          <input type="date" id="lv-end" style="flex:1">
+        </div>
+        <input type="text" id="lv-note" placeholder="Notiz (optional)">
+        <button class="btn" onclick="addLeave()">Zeitraum hinzufügen</button>
+      </div>
+    </div>
+    <div class="lbl">Erfasster Urlaub / Feiertage</div>
+    <div class="crd" id="lv-list" style="margin-bottom:24px"></div>
+  </div>
+</div>
+
+<div class="pg" id="pg-bv-editor">
+  <div class="hdr"><button class="bck" onclick="bk('pg-editor')">‹</button><div><div class="ht" data-i18n="editor_bv_list">Baustellen</div><div class="hs">Verwalten & Einstellungen</div></div></div>
+  <div class="sc">
+    <div class="lbl" data-i18n="editor_bv_list" style="margin-top:12px">Baustellen</div>
+    <div class="crd" id="edbvl" style="margin-bottom:16px"></div>
+
+    <div class="lbl" id="edbvl-arch-lbl" data-i18n="editor_bv_archived_list" style="display:none">Archivierte Baustellen</div>
+    <div class="crd" id="edbvl-arch" style="margin-bottom:16px;display:none"></div>
+    <div style="height:24px"></div>
   </div>
 </div>
 
@@ -583,6 +651,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       <div style="font-size:16px;font-weight:700" id="cal-label">—</div>
       <button class="kwb" onclick="calNav(1)">▶</button>
     </div>
+    <div id="stat-summary"></div>
     <div id="statbody" style="padding-bottom:24px"></div>
   </div>
 </div>
@@ -642,6 +711,12 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       <div class="ar">›</div>
     </button>
 
+    <button class="ba" onclick="go('pg-abw')" style="margin-bottom:10px">
+      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></div>
+      <div><div class="at">Abwesenheiten & Urlaub</div><div class="as">Fehltage, Urlaub, Feiertage erfassen</div></div>
+      <div class="ar">›</div>
+    </button>
+
     <button class="ba" onclick="go('pg-bl')" style="margin-bottom:16px">
       <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-3-3.87M13 3.13a4 4 0 0 1 0 7.75"/><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM1 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg></div>
       <div><div class="at" data-i18n="home_bl_title">Bauleiter verwalten</div><div class="as" data-i18n="home_bl_sub">Zuweisung für Baustellen</div></div>
@@ -649,10 +724,11 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     </button>
 
     <div class="lbl" data-i18n="editor_bv_list">Baustellen</div>
-    <div class="crd" id="edbvl" style="margin-bottom:16px"></div>
-
-    <div class="lbl" id="edbvl-arch-lbl" data-i18n="editor_bv_archived_list" style="display:none">Archivierte Baustellen</div>
-    <div class="crd" id="edbvl-arch" style="margin-bottom:16px;display:none"></div>
+    <button class="ba" onclick="go('pg-bv-editor')" style="margin-bottom:16px">
+      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 9 6v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21V12h6v9"/></svg></div>
+      <div><div class="at">Baustellen verwalten</div><div class="as">Sätze, Budget, Archivieren, Warnungen</div></div>
+      <div class="ar">›</div>
+    </button>
 
     <div class="lbl" data-i18n="editor_dash_stats_title">Dashboard-Statistiken</div>
     <div class="crd" style="margin-bottom:16px">
@@ -1682,7 +1758,7 @@ function setLang(lang) {
   LANG = lang;
   localStorage.setItem("app_lang", lang);
   applyTranslations();
-  rwarn();
+  rwarn();rwarnMa();
   ustats();
   if(document.getElementById("pg-verl")?.classList.contains("on")) rverl();
   if(document.getElementById("pg-bvm")?.classList.contains("on")) rbvm();
@@ -1706,7 +1782,7 @@ function applyTranslations() {
 }
 
 // ═══ STATE ═══
-let BV=[], MA=[], EN=[], BL=[];
+let BV=[], MA=[], EN=[], BL=[], AB=[], LV=[];
 let WA=new Set(), waFilterOpen=true; // Standardmäßig nur offene (noch nicht abgehakte) Rapporte anzeigen
 let statTab="ma", statScope="month", statPeriod="", calMonth="";
 let sBV=null, cD="", eGroupKey="", eBV=null, eMA=-1, eBL=-1, selC=-1, woff=0;
@@ -1714,6 +1790,7 @@ let pstack=["pg-home"];
 let toastT=null;
 let ptimer=null;
 let teamSel=new Set();
+let presentToday=new Set();
 let sameTime=true;
 let curPause=30;
 let pinInput="";
@@ -2001,6 +2078,9 @@ async function rgImport(){
     syn("w",tr("sync_now"));
     const res=await sbIns("rg",newRows,"id");
     if(!res){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
+    const latestPerBv={};
+    newRows.forEach(r=>{ if(r.bv_id && (!latestPerBv[r.bv_id]||r.datum>latestPerBv[r.bv_id])) latestPerBv[r.bv_id]=r.datum; });
+    await Promise.all(Object.entries(latestPerBv).map(([bid,dt])=>updateBvLastInvoiced(bid,dt,null)));
     await syncDown();
     syn("",tr("sync_saved"));
   }
@@ -2023,6 +2103,7 @@ async function rgAddManual(){
   syn("w",tr("sync_now"));
   const res=await sbIns("rg",[row],"id");
   if(!res){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
+  if(bv_id) await updateBvLastInvoiced(bv_id,datum,row.id);
   await syncDown();
   syn("",tr("sync_saved"));
   ["rg-m-datum","rg-m-firma","rg-m-rgnr","rg-m-text","rg-m-betrag"].forEach(id=>document.getElementById(id).value="");
@@ -2206,13 +2287,15 @@ async function boot(){
   BL=lsGet("bl",[]);
   WA=new Set(lsGet("wa",[]));
   RG=lsGet("rg",[]);
+  AB=lsGet("ab",[]);
+  LV=lsGet("lv",[]);
   maRatesLoad();
   
   go("pg-home");
   applyTranslations();
   sd0();
   ustats();
-  rwarn();
+  rwarn();rwarnMa();
   rmissing();
   await syncDown(true);
   initPush();
@@ -2230,13 +2313,15 @@ async function syncDown(first=false){
   syn("w",tr("sync_now"));
   await seedIfEmpty();
 
-  const [rbv,rma,ren,rbl,rws,rrg]=await Promise.all([
+  const [rbv,rma,ren,rbl,rws,rrg,rab,rlv]=await Promise.all([
     sbSel("bv","&order=nr.asc"),
     sbSel("ma","&order=sort_order.asc"),
     sbSel("en","&order=datum.asc"),
     sbSel("bl","&order=name.asc"),
     sbSel("wa_sent","&order=key.asc"),
-    sbSel("rg","&order=datum.desc")
+    sbSel("rg","&order=datum.desc"),
+    sbSel("absences","&order=datum.desc"),
+    sbSel("leave_periods","&order=start_date.desc")
   ]);
 
   if(rbv) BV=rbv;
@@ -2245,6 +2330,8 @@ async function syncDown(first=false){
   if(rbl) BL=rbl;
   if(rws) WA=new Set(rws.map(r=>r.key));
   if(rrg) RG=rrg;
+  if(rab) AB=rab;
+  if(rlv) LV=rlv;
 
   lsSet("bv",BV);
   lsSet("ma",MA);
@@ -2252,11 +2339,15 @@ async function syncDown(first=false){
   lsSet("bl",BL);
   lsSet("wa",Array.from(WA));
   lsSet("rg",RG);
+  lsSet("ab",AB);
+  lsSet("lv",LV);
 
   ustats();
-  rwarn();
+  rwarn();rwarnMa();
   rmissing();
   rblSel();
+  if(document.getElementById("pg-abw")?.classList.contains("on")) rAbw();
+  if(document.getElementById("pg-bv-editor")?.classList.contains("on")) rEditorBv();
 
   if(document.getElementById("pg-bv")?.classList.contains("on")) rbvg();
   if(document.getElementById("pg-verl")?.classList.contains("on")) rverl();
@@ -2283,11 +2374,13 @@ function go(id){
   el.classList.remove("bk");
   el.classList.add("on");
 
-  if(id==="pg-home"){ustats();rwarn();rmissing();}
+  if(id==="pg-home"){ustats();rwarn();rwarnMa();rmissing();}
   if(id==="pg-verl")rverl();
   if(id==="pg-bvm")rbvm();
   if(id==="pg-ma")rmam();
   if(id==="pg-bl")rblm();
+  if(id==="pg-abw")rAbw();
+  if(id==="pg-bv-editor")rEditorBv();
   if(id==="pg-woche"){woff=0;rw();}
   if(id==="pg-wa"){rwaList();syncDown();}
   if(id==="pg-stat"){statSetTab(statTab);syncDown();}
@@ -2303,11 +2396,13 @@ function bk(to){
   prev.classList.add("on");
 
   if(cur==="pg-pin"){ pinInput=""; rPinDots(); document.getElementById("pinerr").textContent=""; }
-  if(to==="pg-home"){ustats();rwarn();rmissing();}
+  if(to==="pg-home"){ustats();rwarn();rwarnMa();rmissing();}
   if(to==="pg-verl")rverl();
   if(to==="pg-bvm")rbvm();
   if(to==="pg-ma")rmam();
   if(to==="pg-bl")rblm();
+  if(to==="pg-abw")rAbw();
+  if(to==="pg-bv-editor")rEditorBv();
   if(to==="pg-woche")rw();
   if(to==="pg-wa"){rwaList();syncDown();}
   if(to==="pg-stat"){statSetTab(statTab);syncDown();}
@@ -2445,6 +2540,31 @@ function rStat(){
     const [y,m]=statPeriod.split("-").map(Number);
     const mn=tr("month_"+String(m).padStart(2,"0"));
     hs.textContent = statScope==="month" ? `${mn} ${y}` : tr("stat_year_label",{y});
+  }
+  const sumEl=document.getElementById("stat-summary");
+  if(sumEl){
+    if(statTab==="cal"){ sumEl.innerHTML=""; }
+    else{
+      const rows=statEntriesInPeriod();
+      const byDay={};
+      rows.forEach(e=>{
+        if(!byDay[e.datum]) byDay[e.datum]={ma:new Set(),verdienst:0};
+        byDay[e.datum].ma.add(e.ma_id);
+        byDay[e.datum].verdienst+=(Number(e.stunden)||0)*maRate(e.ma_id);
+      });
+      const days=Object.keys(byDay);
+      const avgMa = days.length ? (days.reduce((a,d)=>a+byDay[d].ma.size,0)/days.length) : 0;
+      const avgVerdienstTag = days.length ? (days.reduce((a,d)=>a+byDay[d].verdienst,0)/days.length) : 0;
+      const totalVerdienst = days.reduce((a,d)=>a+byDay[d].verdienst,0);
+      const weeks=new Set(days.map(d=>{ const dt=new Date(d+"T00:00:00"); return dt.getFullYear()+"-"+gkw(d); }));
+      const avgVerdienstWoche = weeks.size ? (totalVerdienst/weeks.size) : 0;
+      sumEl.innerHTML=`<div class="sts" style="padding:0 16px 4px">
+        <div class="stc"><div class="stn">${avgMa.toFixed(1)}</div><div class="stl">Ø Mitarbeiter/Tag</div></div>
+        <div class="stc"><div class="stn money">${fmtEUR(avgVerdienstTag)}</div><div class="stl">Ø Verdienst/Tag</div></div>
+        <div class="stc"><div class="stn money">${fmtEUR(avgVerdienstWoche)}</div><div class="stl">Ø Verdienst/Woche</div></div>
+        <div class="stc"><div class="stn money">${fmtEUR(totalVerdienst)}</div><div class="stl">Verdienst gesamt</div></div>
+      </div>`;
+    }
   }
   if(statTab==="ma") rStatMa();
   else if(statTab==="bv") rStatBv();
@@ -2673,6 +2793,7 @@ function rwarn(){
 function gofill(dt){
   document.getElementById("inp-d").value=dt;
   cD=dt;
+  presentToday=new Set(MA.filter(m=>!m.archived).map(m=>m.id));
   sBV=null;
   document.getElementById("bvnx").disabled=true;
   document.getElementById("nb-nr").value="";
@@ -2682,6 +2803,118 @@ function gofill(dt){
   document.getElementById("bvsub").textContent=fd(dt);
   rbvg();
   go("pg-bv");
+}
+
+// ═══ ABWESENHEITEN / URLAUB / FEIERTAGE ═══
+function isMaAbsentOn(maId, ds){
+  if(AB.some(a=>a.ma_id===maId && a.datum===ds)) return true;
+  if(LV.some(l=>l.start_date<=ds && l.end_date>=ds && (l.company_wide || l.ma_id===maId))) return true;
+  return false;
+}
+async function addAbsence(){
+  const ma_id=document.getElementById("abw-ma").value;
+  const datum=document.getElementById("abw-datum").value;
+  const grund=document.getElementById("abw-grund").value.trim();
+  if(!ma_id||!datum){ toast("Mitarbeiter & Datum wählen"); return; }
+  syn("w",tr("sync_now"));
+  const res=await sbIns("absences",[{ma_id,datum,grund}],"ma_id,datum");
+  if(!res){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
+  await syncDown(); syn("",tr("sync_saved"));
+  document.getElementById("abw-grund").value="";
+  rAbw();
+}
+async function deleteAbsence(id){
+  syn("w",tr("sync_now"));
+  const res=await sbDel("absences",id);
+  if(res===null){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
+  await syncDown(); syn("",tr("sync_saved")); rAbw();
+}
+async function addLeave(){
+  const company_wide=document.getElementById("lv-scope").value==="firma";
+  const ma_id=company_wide?null:document.getElementById("lv-ma").value;
+  const start_date=document.getElementById("lv-start").value;
+  const end_date=document.getElementById("lv-end").value||start_date;
+  const leave_type=document.getElementById("lv-type").value;
+  const note=document.getElementById("lv-note").value.trim();
+  if(!start_date || (!company_wide && !ma_id)){ toast("Bitte Angaben vervollständigen"); return; }
+  syn("w",tr("sync_now"));
+  const res=await sbIns("leave_periods",[{ma_id,start_date,end_date,leave_type,company_wide,note}]);
+  if(!res){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
+  await syncDown(); syn("",tr("sync_saved"));
+  document.getElementById("lv-note").value="";
+  rAbw();
+}
+async function deleteLeave(id){
+  syn("w",tr("sync_now"));
+  const res=await sbDel("leave_periods",id);
+  if(res===null){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
+  await syncDown(); syn("",tr("sync_saved")); rAbw();
+}
+function rAbw(){
+  const maSel=document.getElementById("abw-ma");
+  if(maSel) maSel.innerHTML=`<option value="">-- Mitarbeiter --</option>`+MA.map(m=>`<option value="${m.id}">${m.name}</option>`).join("");
+  const lvMa=document.getElementById("lv-ma");
+  if(lvMa) lvMa.innerHTML=MA.map(m=>`<option value="${m.id}">${m.name}</option>`).join("");
+
+  const abList=document.getElementById("abw-list");
+  if(abList){
+    const rows=[...AB].sort((a,b)=>b.datum.localeCompare(a.datum)).slice(0,60);
+    abList.innerHTML = rows.length ? rows.map(a=>`<div class="mr"><div class="mn">${maById(a.ma_id)?.name||"?"} · ${fd(a.datum)}${a.grund?" · "+a.grund:""}</div><button class="btd" style="width:auto;margin:0;padding:7px 10px;font-size:12px" onclick="deleteAbsence('${a.id}')">✕</button></div>`).join("")
+      : `<div class="mr"><div class="mn" style="color:var(--s)">Keine Abwesenheiten erfasst.</div></div>`;
+  }
+  const lvList=document.getElementById("lv-list");
+  if(lvList){
+    const rows=[...LV].sort((a,b)=>b.start_date.localeCompare(a.start_date));
+    lvList.innerHTML = rows.length ? rows.map(l=>{
+      const who = l.company_wide ? "Ganze Firma" : (maById(l.ma_id)?.name||"?");
+      const range = l.start_date===l.end_date ? fd(l.start_date) : `${fd(l.start_date)} – ${fd(l.end_date)}`;
+      const typeLbl={urlaub:"Urlaub",feiertag:"Feiertag",krankheit:"Krankheit",sonstiges:"Sonstiges"}[l.leave_type]||l.leave_type;
+      return `<div class="mr"><div class="mn">${who} · ${typeLbl}<div style="font-size:12px;color:var(--s)">${range}${l.note?" · "+l.note:""}</div></div><button class="btd" style="width:auto;margin:0;padding:7px 10px;font-size:12px" onclick="deleteLeave('${l.id}')">✕</button></div>`;
+    }).join("") : `<div class="mr"><div class="mn" style="color:var(--s)">Kein Urlaub/Feiertag erfasst.</div></div>`;
+  }
+}
+
+// Pro Mitarbeiter: fehlt Eintrag für gestern/vorgestern (Wochenende & Abwesenheit/Urlaub ausgenommen), heute nie
+function getMissPerMa(){
+  const out=[];
+  const today=new Date(); today.setHours(0,0,0,0);
+  for(let back=1;back<=2;back++){
+    const d=new Date(today); d.setDate(d.getDate()-back);
+    const dw=d.getDay();
+    if(dw===0||dw===6) continue;
+    const ds=d.toISOString().split("T")[0];
+    MA.filter(m=>!m.archived).forEach(m=>{
+      if(isMaAbsentOn(m.id,ds)) return;
+      if(EN.some(e=>e.ma_id===m.id && e.datum===ds && Number(e.stunden)>0)) return;
+      out.push({ma:m,ds});
+    });
+  }
+  return out;
+}
+function rwarnMa(){
+  const s=document.getElementById("warn-ma");
+  if(!s) return;
+  const m=getMissPerMa();
+  if(!m.length){ s.style.display="none"; return; }
+  s.style.display="block";
+  s.innerHTML=`<div class="wb"><div class="wh"><span style="display:inline-flex">${ICON_WARN}</span><div class="wht">Fehlende Einträge (letzte 2 Tage)</div></div>
+    <div class="wbd">${m.map(x=>`<div class="wdi" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><div class="wdd"></div>${x.ma.name} – ${fd(x.ds)}</span><button class="wfb" style="margin:0;padding:5px 9px;font-size:11px" onclick="quickMarkAbsent('${x.ma.id}','${x.ds}')">als abwesend markieren</button></div>`).join("")}</div></div>`;
+}
+async function quickMarkAbsent(maId,ds){
+  syn("w",tr("sync_now"));
+  const res=await sbIns("absences",[{ma_id:maId,datum:ds,grund:"nachträglich erfasst"}],"ma_id,datum");
+  if(!res){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
+  await syncDown(); syn("",tr("sync_saved"));
+  toast("Als abwesend markiert");
+}
+
+// Rechnungs-Tracking: letztes Rechnungsdatum je Baustelle merken → steuert v_unbilled_hours
+async function updateBvLastInvoiced(bv_id, datum, rg_id){
+  if(!bv_id||!datum) return;
+  const cur=await sbFetch(`bv_last_invoiced?bv_id=eq.${bv_id}&select=last_invoice_date`);
+  const curDate = cur && cur[0] ? cur[0].last_invoice_date : null;
+  if(curDate && curDate>=datum) return;
+  await sbIns("bv_last_invoiced",[{bv_id,last_invoice_date:datum,last_rg_id:rg_id||null}],"bv_id");
 }
 
 // ═══ BENACHRICHTIGUNGEN (Editor-Modus) ═══
@@ -2866,10 +3099,46 @@ function checkInvoiceOverdue(){
 }
 
 // ═══ BAUSTELLEN ═══
-function n2bv(){
+function n2anw(){
   const d=document.getElementById("inp-d").value;
   if(!d){alert(tr("pick_date_first"));return;}
   cD=d;
+  document.getElementById("anwsub").textContent=fd(d);
+  // Vorbelegung: wer schon als abwesend/im Urlaub erfasst ist, ist standardmäßig nicht angehakt
+  presentToday=new Set(MA.filter(m=>!m.archived && !isMaAbsentOn(m.id,d)).map(m=>m.id));
+  rAnw();
+  go("pg-anw");
+}
+function rAnw(){
+  const el=document.getElementById("anwl");
+  if(!el) return;
+  el.innerHTML=MA.filter(m=>!m.archived).map(m=>`
+    <div class="tmr">
+      <div class="tmcb ${presentToday.has(m.id)?"on":""}" onclick="toggleAnw('${m.id}')">${presentToday.has(m.id)?"✓":""}</div>
+      <div class="av" style="background:${m.bg};color:${m.tc};width:36px;height:36px;font-size:12px">${m.k||"?"}</div>
+      <div class="mn" style="font-size:14px">${m.name}</div>
+    </div>`).join("");
+}
+function toggleAnw(id){
+  if(presentToday.has(id)) presentToday.delete(id); else presentToday.add(id);
+  rAnw();
+}
+function anwSetAll(all){
+  presentToday = all ? new Set(MA.filter(m=>!m.archived).map(m=>m.id)) : new Set();
+  rAnw();
+}
+async function n2bv(){
+  const d=cD||document.getElementById("inp-d").value;
+  if(!d){alert(tr("pick_date_first"));return;}
+  cD=d;
+  // Wer nicht angehakt wurde und noch keinen Abwesenheits-/Urlaubs-Eintrag für diesen Tag hat, wird automatisch als abwesend erfasst
+  const absentees=MA.filter(m=>!m.archived && !presentToday.has(m.id) && !isMaAbsentOn(m.id,d));
+  if(absentees.length){
+    syn("w",tr("sync_now"));
+    await sbIns("absences",absentees.map(m=>({ma_id:m.id,datum:d,grund:"bei Erfassung als nicht da markiert"})),"ma_id,datum");
+    await syncDown();
+    syn("",tr("sync_saved"));
+  }
   document.getElementById("bvsub").textContent=fd(d);
   sBV=null;
   document.getElementById("bvnx").disabled=true;
@@ -2982,7 +3251,7 @@ async function handleAddBV(nrId, nmId, blIdId, autoSelect) {
 function n2st(){
   if(!sBV)return;
   document.getElementById("stsub").textContent=`${fd(cD)} · BV ${sBV.nr}`;
-  teamSel=new Set(MA.map(m=>m.id)); // standardmäßig alle ausgewählt
+  teamSel = presentToday.size ? new Set(MA.filter(m=>presentToday.has(m.id)).map(m=>m.id)) : new Set(MA.map(m=>m.id));
   sameTime=true;
   curPause=30;
   indivPause={};
@@ -3663,7 +3932,7 @@ async function confirmBulkMove(){
   bulkSel=new Set();
   rverl();
   ustats();
-  rwarn();
+  rwarn();rwarnMa();
   toast(tr("toast_updated"));
 }
 
@@ -3793,7 +4062,7 @@ async function svedit(){
   cls("ov-e");
   rverl();
   ustats();
-  rwarn();
+  rwarn();rwarnMa();
   toast(tr("toast_updated"));
 }
 
@@ -3943,7 +4212,7 @@ function cDE(){
   conf(tr("delete_entry"),`BV ${bv?.nr||"?"} · ${fd(g?.datum)}`,async()=>{
     if(g){ for(const r of g.rows) await sbDel("en",r.id); }
     await syncDown();
-    clco(); cls("ov-e"); rverl(); ustats(); rwarn(); toast(tr("toast_deleted"));
+    clco(); cls("ov-e"); rverl(); ustats(); rwarn();rwarnMa(); toast(tr("toast_deleted"));
   });
 }
 
@@ -3962,7 +4231,7 @@ function cDA(){
   conf(title,msg,async()=>{
     for(const e of rows) if(e.id) await sbDel("en",e.id);
     await syncDown();
-    clco(); rverl(); ustats(); rwarn();
+    clco(); rverl(); ustats(); rwarn();rwarnMa();
     toast(active?tr("toast_deleted_all"):tr("toast_deleted_all"));
   });
 }
@@ -4057,6 +4326,8 @@ function initDashTogglesUI(){
 }
 function rEditor(){
   initDashTogglesUI();
+}
+function rEditorBv(){
   const active=[...BV].filter(b=>!b.archived).sort((a,b)=>a.nr.localeCompare(b.nr));
   const archived=[...BV].filter(b=>b.archived).sort((a,b)=>a.nr.localeCompare(b.nr));
 
@@ -4124,7 +4395,7 @@ async function delEdBv(){
     }
     await syncDown();
     cls("ov-edbv");
-    rEditor();
+    rEditorBv();
     toast(tr("toast_deleted"));
   });
 }
@@ -4329,7 +4600,7 @@ async function svEdBv(){
     await sbUpd("bv", edBVid, { nr, name: name || "—", warn_disabled: warnOff, archived: archived, rate, budget_h });
     await syncDown();
     cls("ov-edbv");
-    rEditor();
+    rEditorBv();
     toast(tr("toast_updated"));
   };
 
