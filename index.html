@@ -2008,6 +2008,7 @@ function lsSet(k,v){
 
 // ═══ RECHNUNGEN ═══
 let RG=[];
+let ABR=[];
 function rgSave(){ lsSet("rg",RG); }
 function rgUid(){ return "rg_"+Date.now()+"_"+Math.random().toString(36).slice(2,8); }
 
@@ -2052,39 +2053,129 @@ function rgDetectBvId(firma, text){
   return null;
 }
 
+function normalizeName(s){
+  return (s||"")
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g," ");
+}
+
+function abrHours(n){
+  return Math.round((Number(n)||0)*100)/100;
+}
+
+function findMaIdByName(name){
+  const n=normalizeName(name);
+  const m=MA.find(x=>normalizeName(x.name)===n);
+  return m ? m.id : null;
+}
+
+function abrMatchesEntry(entry, abr){
+  if(!entry || !abr) return false;
+  if(entry.datum !== abr.datum) return false;
+
+  const bv = bvById(entry.bv_id);
+  if(!bv) return false;
+
+  const entryBvNr = String(bv.nr||"").trim();
+  const abrBvNr = String(abr.bv_nr||"").trim();
+  if(entryBvNr !== abrBvNr) return false;
+
+  const ma = maById(entry.ma_id);
+  if(!ma) return false;
+
+  const entryName = normalizeName(ma.name);
+  const abrName = normalizeName(abr.ma_name);
+  if(entryName !== abrName) return false;
+
+  return abrHours(entry.stunden) === abrHours(abr.stunden);
+}
+	
 async function rgImport(){
   const raw=document.getElementById("rg-paste").value;
   const lines=raw.split(/\r?\n/).map(l=>l.trim()).filter(l=>l!=="");
-  let added=0, skipped=0;
-  const newRows=[];
+  let addedRg=0, addedAbr=0, skipped=0;
+
+  const rgMap={};     // Rechnungsübersicht
+  const abrRows=[];   // Abgerechnete Stundenpositionen
+
   for(const line of lines){
     const cols=rgSplitLine(line);
-    if(cols.length<2){ skipped++; continue; }
-    // Erwartetes Format (wie beim Kopieren aus der Excel-Tabelle):
-    // Datum | Kundennr | Firma | Rechnungsnr(Jahr) | Text | Betrag
+    if(cols.length < 6){ skipped++; continue; }
+
+    // Erwartetes Format deiner Excel:
+    // Datum | BV_NR | Mitarbeiter | Stunden | Rechnungsnr | Block/Text
     const datum=rgParseDatum(cols[0]);
     if(!datum){ skipped++; continue; }
-    const betragRaw=cols[cols.length-1];
-    const betrag=rgParseBetrag(betragRaw);
-    const firma=cols.length>=3?cols[2]:(cols[1]||"");
-    const rgnr=cols.length>=4?cols[3]:"";
-    const text=cols.length>=5?cols.slice(4,cols.length-1).join(" "):"";
-    const bv_id=rgDetectBvId(firma,text);
-    newRows.push({id:rgUid(),datum,firma,rgnr,text,betrag,bezahltAm:null,bv_id});
-    added++;
+
+    const bv_nr=String(cols[1]||"").trim();
+    const ma_name=String(cols[2]||"").trim();
+    const stunden=rgParseBetrag(cols[3]);
+    const rgnr=String(cols[4]||"").trim();
+    const block=String(cols[5]||"").trim();
+
+    const bv=BV.find(b=>String(b.nr||"").trim()===bv_nr);
+    const bv_id=bv ? bv.id : null;
+
+    // ABR-Zeile speichern
+    abrRows.push({
+      id: "abr_"+Date.now()+"_"+Math.random().toString(36).slice(2,10),
+      datum,
+      bv_nr,
+      bv_id,
+      ma_name,
+      ma_id: findMaIdByName(ma_name),
+      stunden: abrHours(stunden),
+      rgnr,
+      block
+    });
+    addedAbr++;
+
+    // RG-Sammelübersicht aufbauen (pro Rechnungsnummer)
+    const k=rgnr;
+    if(!rgMap[k]){
+      rgMap[k]={
+        id: rgUid(),
+        datum,
+        firma: "Seith Energietechnik GmbH & Co. KG",
+        rgnr,
+        text: `Rechnung BV ${bv_nr}`,
+        betrag: 0,
+        bezahltAm: null,
+        bv_id
+      };
+      addedRg++;
+    }
+    rgMap[k].betrag += stunden * (ma_name==="Sayim Aslan" ? 37 : 35);
+
+    // falls die Rechnung mehrere BVs hat, bv_id nur setzen wenn eindeutig
+    if(rgMap[k].bv_id && bv_id && rgMap[k].bv_id !== bv_id){
+      rgMap[k].bv_id = null;
+    }
   }
-  if(newRows.length){
-    syn("w",tr("sync_now"));
-    const res=await sbIns("rg",newRows,"id");
-    if(!res){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
-    const latestPerBv={};
-    newRows.forEach(r=>{ if(r.bv_id && (!latestPerBv[r.bv_id]||r.datum>latestPerBv[r.bv_id])) latestPerBv[r.bv_id]=r.datum; });
-    await Promise.all(Object.entries(latestPerBv).map(([bid,dt])=>updateBvLastInvoiced(bid,dt,null)));
-    await syncDown();
-    syn("",tr("sync_saved"));
+
+  const newRgRows=Object.values(rgMap);
+
+  syn("w",tr("sync_now"));
+
+  if(newRgRows.length){
+    const resRg=await sbIns("rg",newRgRows,"rgnr");
+    if(!resRg){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
   }
+
+  if(abrRows.length){
+    const resAbr=await sbIns("abr",abrRows,"datum,bv_nr,ma_name,stunden,rgnr");
+    if(!resAbr){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
+  }
+
+  await syncDown();
+  syn("",tr("sync_saved"));
+
   document.getElementById("rg-import-st").textContent=
-    added+" Zeile(n) übernommen"+(skipped?`, ${skipped} übersprungen (Format nicht erkannt)`:"");
+    `${addedRg} Rechnung(en), ${addedAbr} Abrechnungszeile(n) übernommen`+
+    (skipped?`, ${skipped} übersprungen`:"");
+
   document.getElementById("rg-paste").value="";
   rRech();
 }
@@ -2286,6 +2377,7 @@ async function boot(){
   BL=lsGet("bl",[]);
   WA=new Set(lsGet("wa",[]));
   RG=lsGet("rg",[]);
+  ABR=lsGet("abr",[]);
   AB=lsGet("ab",[]);
   LV=lsGet("lv",[]);
   maRatesLoad();
@@ -2312,16 +2404,17 @@ async function syncDown(first=false){
   syn("w",tr("sync_now"));
   await seedIfEmpty();
 
-  const [rbv,rma,ren,rbl,rws,rrg,rab,rlv]=await Promise.all([
-    sbSel("bv","&order=nr.asc"),
-    sbSel("ma","&order=sort_order.asc"),
-    sbSel("en","&order=datum.asc"),
-    sbSel("bl","&order=name.asc"),
-    sbSel("wa_sent","&order=key.asc"),
-    sbSel("rg","&order=datum.desc"),
-    sbSel("absences","&order=datum.desc"),
-    sbSel("leave_periods","&order=start_date.desc")
-  ]);
+const [rbv,rma,ren,rbl,rws,rrg,rabr,rab,rlv]=await Promise.all([
+  sbSel("bv","&order=nr.asc"),
+  sbSel("ma","&order=sort_order.asc"),
+  sbSel("en","&order=datum.asc"),
+  sbSel("bl","&order=name.asc"),
+  sbSel("wa_sent","&order=key.asc"),
+  sbSel("rg","&order=datum.desc"),
+  sbSel("abr","&order=datum.desc"),
+  sbSel("absences","&order=datum.desc"),
+  sbSel("leave_periods","&order=start_date.desc")
+]);
 
   if(rbv) BV=rbv;
   if(rma) MA=rma;
@@ -2329,6 +2422,7 @@ async function syncDown(first=false){
   if(rbl) BL=rbl;
   if(rws) WA=new Set(rws.map(r=>r.key));
   if(rrg) RG=rrg;
+  if(rabr) ABR=rabr;
   if(rab) AB=rab;
   if(rlv) LV=rlv;
 
@@ -2338,6 +2432,7 @@ async function syncDown(first=false){
   lsSet("bl",BL);
   lsSet("wa",Array.from(WA));
   lsSet("rg",RG);
+  lsSet("abr",ABR);
   lsSet("ab",AB);
   lsSet("lv",LV);
 
@@ -3625,23 +3720,13 @@ function rgDashStats(){
   // einschließlich diesem Datum gelten als abgerechnet, alles danach (bzw. alles,
   // falls noch nie abgerechnet wurde) zählt als noch nicht abgerechnet.
   // Der Stundensatz kommt pro Mitarbeiter (nicht pro Baustelle).
-  let unbilledSum=0;
-  BV.filter(b=>!b.archived).forEach(b=>{
-    // Bevorzugt: Rechnungen, die explizit dieser Baustelle zugeordnet sind (bv_id).
-    // Fallback für alte Rechnungen ohne bv_id: Text-/Firmensuche.
-    let matches = RG.filter(r=>r.bv_id===b.id);
-    if(!matches.length){
-      matches = RG.filter(r=>{
-        if(r.bv_id) return false; // Rechnung ist einer anderen BV fest zugeordnet
-        const hay=((r.firma||"")+" "+(r.text||"")).toLowerCase();
-        return (b.nr && hay.includes(b.nr.toLowerCase())) || (b.name && hay.includes(b.name.toLowerCase()));
-      });
-    }
-    const lastInvoiceDate = matches.length ? matches.reduce((max,r)=>r.datum>max?r.datum:max, matches[0].datum) : null;
-    const entries = EN.filter(e=>e.bv_id===b.id && (!lastInvoiceDate || e.datum>lastInvoiceDate));
-    entries.forEach(e=>{
+let unbilledSum=0;
+
+  EN.forEach(e=>{
+    const alreadyBilled = ABR.some(a=>abrMatchesEntry(e,a));
+    if(!alreadyBilled){
       unbilledSum += (Number(e.stunden)||0) * maRate(e.ma_id);
-    });
+    }
   });
   const ubEl=document.getElementById("s-ub"); if(ubEl){ ubEl.textContent=rgFmtMoney(unbilledSum); }
 
