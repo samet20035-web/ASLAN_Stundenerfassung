@@ -256,6 +256,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       <div class="stc" id="dc-invover"><div class="stn money" id="s-ru">0 €</div><div class="stl" data-i18n="dash_inv_over">Überfällig</div></div>
       <div class="stc" id="dc-invtotal"><div class="stn money" id="s-rt">0 €</div><div class="stl" data-i18n="dash_inv_total">Umsatz gesamt</div></div>
       <div class="stc" id="dc-invnext"><div class="stn" id="s-rf">–</div><div class="stl" data-i18n="dash_inv_next">Nächste Frist</div></div>
+      <div class="stc" id="dc-unbilled" style="background:#eaf2ff;border-color:#bcd6ff"><div class="stn money" id="s-ub" style="color:#2f6fed">0 €</div><div class="stl" data-i18n="dash_inv_unbilled">Noch nicht abgerechnet</div></div>
     </div>
 
     <div id="dc-deadlines" style="padding:0 16px;margin-top:14px">
@@ -427,7 +428,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     <div class="lbl" style="margin:0 0 8px" data-i18n="empty_rep_team">Mitarbeiter</div>
     <div class="crd" id="er-tml" style="margin-bottom:20px"></div>
 
-    <button class="btn" onclick="saveEmptyRep()" data-i18n="empty_rep_save">Leer-Rapport speichern</button>
+    <button class="btn" onclick="printEmptyRep()" data-i18n="empty_rep_save">Leer-Rapport drucken</button>
     <div style="height:24px"></div>
   </div></div>
 </div>
@@ -672,9 +673,13 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
           <div class="lbl2" data-i18n="editor_dash_invnext">Nächste Frist anzeigen</div>
           <button class="tgl" id="dtgl-invnext" onclick="toggleDashStat('invnext','dtgl-invnext')"></button>
         </div>
-        <div class="toggle-row">
+        <div class="toggle-row" style="margin-bottom:10px">
           <div class="lbl2" data-i18n="editor_dash_deadlines">Fristen-Liste (Sammelrechnungen) anzeigen</div>
           <button class="tgl" id="dtgl-deadlines" onclick="toggleDashStat('deadlines','dtgl-deadlines')"></button>
+        </div>
+        <div class="toggle-row">
+          <div class="lbl2" data-i18n="editor_dash_unbilled">Noch nicht abgerechneten Umsatz anzeigen</div>
+          <button class="tgl" id="dtgl-unbilled" onclick="toggleDashStat('unbilled','dtgl-unbilled')"></button>
         </div>
       </div>
     </div>
@@ -1252,6 +1257,7 @@ const I18N = {
     dash_inv_open: "Offene Rechnungen",
     dash_inv_over: "Überfällig",
     dash_inv_total: "Umsatz gesamt",
+    dash_inv_unbilled: "Noch nicht abgerechnet",
     dash_inv_next: "Nächste Frist",
     dash_inv_deadlines_title: "Fristen Sammelrechnungen",
     dash_inv_none: "Keine offenen Rechnungen.",
@@ -1266,6 +1272,7 @@ const I18N = {
     editor_dash_invopen: "Offene Rechnungen anzeigen",
     editor_dash_invover: "Überfällige Rechnungen anzeigen",
     editor_dash_invtotal: "Gesamtumsatz anzeigen",
+    editor_dash_unbilled: "Noch nicht abgerechneten Umsatz anzeigen",
     editor_dash_invnext: "Nächste Frist anzeigen",
     editor_dash_deadlines: "Fristen-Liste (Sammelrechnungen) anzeigen",
 
@@ -1277,7 +1284,7 @@ const I18N = {
     empty_rep_bv: "Baustelle",
     empty_rep_bl_prefix: "Bauleiter",
     empty_rep_team: "Mitarbeiter",
-    empty_rep_save: "Leer-Rapport speichern",
+    empty_rep_save: "Leer-Rapport drucken",
     empty_rep_missing: "Bitte Datum und Baustelle wählen",
     empty_rep_missing_team: "Bitte mind. einen Mitarbeiter wählen",
     empty_rep_saved: "Leer-Rapport gespeichert",
@@ -1601,6 +1608,7 @@ const I18N = {
     dash_inv_open: "Açık faturalar",
     dash_inv_over: "Vadesi geçmiş",
     dash_inv_total: "Toplam ciro",
+    dash_inv_unbilled: "Henüz faturalanmadı",
     dash_inv_next: "Sonraki vade",
     dash_inv_deadlines_title: "Toplu fatura vadeleri",
     dash_inv_none: "Açık fatura yok.",
@@ -1615,6 +1623,7 @@ const I18N = {
     editor_dash_invopen: "Açık faturaları göster",
     editor_dash_invover: "Vadesi geçmiş faturaları göster",
     editor_dash_invtotal: "Toplam ciroyu göster",
+    editor_dash_unbilled: "Henüz faturalanmamış ciroyu göster",
     editor_dash_invnext: "Sonraki vadeyi göster",
     editor_dash_deadlines: "Vade listesini göster (toplu faturalar)",
 
@@ -1626,7 +1635,7 @@ const I18N = {
     empty_rep_bv: "Şantiye",
     empty_rep_bl_prefix: "Şantiye şefi",
     empty_rep_team: "Çalışanlar",
-    empty_rep_save: "Boş raporu kaydet",
+    empty_rep_save: "Boş raporu yazdır",
     empty_rep_missing: "Lütfen tarih ve şantiye seçin",
     empty_rep_missing_team: "Lütfen en az bir çalışan seçin",
     empty_rep_saved: "Boş rapor kaydedildi",
@@ -2882,7 +2891,15 @@ async function handleAddBV(nrId, nmId, blIdId, autoSelect) {
   const blId = document.getElementById(blIdId).value;
 
   if(!nr){ alert(tr("bv_nr_enter")); return; }
-  if(BV.find(b=>b.nr===nr)){ alert(tr("bv_nr_exists")); return; }
+  const existing = BV.find(b=>b.nr===nr);
+  if(existing){
+    document.getElementById(nrId).value = "";
+    document.getElementById(nmId).value = "";
+    document.getElementById(blIdId).value = "";
+    if(document.getElementById("bvhint")) document.getElementById("bvhint").style.display="none";
+    if(autoSelect){ pkBV(existing.id); } else { rbvm(); }
+    return;
+  }
 
   const execAdd = async () => {
     syn("w", tr("sync_now"));
@@ -3223,20 +3240,20 @@ function toggleErTeam(id){
   if(erTeamSel.has(id)) erTeamSel.delete(id); else erTeamSel.add(id);
   rErTeam();
 }
-async function saveEmptyRep(){
+function printEmptyRep(){
   const datum=document.getElementById("er-datum").value;
   const bvId=document.getElementById("er-bv").value;
   if(!datum||!bvId){ toast("Bitte Datum und Baustelle wählen"); return; }
   if(erTeamSel.size===0){ toast("Bitte mind. einen Mitarbeiter wählen"); return; }
 
-  const rows=[...erTeamSel].map(id=>({ datum, bv_id:bvId, ma_id:id, stunden:null, beginn:null, ende:null, pause_min:null }));
-  syn("w",tr("sync_now"));
-  const res=await sbIns("en", rows, "datum,bv_id,ma_id");
-  if(!res){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
-  await syncDown();
-  syn("",tr("sync_saved"));
-  toast("Leer-Rapport gespeichert");
-  go("pg-home");
+  // Kein Speichern in der Datenbank nötig - der Leer-Rapport wird direkt
+  // als PDF geöffnet, damit er ausgedruckt werden kann (wie beim normalen Rapport).
+  repD=datum;
+  repBV=BV.find(b=>b.id===bvId);
+  if(!repBV) return;
+  repFutureMode=true;
+  repFutureMaSel=new Set(erTeamSel);
+  openRapportPdf(repD, repBV.id);
 }
 
 // ═══ STATS ═══
@@ -3275,13 +3292,13 @@ function ustats(){
 // ═══ DASHBOARD-STATISTIKEN RECHNUNGEN ═══
 function dashToggles(){
   return Object.assign({
-    invopen:true, invover:true, invtotal:true, invnext:true, deadlines:true
+    invopen:true, invover:true, invtotal:true, invnext:true, deadlines:true, unbilled:true
   }, lsGet("dashToggles",{}));
 }
 function saveDashToggles(t){ lsSet("dashToggles",t); applyDashToggles(); }
 function applyDashToggles(){
   const t=dashToggles();
-  const map={invopen:"dc-invopen",invover:"dc-invover",invtotal:"dc-invtotal",invnext:"dc-invnext",deadlines:"dc-deadlines"};
+  const map={invopen:"dc-invopen",invover:"dc-invover",invtotal:"dc-invtotal",invnext:"dc-invnext",deadlines:"dc-deadlines",unbilled:"dc-unbilled"};
   Object.keys(map).forEach(k=>{
     const el=document.getElementById(map[k]);
     if(el) el.style.display = t[k]===false ? "none" : "";
@@ -3305,6 +3322,21 @@ function rgDashStats(){
   const roEl=document.getElementById("s-ro"); if(roEl){ roEl.textContent=rgFmtMoney(openSum); roEl.style.color="#e67e22"; }
   const ruEl=document.getElementById("s-ru"); if(ruEl){ ruEl.textContent=rgFmtMoney(overSum); ruEl.style.color="#c0392b"; }
   const rtEl=document.getElementById("s-rt"); if(rtEl){ rtEl.textContent=rgFmtMoney(totalSum); rtEl.style.color="var(--g)"; }
+
+  // Noch nicht abgerechneter Umsatz: Baustellen mit Stundensatz, deren
+  // Umsatz bisher in keiner Rechnung (RG) auftaucht (Abgleich über Name/Nr).
+  let unbilledSum=0;
+  BV.filter(b=>!b.archived && Number(b.rate)>0).forEach(b=>{
+    const hours=EN.filter(e=>e.bv_id===b.id).reduce((a,e)=>a+(Number(e.stunden)||0),0);
+    if(!hours) return;
+    const revenue=hours*Number(b.rate);
+    const invoiced = RG.some(r=>{
+      const hay=((r.firma||"")+" "+(r.text||"")).toLowerCase();
+      return (b.name && hay.includes(b.name.toLowerCase())) || (b.nr && hay.includes(b.nr.toLowerCase()));
+    });
+    if(!invoiced) unbilledSum+=revenue;
+  });
+  const ubEl=document.getElementById("s-ub"); if(ubEl){ ubEl.textContent=rgFmtMoney(unbilledSum); }
 
   // Überfällig-Kachel nur zeigen, wenn wirklich etwas überfällig ist
   const dcOver=document.getElementById("dc-invover");
