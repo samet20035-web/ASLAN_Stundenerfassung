@@ -2115,10 +2115,16 @@ async function rgImport(){
 
   for(const line of lines){
     const cols=rgSplitLine(line);
-    if(!cols || cols.length < 6){ skipped++; continue; }
+    if(!cols || cols.length < 6){ 
+      skipped++; 
+      continue; 
+    }
 
     const datum=rgParseDatum(cols[0]);
-    if(!datum){ skipped++; continue; }
+    if(!datum){ 
+      skipped++; 
+      continue; 
+    }
 
     const bv_nr=String(cols[1]||"").trim();
     const ma_name=String(cols[2]||"").trim();
@@ -2147,35 +2153,36 @@ async function rgImport(){
     });
     addedAbr++;
 
-const k = block || rgnr;
+    const k = block || rgnr;
 
-if(!rgMap[k]){
-  rgMap[k]={
-    id: rgUid(),
-    datum,
-    firma: "Seith Energietechnik GmbH & Co. KG",
-    rgnr: block ? null : rgnr,
-    text: block || `Rechnung BV ${bv_nr}`,
-    betrag: 0,
-    bezahltAm: null,
-    bv_id: bv_id || null,
-    block: block || null
-  };
-  addedRg++;
-}
+    if(!rgMap[k]){
+      rgMap[k]={
+        id: rgUid(),
+        datum,
+        firma: "Seith Energietechnik GmbH & Co. KG",
+        rgnr: block ? null : rgnr,
+        text: block || `Rechnung BV ${bv_nr}`,
+        betrag: 0,
+        bezahltAm: null,
+        bv_id: bv_id || null,
+        block: block || null
+      };
+      addedRg++;
+    }
 
-rgMap[k].betrag += stunden * (ma_name==="Sayim Aslan" ? 37 : 35);
+    rgMap[k].betrag += stunden * (ma_name==="Sayim Aslan" ? 37 : 35);
 
-// wenn innerhalb derselben Sammelrechnung mehrere BVs vorkommen,
-// dann keine einzelne BV-Zuordnung am Kopf behalten
-if(rgMap[k].bv_id && bv_id && rgMap[k].bv_id !== bv_id){
-  rgMap[k].bv_id = null;
-}
+    // wenn innerhalb derselben Sammelrechnung mehrere BVs vorkommen,
+    // dann keine einzelne BV-Zuordnung am Kopf behalten
+    if(rgMap[k].bv_id && bv_id && rgMap[k].bv_id !== bv_id){
+      rgMap[k].bv_id = null;
+    }
 
-// für eine Sammelrechnung das neueste Datum merken
-if(datum > rgMap[k].datum){
-  rgMap[k].datum = datum;
-}
+    // für eine Sammelrechnung das neueste Datum merken
+    if(datum > rgMap[k].datum){
+      rgMap[k].datum = datum;
+    }
+  }
 
   const newRgRows=Object.values(rgMap);
 
@@ -2267,7 +2274,7 @@ function rgToggleGroup(key){
 }
 
 function rgGroupKey(r){
-  if(r.block) return "block|" + r.block;
+  if(r.block && r.block.trim()!=="") return "block|" + r.block.trim();
   return r.datum + "|" + r.firma;
 }
 	
