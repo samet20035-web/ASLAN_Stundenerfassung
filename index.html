@@ -3323,18 +3323,22 @@ function rgDashStats(){
   const ruEl=document.getElementById("s-ru"); if(ruEl){ ruEl.textContent=rgFmtMoney(overSum); ruEl.style.color="#c0392b"; }
   const rtEl=document.getElementById("s-rt"); if(rtEl){ rtEl.textContent=rgFmtMoney(totalSum); rtEl.style.color="var(--g)"; }
 
-  // Noch nicht abgerechneter Umsatz: Baustellen mit Stundensatz, deren
-  // Umsatz bisher in keiner Rechnung (RG) auftaucht (Abgleich über Name/Nr).
+  // Noch nicht abgerechneter Umsatz: pro Baustelle wird das jüngste Rechnungsdatum
+  // gesucht (Abgleich über BV-Nr./Name in Rechnungstext). Alle Stunden bis
+  // einschließlich diesem Datum gelten als abgerechnet, alles danach (bzw. alles,
+  // falls noch nie abgerechnet wurde) zählt als noch nicht abgerechnet.
+  // Der Stundensatz kommt pro Mitarbeiter (nicht pro Baustelle).
   let unbilledSum=0;
-  BV.filter(b=>!b.archived && Number(b.rate)>0).forEach(b=>{
-    const hours=EN.filter(e=>e.bv_id===b.id).reduce((a,e)=>a+(Number(e.stunden)||0),0);
-    if(!hours) return;
-    const revenue=hours*Number(b.rate);
-    const invoiced = RG.some(r=>{
+  BV.filter(b=>!b.archived).forEach(b=>{
+    const matches = RG.filter(r=>{
       const hay=((r.firma||"")+" "+(r.text||"")).toLowerCase();
-      return (b.name && hay.includes(b.name.toLowerCase())) || (b.nr && hay.includes(b.nr.toLowerCase()));
+      return (b.nr && hay.includes(b.nr.toLowerCase())) || (b.name && hay.includes(b.name.toLowerCase()));
     });
-    if(!invoiced) unbilledSum+=revenue;
+    const lastInvoiceDate = matches.length ? matches.reduce((max,r)=>r.datum>max?r.datum:max, matches[0].datum) : null;
+    const entries = EN.filter(e=>e.bv_id===b.id && (!lastInvoiceDate || e.datum>lastInvoiceDate));
+    entries.forEach(e=>{
+      unbilledSum += (Number(e.stunden)||0) * maRate(e.ma_id);
+    });
   });
   const ubEl=document.getElementById("s-ub"); if(ubEl){ ubEl.textContent=rgFmtMoney(unbilledSum); }
 
