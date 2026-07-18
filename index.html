@@ -2190,38 +2190,37 @@ async function rgImport(){
     if(headers[rgnr]) headers[rgnr].block = rgNormBlock(blockByRgnr[rgnr]);
   });
 
-  const newRgRows=[];
-  const updateRgRows=[];
+  const headerRows=Object.values(headers).map(h=>({
+    id: (RG.find(r=>String(r.rgnr||"").trim()===h.rgnr)?.id) || rgUid(),
+    datum:h.datum, firma:h.firma, rgnr:h.rgnr, text:h.text,
+    betrag:h.betrag, bezahltAm:(RG.find(r=>String(r.rgnr||"").trim()===h.rgnr)?.bezahltAm) ?? null,
+    faelligkeit:h.faelligkeit||null,
+    bv_id:h.bv_id || RG.find(r=>String(r.rgnr||"").trim()===h.rgnr)?.bv_id || null,
+    block:h.block || RG.find(r=>String(r.rgnr||"").trim()===h.rgnr)?.block || null
+  }));
+  addedRg += headerRows.filter(h=>!RG.some(r=>String(r.rgnr||"").trim()===h.rgnr)).length;
+  updatedRg += headerRows.filter(h=>RG.some(r=>String(r.rgnr||"").trim()===h.rgnr)).length;
 
-  Object.values(headers).forEach(h=>{
-    const existing=RG.find(r=>String(r.rgnr||"").trim()===h.rgnr);
-    if(existing){
-      updateRgRows.push({ id:existing.id, changes:{
-        datum:h.datum, firma:h.firma, text:h.text, betrag:h.betrag,
-        faelligkeit:h.faelligkeit||null, bv_id:h.bv_id||existing.bv_id||null,
-        block:h.block||existing.block||null
-      }});
-      updatedRg++;
-    } else {
-      newRgRows.push({
-        id:rgUid(), datum:h.datum, firma:h.firma, rgnr:h.rgnr, text:h.text,
-        betrag:h.betrag, bezahltAm:null, faelligkeit:h.faelligkeit||null,
-        bv_id:h.bv_id||null, block:h.block||null
-      });
-      addedRg++;
-    }
-  });
-
-  Object.values(calcMap).forEach(c=>{
-    newRgRows.push({
-      id:c.id, datum:c.datum, firma:c.firma, rgnr:c.rgnr, text:c.text,
-      betrag:Math.round(c.betrag*100)/100, bezahltAm:null,
-      bv_id:c.bv_id, block:c.block
-    });
-    addedRg++;
-  });
+  const newRgRows=Object.values(calcMap).map(c=>({
+    id:c.id, datum:c.datum, firma:c.firma, rgnr:c.rgnr, text:c.text,
+    betrag:Math.round(c.betrag*100)/100, bezahltAm:null,
+    bv_id:c.bv_id, block:c.block
+  }));
+  addedRg += newRgRows.length;
 
   syn("w",tr("sync_now"));
+
+  // Echtes Datenbank-Upsert über die Rechnungsnummer: funktioniert auch,
+  // wenn der lokale Datenstand nicht mehr aktuell ist (verhindert 23505-Fehler
+  // beim erneuten Einfügen einer bereits vorhandenen Rechnung).
+  if(headerRows.length){
+    const resHdr=await sbIns("rg",headerRows,"rgnr");
+    if(!resHdr){
+      syn("e",tr("sync_error"));
+      alert(tr("save_failed"));
+      return;
+    }
+  }
 
   if(newRgRows.length){
     const resRg=await sbIns("rg",newRgRows);
@@ -2229,17 +2228,6 @@ async function rgImport(){
       syn("e",tr("sync_error"));
       alert(tr("save_failed"));
       return;
-    }
-  }
-
-  if(updateRgRows.length){
-    for(const u of updateRgRows){
-      const resU=await sbUpd("rg",u.id,u.changes);
-      if(!resU){
-        syn("e",tr("sync_error"));
-        alert(tr("save_failed"));
-        return;
-      }
     }
   }
 
