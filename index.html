@@ -257,7 +257,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       <div class="stc" id="dc-invtotal"><div class="stn money" id="s-rt">0 €</div><div class="stl" data-i18n="dash_inv_total">Umsatz gesamt</div></div>
       <div class="stc" id="dc-invnext"><div class="stn" id="s-rf">–</div><div class="stl" data-i18n="dash_inv_next">Nächste Frist</div></div>
       <div class="stc" id="dc-unbilled" style="background:#eaf2ff;border-color:#bcd6ff"><div class="stn money" id="s-ub" style="color:#2f6fed">0 €</div><div class="stl" data-i18n="dash_inv_unbilled">Noch nicht abgerechnet</div></div>
-      <div class="stc" id="dc-unbilled-h" style="background:#0f2a5c;border-color:#0f2a5c"><div class="stn" id="s-ubh2" style="color:#fff">0 h</div><div class="stl" style="color:#cfe0ff">Offene Stunden</div></div>
+      <div class="stc" id="dc-unbilled-h" style="background:#0f2a5c;border-color:#0f2a5c"><div class="stn" id="s-ubh2" style="color:#fff">0 h</div><div class="stl" style="color:#cfe0ff" data-i18n="dash_open_hours">Offene Stunden</div></div>
     </div>
 
     <div id="dc-deadlines" style="padding:0 16px;margin-top:14px">
@@ -329,7 +329,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 
     <button class="ba" onclick="go('pg-rg')">
       <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l2 2 4-4"/><path d="M5 3h9l5 5v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/></svg></div>
-      <div><div class="at">Rechnungen</div><div class="as">Übersicht &amp; Zahlungsziel</div></div>
+      <div><div class="at" data-i18n="rg_link">Rechnungen</div><div class="as" data-i18n="rg_link_sub">Übersicht &amp; Zahlungsziel</div></div>
       <div class="ar">›</div>
     </button>
 
@@ -500,50 +500,50 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 </div>
 
 <div class="pg" id="pg-abw">
-  <div class="hdr"><button class="bck" onclick="bk('pg-editor')">‹</button><div><div class="ht">Abwesenheiten & Urlaub</div><div class="hs">Fehltage, Urlaub, Feiertage</div></div></div>
+  <div class="hdr"><button class="bck" onclick="bk('pg-editor')">‹</button><div><div class="ht" data-i18n="abw_menu_title">Abwesenheiten & Urlaub</div><div class="hs" data-i18n="abw_page_sub">Fehltage, Urlaub, Feiertage</div></div></div>
   <div class="sc">
-    <div style="padding:12px 16px 0;font-size:12px;color:var(--s);line-height:1.5">Standardmäßig gilt jeder Mitarbeiter an jedem Tag als anwesend. Trage hier nur Ausnahmen ein (einzelner Fehltag, Urlaub, Feiertag, Krankheit) – nur diese hinterlegten Ausnahmen weichen von "jeder ist da" ab.</div>
+    <div style="padding:12px 16px 0;font-size:12px;color:var(--s);line-height:1.5" data-i18n="abw_intro">Standardmäßig gilt jeder Mitarbeiter an jedem Tag als anwesend. Trage hier nur Ausnahmen ein (einzelner Fehltag, Urlaub, Feiertag, Krankheit) – nur diese hinterlegten Ausnahmen weichen von "jeder ist da" ab.</div>
     <div class="nbv" style="margin-top:12px">
-      <div style="font-size:13px;font-weight:700;color:var(--gd);text-transform:uppercase;letter-spacing:.06em">Einzelne Abwesenheit (Tag)</div>
+      <div style="font-size:13px;font-weight:700;color:var(--gd);text-transform:uppercase;letter-spacing:.06em" data-i18n="abw_single_title">Einzelne Abwesenheit (Tag)</div>
       <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px">
         <select id="abw-ma"></select>
         <input type="date" id="abw-datum">
-        <input type="text" id="abw-grund" placeholder="Grund (optional)">
-        <button class="btn" onclick="addAbsence()">Abwesenheit hinzufügen</button>
+        <input type="text" id="abw-grund" data-i18n-ph="abw_reason_ph" placeholder="Grund (optional)">
+        <button class="btn" onclick="addAbsence()" data-i18n="abw_add_btn">Abwesenheit hinzufügen</button>
       </div>
     </div>
-    <div class="lbl">Erfasste Abwesenheiten</div>
+    <div class="lbl" data-i18n="abw_list_title">Erfasste Abwesenheiten</div>
     <div class="crd" id="abw-list" style="margin-bottom:16px"></div>
 
     <div class="nbv">
-      <div style="font-size:13px;font-weight:700;color:var(--gd);text-transform:uppercase;letter-spacing:.06em">Urlaub / Feiertag (Zeitraum)</div>
+      <div style="font-size:13px;font-weight:700;color:var(--gd);text-transform:uppercase;letter-spacing:.06em" data-i18n="abw_leave_title">Urlaub / Feiertag (Zeitraum)</div>
       <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px">
         <select id="lv-scope" onchange="document.getElementById('lv-ma').style.display=this.value==='firma'?'none':'block'">
-          <option value="firma">Ganze Firma</option>
-          <option value="einzeln">Einzelner Mitarbeiter</option>
+          <option value="firma" data-i18n="abw_whole_company">Ganze Firma</option>
+          <option value="einzeln" data-i18n="rg_single_employee">Einzelner Mitarbeiter</option>
         </select>
         <select id="lv-ma" style="display:none"></select>
         <select id="lv-type">
-          <option value="urlaub">Urlaub</option>
-          <option value="feiertag">Feiertag</option>
-          <option value="krankheit">Krankheit</option>
-          <option value="sonstiges">Sonstiges</option>
+          <option value="urlaub" data-i18n="abw_type_urlaub">Urlaub</option>
+          <option value="feiertag" data-i18n="abw_type_feiertag">Feiertag</option>
+          <option value="krankheit" data-i18n="abw_type_krankheit">Krankheit</option>
+          <option value="sonstiges" data-i18n="abw_type_sonstiges">Sonstiges</option>
         </select>
         <div style="display:flex;gap:8px">
           <input type="date" id="lv-start" style="flex:1">
           <input type="date" id="lv-end" style="flex:1">
         </div>
-        <input type="text" id="lv-note" placeholder="Notiz (optional)">
-        <button class="btn" onclick="addLeave()">Zeitraum hinzufügen</button>
+        <input type="text" id="lv-note" data-i18n-ph="abw_note_ph" placeholder="Notiz (optional)">
+        <button class="btn" onclick="addLeave()" data-i18n="abw_leave_add_btn">Zeitraum hinzufügen</button>
       </div>
     </div>
-    <div class="lbl">Erfasster Urlaub / Feiertage</div>
+    <div class="lbl" data-i18n="abw_leave_list_title">Erfasster Urlaub / Feiertage</div>
     <div class="crd" id="lv-list" style="margin-bottom:24px"></div>
   </div>
 </div>
 
 <div class="pg" id="pg-bv-editor">
-  <div class="hdr"><button class="bck" onclick="bk('pg-editor')">‹</button><div><div class="ht" data-i18n="editor_bv_list">Baustellen</div><div class="hs">Verwalten & Einstellungen</div></div></div>
+  <div class="hdr"><button class="bck" onclick="bk('pg-editor')">‹</button><div><div class="ht" data-i18n="editor_bv_list">Baustellen</div><div class="hs" data-i18n="bvm_manage_settings">Verwalten & Einstellungen</div></div></div>
   <div class="sc">
     <div class="lbl" data-i18n="editor_bv_list" style="margin-top:12px">Baustellen</div>
     <div class="crd" id="edbvl" style="margin-bottom:16px"></div>
@@ -583,13 +583,13 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
   <div class="sc">
     <div style="padding:16px">
         
-        <label>Datum:</label>
+        <label data-i18n="report_date_label">Datum:</label>
         <input type="date" id="rep-d" style="font-size:19px;padding:15px;width:100%;margin-bottom:15px;">
 
         <div id="selection-container" style="margin-top: 10px;">
-            <button class="btn" onclick="showBvList()">Baustellen anzeigen</button>
+            <button class="btn" onclick="showBvList()" data-i18n="rg_show_bv_btn">Baustellen anzeigen</button>
             <div id="bv-list" style="margin: 10px 0;"></div>
-            <button id="download-btn" class="btn" style="display:none; background:#2d7a3a;" onclick="generateSelectedPDFs()">Ausgewählte PDFs erstellen</button>
+            <button id="download-btn" class="btn" style="display:none; background:#2d7a3a;" onclick="generateSelectedPDFs()" data-i18n="pdf_selected_btn">Ausgewählte PDFs erstellen</button>
         </div>
 
         <div class="qb">
@@ -714,7 +714,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 
     <button class="ba" onclick="go('pg-bv-editor')" style="margin-bottom:16px">
       <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 9 6v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21V12h6v9"/></svg></div>
-      <div><div class="at">Baustellen verwalten</div><div class="as">Sätze, Budget, Archivieren, Warnungen</div></div>
+      <div><div class="at" data-i18n="home_bv_title">Baustellen verwalten</div><div class="as" data-i18n="editor_bvm_menu_sub">Sätze, Budget, Archivieren, Warnungen</div></div>
       <div class="ar">›</div>
     </button>
 
@@ -726,7 +726,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 
     <button class="ba" onclick="go('pg-notify')" style="margin-bottom:10px">
       <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
-      <div><div class="at" data-i18n="push_settings_title">Benachrichtigungen</div><div class="as">Erinnerungen & Warnungen einstellen</div></div>
+      <div><div class="at" data-i18n="push_settings_title">Benachrichtigungen</div><div class="as" data-i18n="push_menu_sub">Erinnerungen & Warnungen einstellen</div></div>
       <div class="ar">›</div>
     </button>
 
@@ -772,11 +772,11 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       </div>
     </div>
 
-    <div class="lbl">Rechnungen-Seite</div>
+    <div class="lbl" data-i18n="editor_rg_page_title">Rechnungen-Seite</div>
     <div class="crd" style="margin-bottom:16px">
       <div style="padding:14px 16px">
         <div class="toggle-row">
-          <div class="lbl2">Block "Manuell hinzufügen" ausblenden</div>
+          <div class="lbl2" data-i18n="editor_rg_hide_manual">Block "Manuell hinzufügen" ausblenden</div>
           <button class="tgl" id="dtgl-rgmanual" onclick="toggleRgManualHidden()"></button>
         </div>
       </div>
@@ -786,7 +786,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 </div>
 
 <div class="pg" id="pg-notify">
-  <div class="hdr"><button class="bck" onclick="bk('pg-editor')">‹</button><div><div class="ht" data-i18n="push_settings_title">Benachrichtigungen</div><div class="hs">Erinnerungen & Warnungen einstellen</div></div></div>
+  <div class="hdr"><button class="bck" onclick="bk('pg-editor')">‹</button><div><div class="ht" data-i18n="push_settings_title">Benachrichtigungen</div><div class="hs" data-i18n="push_menu_sub">Erinnerungen & Warnungen einstellen</div></div></div>
   <div class="sc"><div style="padding:16px">
     <div class="crd" style="margin-bottom:16px">
       <div style="padding:14px 16px">
@@ -880,50 +880,50 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 </div>
 
 <div class="pg" id="pg-rg">
-  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht">Rechnungen</div><div class="hs">Übersicht & Zahlungsziel (14 Tage)</div></div></div>
+  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="rg_link">Rechnungen</div><div class="hs" data-i18n="rg_page_sub">Übersicht & Zahlungsziel (14 Tage)</div></div></div>
   <div class="sc"><div style="padding:16px">
 
-    <div class="lbl" style="margin:0 0 8px">Filter</div>
+    <div class="lbl" style="margin:0 0 8px" data-i18n="rg_filter_label">Filter</div>
     <div style="display:flex;gap:8px;margin-bottom:14px">
       <select id="rg-filter" onchange="rRech()" style="flex:1">
-        <option value="alle">Alle</option>
-        <option value="offen">Offen</option>
-        <option value="ueberfaellig">Überfällig</option>
-        <option value="bezahlt">Bezahlt</option>
+        <option value="alle" data-i18n="rg_filter_all">Alle</option>
+        <option value="offen" data-i18n="rg_filter_open">Offen</option>
+        <option value="ueberfaellig" data-i18n="rg_filter_overdue">Überfällig</option>
+        <option value="bezahlt" data-i18n="rg_filter_paid">Bezahlt</option>
       </select>
     </div>
 
-    <div class="lbl" style="margin:0 0 8px">Übersicht</div>
+    <div class="lbl" style="margin:0 0 8px" data-i18n="rg_overview">Übersicht</div>
     <div id="rg-list"></div>
 
     <div style="height:8px"></div>
-    <div class="lbl" style="margin:20px 0 8px">Aus Excel einfügen</div>
+    <div class="lbl" style="margin:20px 0 8px" data-i18n="rg_import_title">Aus Excel einfügen</div>
     <div class="crd" style="padding:12px">
-      <div class="lbl" style="margin:0 0 6px">1. Rechnungstabelle</div>
-      <textarea id="rg-paste-rg" rows="4" placeholder="Rechnungszeilen hier einfügen (Tab-getrennt, wie beim Kopieren aus Excel)…" style="width:100%;font-size:14px;padding:10px;border:.5px solid var(--bs);border-radius:var(--rs);background:var(--c);color:var(--t);font-family:inherit;resize:vertical"></textarea>
-      <div class="lbl" style="margin:12px 0 6px">2. Abrechnungs-/Stundentabelle</div>
-      <textarea id="rg-paste-abr" rows="4" placeholder="Abrechnungszeilen (Stunden je Mitarbeiter) hier einfügen…" style="width:100%;font-size:14px;padding:10px;border:.5px solid var(--bs);border-radius:var(--rs);background:var(--c);color:var(--t);font-family:inherit;resize:vertical"></textarea>
-      <div style="font-size:12px;color:var(--s);margin-top:6px">Beide Tabellen werden zusammen ausgewertet und einander automatisch zugeordnet.</div>
-      <button class="btn" style="margin-top:10px" onclick="rgImport()">Beide einfügen &amp; übernehmen</button>
+      <div class="lbl" style="margin:0 0 6px" data-i18n="rg_import_step1">1. Rechnungstabelle</div>
+      <textarea id="rg-paste-rg" rows="4" data-i18n-ph="rg_paste_rg_ph" placeholder="Rechnungszeilen hier einfügen (Tab-getrennt, wie beim Kopieren aus Excel)…" style="width:100%;font-size:14px;padding:10px;border:.5px solid var(--bs);border-radius:var(--rs);background:var(--c);color:var(--t);font-family:inherit;resize:vertical"></textarea>
+      <div class="lbl" style="margin:12px 0 6px" data-i18n="rg_import_step2">2. Abrechnungs-/Stundentabelle</div>
+      <textarea id="rg-paste-abr" rows="4" data-i18n-ph="rg_paste_abr_ph" placeholder="Abrechnungszeilen (Stunden je Mitarbeiter) hier einfügen…" style="width:100%;font-size:14px;padding:10px;border:.5px solid var(--bs);border-radius:var(--rs);background:var(--c);color:var(--t);font-family:inherit;resize:vertical"></textarea>
+      <div style="font-size:12px;color:var(--s);margin-top:6px" data-i18n="rg_import_hint">Beide Tabellen werden zusammen ausgewertet und einander automatisch zugeordnet.</div>
+      <button class="btn" style="margin-top:10px" onclick="rgImport()" data-i18n="rg_import_btn">Einfügen &amp; übernehmen</button>
       <div id="rg-import-st" style="margin-top:8px;font-size:13px;color:var(--s)"></div>
     </div>
 
     <div id="mrg-block">
-      <div class="lbl" style="margin:20px 0 8px">Manuell hinzufügen</div>
+      <div class="lbl" style="margin:20px 0 8px" data-i18n="rg_manual_title">Manuell hinzufügen</div>
       <div class="crd" style="padding:12px">
         <div style="display:flex;gap:8px;margin-bottom:8px">
           <input type="date" id="rg-m-datum" style="flex:1">
-          <input type="text" id="rg-m-betrag" inputmode="decimal" placeholder="Betrag €" style="width:110px">
+          <input type="text" id="rg-m-betrag" inputmode="decimal" data-i18n-ph="rg_amount_ph" placeholder="Betrag €" style="width:110px">
         </div>
-        <input type="text" id="rg-m-firma" placeholder="Firma" style="margin-bottom:8px">
+        <input type="text" id="rg-m-firma" data-i18n-ph="rg_company_ph" placeholder="Firma" style="margin-bottom:8px">
         <select id="rg-m-bv" style="margin-bottom:8px">
-          <option value="">Baustelle (optional, wird sonst automatisch erkannt)</option>
+          <option value="" data-i18n="rg_bv_optional">Baustelle (optional, wird sonst automatisch erkannt)</option>
         </select>
         <div style="display:flex;gap:8px">
-          <input type="text" id="rg-m-rgnr" placeholder="Rechnungs-Nr" style="flex:1">
-          <input type="text" id="rg-m-text" placeholder="Text (z.B. Rechnung BV 6558)" style="flex:1">
+          <input type="text" id="rg-m-rgnr" data-i18n-ph="rg_invoice_nr_ph" placeholder="Rechnungs-Nr" style="flex:1">
+          <input type="text" id="rg-m-text" data-i18n-ph="rg_text_ph" placeholder="Text (z.B. Rechnung BV 6558)" style="flex:1">
         </div>
-        <button class="bto" style="margin-top:10px" onclick="rgAddManual()">Hinzufügen</button>
+        <button class="bto" style="margin-top:10px" onclick="rgAddManual()" data-i18n="rg_manual_btn">Hinzufügen</button>
       </div>
     </div>
 
@@ -966,11 +966,11 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     <div style="margin-bottom:12px"><div class="lbl" style="margin:0 0 6px" data-i18n="full_name">Name</div><input type="text" id="man" data-i18n-ph="full_name" placeholder="Vollständiger Name"></div>
     <div style="margin-bottom:12px"><div class="lbl" style="margin:0 0 6px" data-i18n="short_code">Kürzel (2 Buchstaben)</div><input type="text" id="mak" data-i18n-ph="short_code" placeholder="z.B. SA" maxlength="3" style="text-transform:uppercase"></div>
     <div style="margin-bottom:14px"><div class="lbl" style="margin:0 0 8px" data-i18n="color">Farbe</div><div class="cpick" id="cpick"></div></div>
-    <div style="margin-bottom:14px"><div class="lbl" style="margin:0 0 6px">Stundensatz (€/h)</div><input type="number" id="mar" inputmode="decimal" step="0.5" placeholder="z.B. 35"></div>
+    <div style="margin-bottom:14px"><div class="lbl" style="margin:0 0 6px" data-i18n="rg_hourly_rate">Stundensatz (€/h)</div><input type="number" id="mar" inputmode="decimal" step="0.5" data-i18n-ph="rg_hourly_rate_ph" placeholder="z.B. 35"></div>
     <div style="display:flex;align-items:center;gap:11px;padding:11px 0;margin-bottom:6px;border-top:.5px solid var(--b);border-bottom:.5px solid var(--b)">
       <div style="flex:1">
-        <div style="font-size:14px;font-weight:600">Bis auf weiteres abwesend</div>
-        <div style="font-size:12px;color:var(--s);margin-top:2px">Erscheint beim Stundeneintragen ganz unten, wird nicht automatisch ausgewählt</div>
+        <div style="font-size:14px;font-weight:600" data-i18n="ma_long_absent">Bis auf weiteres abwesend</div>
+        <div style="font-size:12px;color:var(--s);margin-top:2px" data-i18n="ma_long_absent_hint">Erscheint beim Stundeneintragen ganz unten, wird nicht automatisch ausgewählt</div>
       </div>
       <button class="tgl" id="maea-longabs-tgl" onclick="toggleMaLongAbsent()"></button>
     </div>
@@ -1437,7 +1437,68 @@ const I18N = {
     rg_pay_group_off: "Ganze Sammelrechnung als offen markieren",
     rg_btn_paid: "Bezahlt",
     rg_btn_undo: "Rückgängig",
-    rg_sammel: "Sammelrechnung ({count})"
+    rg_sammel: "Sammelrechnung ({count})",
+
+    dash_open_hours: "Offene Stunden",
+    rg_link: "Rechnungen",
+    rg_link_sub: "Übersicht & Zahlungsziel",
+    rg_page_sub: "Übersicht & Zahlungsziel (14 Tage)",
+    rg_single_employee: "Einzelner Mitarbeiter",
+    rg_show_bv_btn: "Baustellen anzeigen",
+    editor_rg_page_title: "Rechnungen-Seite",
+    editor_rg_hide_manual: "Block \"Manuell hinzufügen\" ausblenden",
+    rg_import_step1: "1. Rechnungstabelle",
+    rg_import_step2: "2. Abrechnungs-/Stundentabelle",
+    rg_paste_rg_ph: "Rechnungszeilen hier einfügen (Tab-getrennt, wie beim Kopieren aus Excel)…",
+    rg_paste_abr_ph: "Abrechnungszeilen (Stunden je Mitarbeiter) hier einfügen…",
+    rg_import_hint: "Beide Tabellen werden zusammen ausgewertet und einander automatisch zugeordnet.",
+    rg_amount_ph: "Betrag €",
+    rg_company_ph: "Firma",
+    rg_bv_optional: "Baustelle (optional, wird sonst automatisch erkannt)",
+    rg_invoice_nr_ph: "Rechnungs-Nr",
+    rg_text_ph: "Text (z.B. Rechnung BV 6558)",
+    rg_hourly_rate: "Stundensatz (€/h)",
+    rg_hourly_rate_ph: "z.B. 35",
+    ma_long_absent: "Bis auf weiteres abwesend",
+    ma_long_absent_hint: "Erscheint beim Stundeneintragen ganz unten, wird nicht automatisch ausgewählt",
+    rg_import_summary: "{added} Rechnung(en) neu, {updated} aktualisiert, {abr} Abrechnungszeile(n) übernommen",
+    rg_import_summary_skipped: ", {skipped} übersprungen",
+    rg_manual_missing: "Bitte Datum und Firma angeben",
+    rg_invoice_single: "Rechnung {first}",
+    rg_invoice_range: "Rechnung {first} – {last}",
+    stat_avg_ma_day: "Ø Mitarbeiter/Tag",
+    select_ma_placeholder: "-- Mitarbeiter --",
+    report_date_label: "Datum:",
+    pdf_selected_btn: "Ausgewählte PDFs erstellen",
+    editor_bvm_menu_sub: "Sätze, Budget, Archivieren, Warnungen",
+    push_menu_sub: "Erinnerungen & Warnungen einstellen",
+
+    abw_menu_title: "Abwesenheiten & Urlaub",
+    abw_menu_sub: "Fehltage, Urlaub, Feiertage erfassen",
+    abw_page_sub: "Fehltage, Urlaub, Feiertage",
+    abw_intro: "Standardmäßig gilt jeder Mitarbeiter an jedem Tag als anwesend. Trage hier nur Ausnahmen ein (einzelner Fehltag, Urlaub, Feiertag, Krankheit) – nur diese hinterlegten Ausnahmen weichen von \"jeder ist da\" ab.",
+    abw_single_title: "Einzelne Abwesenheit (Tag)",
+    abw_reason_ph: "Grund (optional)",
+    abw_add_btn: "Abwesenheit hinzufügen",
+    abw_list_title: "Erfasste Abwesenheiten",
+    abw_leave_title: "Urlaub / Feiertag (Zeitraum)",
+    abw_whole_company: "Ganze Firma",
+    abw_type_urlaub: "Urlaub",
+    abw_type_feiertag: "Feiertag",
+    abw_type_krankheit: "Krankheit",
+    abw_type_sonstiges: "Sonstiges",
+    abw_note_ph: "Notiz (optional)",
+    abw_leave_add_btn: "Zeitraum hinzufügen",
+    abw_leave_list_title: "Erfasster Urlaub / Feiertage",
+    abw_select_ma_datum: "Mitarbeiter & Datum wählen",
+    abw_fill_all: "Bitte Angaben vervollständigen",
+    abw_none: "Keine Abwesenheiten erfasst.",
+    abw_leave_none: "Kein Urlaub/Feiertag erfasst.",
+    abw_missing_title: "Fehlende Einträge (letzte 2 Tage)",
+    abw_mark_absent_btn: "als abwesend markieren",
+    abw_marked_absent_toast: "Als abwesend markiert",
+    abw_retro_reason: "nachträglich erfasst",
+    bvm_manage_settings: "Verwalten & Einstellungen"
   },
   tr: {
     title: "ASLAN · Saat Takibi",
@@ -1788,7 +1849,68 @@ const I18N = {
     rg_pay_group_off: "Tüm toplu faturayı açık olarak işaretle",
     rg_btn_paid: "Ödendi",
     rg_btn_undo: "Geri al",
-    rg_sammel: "Toplu fatura ({count})"
+    rg_sammel: "Toplu fatura ({count})",
+
+    dash_open_hours: "Açık saatler",
+    rg_link: "Faturalar",
+    rg_link_sub: "Genel bakış ve vade",
+    rg_page_sub: "Genel bakış ve vade (14 gün)",
+    rg_single_employee: "Tek çalışan",
+    rg_show_bv_btn: "Şantiyeleri göster",
+    editor_rg_page_title: "Faturalar sayfası",
+    editor_rg_hide_manual: "\"Elle ekle\" bölümünü gizle",
+    rg_import_step1: "1. Fatura tablosu",
+    rg_import_step2: "2. Faturalama/saat tablosu",
+    rg_paste_rg_ph: "Fatura satırlarını buraya yapıştırın (Excel'den kopyalar gibi Tab ile ayrılmış)…",
+    rg_paste_abr_ph: "Faturalama satırlarını (çalışan başına saat) buraya yapıştırın…",
+    rg_import_hint: "Her iki tablo birlikte değerlendirilir ve otomatik olarak eşleştirilir.",
+    rg_amount_ph: "Tutar €",
+    rg_company_ph: "Firma",
+    rg_bv_optional: "Şantiye (isteğe bağlı, aksi halde otomatik algılanır)",
+    rg_invoice_nr_ph: "Fatura no",
+    rg_text_ph: "Metin (örn. Fatura BV 6558)",
+    rg_hourly_rate: "Saat ücreti (€/sa)",
+    rg_hourly_rate_ph: "örn. 35",
+    ma_long_absent: "İkinci bir emre kadar devamsız",
+    ma_long_absent_hint: "Saat girişinde en altta görünür, otomatik seçilmez",
+    rg_import_summary: "{added} yeni fatura, {updated} güncellendi, {abr} faturalama satırı aktarıldı",
+    rg_import_summary_skipped: ", {skipped} atlandı",
+    rg_manual_missing: "Lütfen tarih ve firma girin",
+    rg_invoice_single: "Fatura {first}",
+    rg_invoice_range: "Fatura {first} – {last}",
+    stat_avg_ma_day: "Ort. çalışan/gün",
+    select_ma_placeholder: "-- Çalışan --",
+    report_date_label: "Tarih:",
+    pdf_selected_btn: "Seçilenlerin PDF'lerini oluştur",
+    editor_bvm_menu_sub: "Ücretler, bütçe, arşivleme, uyarılar",
+    push_menu_sub: "Hatırlatmaları ve uyarıları ayarla",
+
+    abw_menu_title: "Devamsızlık ve İzin",
+    abw_menu_sub: "Devamsızlık, izin, resmi tatil kaydet",
+    abw_page_sub: "Devamsızlık, izin, resmi tatil",
+    abw_intro: "Varsayılan olarak her çalışan her gün mevcut kabul edilir. Burada yalnızca istisnaları girin (tek günlük devamsızlık, izin, resmi tatil, hastalık) – sadece kaydedilen bu istisnalar \"herkes burada\" durumundan sapar.",
+    abw_single_title: "Tekil devamsızlık (gün)",
+    abw_reason_ph: "Sebep (isteğe bağlı)",
+    abw_add_btn: "Devamsızlık ekle",
+    abw_list_title: "Kaydedilen devamsızlıklar",
+    abw_leave_title: "İzin / Resmi tatil (dönem)",
+    abw_whole_company: "Tüm firma",
+    abw_type_urlaub: "İzin",
+    abw_type_feiertag: "Resmi tatil",
+    abw_type_krankheit: "Hastalık",
+    abw_type_sonstiges: "Diğer",
+    abw_note_ph: "Not (isteğe bağlı)",
+    abw_leave_add_btn: "Dönem ekle",
+    abw_leave_list_title: "Kaydedilen izin / resmi tatiller",
+    abw_select_ma_datum: "Çalışan ve tarih seçin",
+    abw_fill_all: "Lütfen bilgileri tamamlayın",
+    abw_none: "Henüz devamsızlık kaydedilmedi.",
+    abw_leave_none: "Henüz izin/resmi tatil kaydedilmedi.",
+    abw_missing_title: "Eksik kayıtlar (son 2 gün)",
+    abw_mark_absent_btn: "devamsız olarak işaretle",
+    abw_marked_absent_toast: "Devamsız olarak işaretlendi",
+    abw_retro_reason: "sonradan girildi",
+    bvm_manage_settings: "Yönet ve ayarlar"
   }
 };
 
@@ -2291,8 +2413,8 @@ async function rgImport(){
   syn("",tr("sync_saved"));
 
   document.getElementById("rg-import-st").textContent =
-    `${addedRg} Rechnung(en) neu, ${updatedRg} aktualisiert, ${addedAbr} Abrechnungszeile(n) übernommen` +
-    (skipped ? `, ${skipped} übersprungen` : "");
+    tr("rg_import_summary",{added:addedRg,updated:updatedRg,abr:addedAbr}) +
+    (skipped ? tr("rg_import_summary_skipped",{skipped}) : "");
 
   document.getElementById("rg-paste-rg").value="";
   document.getElementById("rg-paste-abr").value="";
@@ -2305,7 +2427,7 @@ async function rgAddManual(){
   const rgnr=document.getElementById("rg-m-rgnr").value.trim();
   const text=document.getElementById("rg-m-text").value.trim();
   const betrag=rgParseBetrag(document.getElementById("rg-m-betrag").value);
-  if(!datum||!firma){ toast("Bitte Datum und Firma angeben"); return; }
+  if(!datum||!firma){ toast(tr("rg_manual_missing")); return; }
   const bvSel=document.getElementById("rg-m-bv").value;
   const bv_id=bvSel||rgDetectBvId(firma,text);
   const row={id:rgUid(),datum,firma,rgnr,text,betrag,bezahltAm:null,bv_id};
@@ -2350,7 +2472,7 @@ function rgFillBvSelect(){
   const sel=document.getElementById("rg-m-bv");
   if(!sel) return;
   const cur=sel.value;
-  sel.innerHTML=`<option value="">Baustelle (optional, wird sonst automatisch erkannt)</option>`+
+  sel.innerHTML=`<option value="">${tr("rg_bv_optional")}</option>`+
     BV.filter(b=>!b.archived).map(b=>`<option value="${b.id}">${b.nr?b.nr+" · ":""}${b.name||""}</option>`).join("");
   sel.value=cur;
 }
@@ -2411,7 +2533,7 @@ function rgRgnrRange(rows){
   if(!nrs.length) return "";
   nrs.sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
   const first=nrs[0], last=nrs[nrs.length-1];
-  return first===last ? `Rechnung ${first}` : `Rechnung ${first} – ${last}`;
+  return first===last ? tr("rg_invoice_single",{first}) : tr("rg_invoice_range",{first,last});
 }
 
 function rRech(){
@@ -2427,7 +2549,7 @@ function rRech(){
 
   const keys=Object.keys(groups).sort((a,b)=>b.localeCompare(a));
   if(keys.length===0){
-    cnt.innerHTML=`<div class="crd" style="padding:16px;text-align:center;color:var(--s);font-size:14px">Noch keine Rechnungen erfasst.</div>`;
+    cnt.innerHTML=`<div class="crd" style="padding:16px;text-align:center;color:var(--s);font-size:14px">${tr("rg_none")}</div>`;
     return;
   }
 
@@ -2452,7 +2574,7 @@ if(key.startsWith("block|")){
   title = firma;
 }
 const color = groupStatus==="bezahlt" ? "var(--g)" : groupStatus==="ueberfaellig" ? "#c0392b" : "#e67e22";
-const label = groupStatus==="bezahlt" ? "Bezahlt" : groupStatus==="ueberfaellig" ? "Überfällig" : "Offen";
+const label = groupStatus==="bezahlt" ? tr("rg_status_paid") : groupStatus==="ueberfaellig" ? tr("rg_status_overdue") : tr("rg_status_open");
 
     const gid="rgg_"+key.replace(/[^a-zA-Z0-9]/g,"_");
     const opened=rgOpenGroups.has(key);
@@ -2462,13 +2584,13 @@ const label = groupStatus==="bezahlt" ? "Bezahlt" : groupStatus==="ueberfaellig"
         <div>
           <div style="font-weight:700;font-size:15px">${title}</div>
          <div style="font-size:12px;color:var(--s);margin-top:2px">
-  ${blockLabel ? `${firma}${firma?" · ":""}${blockLabel}${isSammel?` · Sammelrechnung (${rows.length})`:""}` : `${rgFmtDatum(datum)}${isSammel?` · Sammelrechnung (${rows.length})`:""}`}
+  ${blockLabel ? `${firma}${firma?" · ":""}${blockLabel}${isSammel?` · ${tr("rg_sammel",{count:rows.length})}`:""}` : `${rgFmtDatum(datum)}${isSammel?` · ${tr("rg_sammel",{count:rows.length})}`:""}`}
 </div>
         </div>
         <div style="text-align:right;display:flex;align-items:center;gap:8px">
           ${(isSammel && anyOpen && !opened) ? `<div onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:6px">
             <input type="date" id="rg-pay-date-${gid}" value="${todayStr}" style="width:auto;padding:6px 5px;font-size:11px">
-            <button class="bto" style="width:auto;margin:0;padding:6px 8px;font-size:11px" onclick="rgGroupPayAll('${key.replace(/'/g,"\\'")}',true)">Sammelrechnung bezahlt</button>
+            <button class="bto" style="width:auto;margin:0;padding:6px 8px;font-size:11px" onclick="rgGroupPayAll('${key.replace(/'/g,"\\'")}',true)">${tr("rg_pay_group_on")}</button>
           </div>` : ""}
           <div>
             <div style="font-weight:800;font-size:16px">${rgFmtMoney(sum)}</div>
@@ -2482,7 +2604,7 @@ const label = groupStatus==="bezahlt" ? "Bezahlt" : groupStatus==="ueberfaellig"
       rows.forEach(r=>{
         const st=rgStatus(r);
         const c = st==="bezahlt" ? "var(--g)" : st==="ueberfaellig" ? "#c0392b" : "#e67e22";
-        const l = st==="bezahlt" ? "bezahlt am "+rgFmtDatum(r.bezahltAm) : st==="ueberfaellig" ? "überfällig" : "offen";
+        const l = st==="bezahlt" ? tr("rg_paid_on",{date:rgFmtDatum(r.bezahltAm)}) : st==="ueberfaellig" ? tr("rg_status_overdue") : tr("rg_status_open");
         html+=`<div class="mr">
           <div style="flex:1">
             <div style="font-size:14px">${r.rgnr?r.rgnr+" · ":""}${r.text||"—"}</div>
@@ -2490,7 +2612,7 @@ const label = groupStatus==="bezahlt" ? "Bezahlt" : groupStatus==="ueberfaellig"
           </div>
           <div style="font-size:14px;font-weight:600;margin-right:8px">${rgFmtMoney(r.betrag)}</div>
           ${r.bezahltAm?"":`<input type="date" id="rg-pay-date-${r.id}" value="${new Date().toISOString().slice(0,10)}" style="width:auto;margin:0 6px 0 0;padding:8px 6px;font-size:12px">`}
-          <button class="bto" style="width:auto;margin:0;padding:8px 10px;font-size:12px" onclick="rgToggleBezahlt('${r.id}')">${r.bezahltAm?"Rückgängig":"Bezahlt"}</button>
+          <button class="bto" style="width:auto;margin:0;padding:8px 10px;font-size:12px" onclick="rgToggleBezahlt('${r.id}')">${r.bezahltAm?tr("rg_btn_undo"):tr("rg_btn_paid")}</button>
           <button class="btd" style="width:auto;margin:0 0 0 6px;padding:8px 10px;font-size:12px" onclick="rgDelete('${r.id}')">✕</button>
         </div>`;
       });
@@ -2498,13 +2620,13 @@ const label = groupStatus==="bezahlt" ? "Bezahlt" : groupStatus==="ueberfaellig"
       if(isSammel){
         html+=`<div style="padding:10px 15px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           ${anyOpen?`<input type="date" id="rg-pay-date-${gid}" value="${new Date().toISOString().slice(0,10)}" style="width:auto;padding:8px 6px;font-size:12px">`:""}
-          <button class="btn" style="margin:0" onclick="rgGroupPayAll('${key.replace(/'/g,"\\'")}',${anyOpen})">${anyOpen?"Ganze Sammelrechnung als bezahlt markieren":"Ganze Sammelrechnung als offen markieren"}</button>
+          <button class="btn" style="margin:0" onclick="rgGroupPayAll('${key.replace(/'/g,"\\'")}',${anyOpen})">${anyOpen?tr("rg_pay_group_on"):tr("rg_pay_group_off")}</button>
         </div>`;
       }
     }
     html+=`</div>`;
   }
-  cnt.innerHTML=html || `<div class="crd" style="padding:16px;text-align:center;color:var(--s);font-size:14px">Keine Einträge für diesen Filter.</div>`;
+  cnt.innerHTML=html || `<div class="crd" style="padding:16px;text-align:center;color:var(--s);font-size:14px">${tr("rg_none_filter")}</div>`;
 }
 
 // ═══ MITARBEITER-STUNDENSÄTZE (lokal, nicht Supabase-synchronisiert) ═══
@@ -2827,7 +2949,7 @@ function rStat(){
       const weeks=new Set(days.map(d=>{ const dt=new Date(d+"T00:00:00"); return dt.getFullYear()+"-"+gkw(d); }));
       const avgVerdienstWoche = weeks.size ? (totalVerdienst/weeks.size) : 0;
       sumEl.innerHTML=`<div class="sts" style="padding:0 16px 4px">
-        <div class="stc"><div class="stn">${avgMa.toFixed(1)}</div><div class="stl">Ø Mitarbeiter/Tag</div></div>
+        <div class="stc"><div class="stn">${avgMa.toFixed(1)}</div><div class="stl">${tr("stat_avg_ma_day")}</div></div>
       </div>`;
     }
   }
@@ -2989,7 +3111,7 @@ function rmissing() {
       const isMissingAddr = !b.name || b.name === "—" || b.name.trim() === "";
       const addrTxt = isMissingAddr ? `<span style="color:#c0392b; font-weight:bold;">Keine Adresse</span>` : b.name;
       const bl = blById(b.bl_id);
-      const blTxt = bl ? bl.name : `<span style="color:#c0392b; font-weight:bold;">Kein Bauleiter</span>`;
+      const blTxt = bl ? bl.name : `<span style="color:#c0392b; font-weight:bold;">${tr("report_field_bauleiter_missing")}</span>`;
       const nrInvalid = !validBVNr(b.nr);
       const nrLabel = nrInvalid ? `<span style="color:#c0392b; font-weight:bold;">BV ${b.nr} <span style="display:inline-flex;vertical-align:middle">${ICON_WARN}</span></span>` : `BV ${b.nr}`;
       const detailParts = [addrTxt, blTxt];
@@ -3115,7 +3237,7 @@ async function deleteLeave(id){
 }
 function rAbw(){
   const maSel=document.getElementById("abw-ma");
-  if(maSel) maSel.innerHTML=`<option value="">-- Mitarbeiter --</option>`+MA.map(m=>`<option value="${m.id}">${m.name}</option>`).join("");
+  if(maSel) maSel.innerHTML=`<option value="">${tr("select_ma_placeholder")}</option>`+MA.map(m=>`<option value="${m.id}">${m.name}</option>`).join("");
   const lvMa=document.getElementById("lv-ma");
   if(lvMa) lvMa.innerHTML=MA.map(m=>`<option value="${m.id}">${m.name}</option>`).join("");
 
