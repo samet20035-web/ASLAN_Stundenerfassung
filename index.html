@@ -2153,7 +2153,7 @@ async function rgImport(){
     });
     addedAbr++;
 
-    const k = block || rgnr;
+    const k = block ? rgNormBlock(block) : rgnr;
 
     if(!rgMap[k]){
       rgMap[k]={
@@ -2273,8 +2273,15 @@ function rgToggleGroup(key){
   rRech();
 }
 
+function rgNormBlock(s){
+  return String(s||"")
+    .trim()
+    .toLowerCase()
+    .replace(/[_\-]+/g," ")   // Unterstriche/Bindestriche wie Leerzeichen behandeln
+    .replace(/\s+/g," ");      // mehrfache Leerzeichen zusammenfassen
+}
 function rgGroupKey(r){
-  if(r.block && r.block.trim()!=="") return "block|" + r.block.trim();
+  if(r.block && r.block.trim()!=="") return "block|" + rgNormBlock(r.block);
   return r.datum + "|" + r.firma;
 }
 	
@@ -3786,6 +3793,13 @@ let unbilledSum=0;
     dcOver.style.display = (toggledOn && overSum>0) ? "" : "none";
   }
 
+  // Offene-Rechnungen-Kachel nur zeigen, wenn wirklich etwas offen ist
+  const dcOpen=document.getElementById("dc-invopen");
+  if(dcOpen){
+    const toggledOn = dashToggles().invopen!==false;
+    dcOpen.style.display = (toggledOn && openSum>0) ? "" : "none";
+  }
+
   // Sammelrechnungen / Fristen je Gruppe (Datum+Firma), nur offene
   const deadlineRows=[];
   Object.keys(groups).forEach(key=>{
@@ -3806,6 +3820,17 @@ ziel.setDate(ziel.getDate()+14);
     deadlineRows.push({firma,datum,sum,days,isSammel:rows.length>1});
   });
   deadlineRows.sort((a,b)=>a.days-b.days);
+
+  const dcNext=document.getElementById("dc-invnext");
+  if(dcNext){
+    const toggledOn = dashToggles().invnext!==false;
+    dcNext.style.display = (toggledOn && deadlineRows.length>0) ? "" : "none";
+  }
+  const dcDeadlines=document.getElementById("dc-deadlines");
+  if(dcDeadlines){
+    const toggledOn = dashToggles().deadlines!==false;
+    dcDeadlines.style.display = (toggledOn && deadlineRows.length>0) ? "" : "none";
+  }
 
   const rfEl=document.getElementById("s-rf");
   if(rfEl){
