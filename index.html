@@ -2179,7 +2179,7 @@ async function rgImport(){
           block: block ? rgNormBlock(block) : null
         };
       }
-      calcMap[k].betrag += stunden * (ma_name==="Sayim Aslan" ? 37 : 35);
+      calcMap[k].betrag += stunden * maRateForDate(findMaIdByName(ma_name), datum);
       if(calcMap[k].bv_id && bv_id && calcMap[k].bv_id !== bv_id) calcMap[k].bv_id=null;
       if(datum > calcMap[k].datum) calcMap[k].datum=datum;
     }
@@ -2432,6 +2432,11 @@ let MA_RATES={};
 function maRatesLoad(){ MA_RATES=lsGet("ma_rates",{}); }
 function maRatesSave(){ lsSet("ma_rates",MA_RATES); }
 function maDefaultRate(m){ return (m && m.name==="Sayim Aslan") ? 37 : 35; }
+const RATE_CUTOFF_DATE = "2026-06-30"; // bis einschließlich 30.06.2026 galt pauschal 35€/h für alle
+function maRateForDate(id, datum){
+  if(datum && datum<=RATE_CUTOFF_DATE) return 35;
+  return maRate(id);
+}
 function maRate(id){
   if(MA_RATES[id]!=null && MA_RATES[id]!=="") return Number(MA_RATES[id]);
   const m=maById(id);
@@ -3819,7 +3824,7 @@ let unbilledSum=0;
   EN.forEach(e=>{
     const alreadyBilled = ABR.some(a=>abrMatchesEntry(e,a));
     if(!alreadyBilled){
-      unbilledSum += (Number(e.stunden)||0) * maRate(e.ma_id);
+      unbilledSum += (Number(e.stunden)||0) * maRateForDate(e.ma_id, e.datum);
     }
   });
   const ubEl=document.getElementById("s-ub"); if(ubEl){ ubEl.textContent=rgFmtMoney(unbilledSum); }
