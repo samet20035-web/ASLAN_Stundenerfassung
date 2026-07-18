@@ -256,7 +256,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       <div class="stc" id="dc-invover"><div class="stn money" id="s-ru">0 €</div><div class="stl" data-i18n="dash_inv_over">Überfällig</div></div>
       <div class="stc" id="dc-invtotal"><div class="stn money" id="s-rt">0 €</div><div class="stl" data-i18n="dash_inv_total">Umsatz gesamt</div></div>
       <div class="stc" id="dc-invnext"><div class="stn" id="s-rf">–</div><div class="stl" data-i18n="dash_inv_next">Nächste Frist</div></div>
-      <div class="stc" id="dc-unbilled" style="background:#eaf2ff;border-color:#bcd6ff"><div class="stn money" id="s-ub" style="color:#2f6fed">0 €</div><div class="stl" data-i18n="dash_inv_unbilled">Noch nicht abgerechnet</div></div>
+      <div class="stc" id="dc-unbilled" style="background:#eaf2ff;border-color:#bcd6ff"><div class="stn money" id="s-ub" style="color:#2f6fed">0 €</div><div class="stl" data-i18n="dash_inv_unbilled">Noch nicht abgerechnet</div><div id="s-ubh" style="font-size:11px;color:#2f6fed;opacity:.8;margin-top:2px;font-weight:600">0 h</div></div>
     </div>
 
     <div id="dc-deadlines" style="padding:0 16px;margin-top:14px">
@@ -3873,14 +3873,17 @@ function rgDashStats(){
   // falls noch nie abgerechnet wurde) zählt als noch nicht abgerechnet.
   // Der Stundensatz kommt pro Mitarbeiter (nicht pro Baustelle).
 let unbilledSum=0;
+let unbilledHours=0;
 
   EN.forEach(e=>{
     const alreadyBilled = ABR.some(a=>abrMatchesEntry(e,a));
     if(!alreadyBilled){
       unbilledSum += (Number(e.stunden)||0) * maRateForDate(e.ma_id, e.datum);
+      unbilledHours += (Number(e.stunden)||0);
     }
   });
   const ubEl=document.getElementById("s-ub"); if(ubEl){ ubEl.textContent=rgFmtMoney(unbilledSum); }
+  const ubhEl=document.getElementById("s-ubh"); if(ubhEl){ ubhEl.textContent=`${unbilledHours.toFixed(1).replace(/\.0$/,"")} h`; }
 
   // Überfällig-Kachel nur zeigen, wenn wirklich etwas überfällig ist
   const dcOver=document.getElementById("dc-invover");
