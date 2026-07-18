@@ -867,8 +867,12 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     <div style="height:8px"></div>
     <div class="lbl" style="margin:20px 0 8px">Aus Excel einfügen</div>
     <div class="crd" style="padding:12px">
-      <textarea id="rg-paste" rows="4" placeholder="Zeilen aus deiner Rechnungstabelle hier einfügen (Tab-getrennt, wie beim Kopieren aus Excel)…" style="width:100%;font-size:14px;padding:10px;border:.5px solid var(--bs);border-radius:var(--rs);background:var(--c);color:var(--t);font-family:inherit;resize:vertical"></textarea>
-      <button class="btn" style="margin-top:10px" onclick="rgImport()">Einfügen &amp; übernehmen</button>
+      <div class="lbl" style="margin:0 0 6px">1. Rechnungstabelle</div>
+      <textarea id="rg-paste-rg" rows="4" placeholder="Rechnungszeilen hier einfügen (Tab-getrennt, wie beim Kopieren aus Excel)…" style="width:100%;font-size:14px;padding:10px;border:.5px solid var(--bs);border-radius:var(--rs);background:var(--c);color:var(--t);font-family:inherit;resize:vertical"></textarea>
+      <div class="lbl" style="margin:12px 0 6px">2. Abrechnungs-/Stundentabelle</div>
+      <textarea id="rg-paste-abr" rows="4" placeholder="Abrechnungszeilen (Stunden je Mitarbeiter) hier einfügen…" style="width:100%;font-size:14px;padding:10px;border:.5px solid var(--bs);border-radius:var(--rs);background:var(--c);color:var(--t);font-family:inherit;resize:vertical"></textarea>
+      <div style="font-size:12px;color:var(--s);margin-top:6px">Beide Tabellen werden zusammen ausgewertet und einander automatisch zugeordnet.</div>
+      <button class="btn" style="margin-top:10px" onclick="rgImport()">Beide einfügen &amp; übernehmen</button>
       <div id="rg-import-st" style="margin-top:8px;font-size:13px;color:var(--s)"></div>
     </div>
 
@@ -2103,7 +2107,9 @@ function abrMatchesEntry(entry, abr){
 }
 	
 async function rgImport(){
-  const raw=document.getElementById("rg-paste").value;
+  const rawRg=document.getElementById("rg-paste-rg")?document.getElementById("rg-paste-rg").value:"";
+  const rawAbr=document.getElementById("rg-paste-abr")?document.getElementById("rg-paste-abr").value:"";
+  const raw=[rawRg,rawAbr].filter(v=>v && v.trim()!=="").join("\n");
   const lines=raw
     .split(/\r?\n/)
     .map(l=>l.trim())
@@ -2247,7 +2253,8 @@ async function rgImport(){
     `${addedRg} Rechnung(en) neu, ${updatedRg} aktualisiert, ${addedAbr} Abrechnungszeile(n) übernommen` +
     (skipped ? `, ${skipped} übersprungen` : "");
 
-  document.getElementById("rg-paste").value="";
+  document.getElementById("rg-paste-rg").value="";
+  document.getElementById("rg-paste-abr").value="";
   rRech();
 }
 
@@ -2283,7 +2290,13 @@ async function rgDelete(id){
 async function rgToggleBezahlt(id){
   const r=RG.find(x=>x.id===id);
   if(!r) return;
-  const bezahltAm = r.bezahltAm ? null : new Date().toISOString().slice(0,10);
+  let bezahltAm;
+  if(r.bezahltAm){
+    bezahltAm=null; // Rückgängig
+  }else{
+    const inp=document.getElementById("rg-pay-date-"+id);
+    bezahltAm = (inp && inp.value) ? inp.value : new Date().toISOString().slice(0,10);
+  }
   syn("w",tr("sync_now"));
   const res=await sbUpd("rg",id,{bezahltAm});
   if(!res){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
@@ -2320,7 +2333,12 @@ function rgGroupKey(r){
 }
 	
 async function rgGroupPayAll(key, pay){
-  const stamp = pay ? new Date().toISOString().slice(0,10) : null;
+  let stamp=null;
+  if(pay){
+    const gid="rgg_"+key.replace(/[^a-zA-Z0-9]/g,"_");
+    const inp=document.getElementById("rg-pay-date-"+gid);
+    stamp = (inp && inp.value) ? inp.value : new Date().toISOString().slice(0,10);
+  }
   const rows=RG.filter(r=>rgGroupKey(r)===key);
   syn("w",tr("sync_now"));
   await Promise.all(rows.map(r=>sbUpd("rg",r.id,{bezahltAm:stamp})));
@@ -2411,13 +2429,15 @@ const label = groupStatus==="bezahlt" ? "Bezahlt" : groupStatus==="ueberfaellig"
             <div style="font-size:11px;color:${c};margin-top:2px">${l}</div>
           </div>
           <div style="font-size:14px;font-weight:600;margin-right:8px">${rgFmtMoney(r.betrag)}</div>
+          ${r.bezahltAm?"":`<input type="date" id="rg-pay-date-${r.id}" value="${new Date().toISOString().slice(0,10)}" style="width:auto;margin:0 6px 0 0;padding:8px 6px;font-size:12px">`}
           <button class="bto" style="width:auto;margin:0;padding:8px 10px;font-size:12px" onclick="rgToggleBezahlt('${r.id}')">${r.bezahltAm?"Rückgängig":"Bezahlt"}</button>
           <button class="btd" style="width:auto;margin:0 0 0 6px;padding:8px 10px;font-size:12px" onclick="rgDelete('${r.id}')">✕</button>
         </div>`;
       });
 
       if(isSammel){
-        html+=`<div style="padding:10px 15px">
+        html+=`<div style="padding:10px 15px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          ${anyOpen?`<input type="date" id="rg-pay-date-${gid}" value="${new Date().toISOString().slice(0,10)}" style="width:auto;padding:8px 6px;font-size:12px">`:""}
           <button class="btn" style="margin:0" onclick="rgGroupPayAll('${key.replace(/'/g,"\\'")}',${anyOpen})">${anyOpen?"Ganze Sammelrechnung als bezahlt markieren":"Ganze Sammelrechnung als offen markieren"}</button>
         </div>`;
       }
