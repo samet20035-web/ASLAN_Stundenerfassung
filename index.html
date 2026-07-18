@@ -966,6 +966,13 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     <div style="margin-bottom:12px"><div class="lbl" style="margin:0 0 6px" data-i18n="short_code">Kürzel (2 Buchstaben)</div><input type="text" id="mak" data-i18n-ph="short_code" placeholder="z.B. SA" maxlength="3" style="text-transform:uppercase"></div>
     <div style="margin-bottom:14px"><div class="lbl" style="margin:0 0 8px" data-i18n="color">Farbe</div><div class="cpick" id="cpick"></div></div>
     <div style="margin-bottom:14px"><div class="lbl" style="margin:0 0 6px">Stundensatz (€/h)</div><input type="number" id="mar" inputmode="decimal" step="0.5" placeholder="z.B. 35"></div>
+    <div style="display:flex;align-items:center;gap:11px;padding:11px 0;margin-bottom:6px;border-top:.5px solid var(--b);border-bottom:.5px solid var(--b)">
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:600">Bis auf weiteres abwesend</div>
+        <div style="font-size:12px;color:var(--s);margin-top:2px">Erscheint beim Stundeneintragen ganz unten, wird nicht automatisch ausgewählt</div>
+      </div>
+      <button class="tgl" id="maea-longabs-tgl" onclick="toggleMaLongAbsent()"></button>
+    </div>
     <button class="btn" onclick="svma()" data-i18n="save_changes">Speichern</button>
     <button class="btd" onclick="cDM()" data-i18n="delete_ma">Mitarbeiter löschen</button>
     <button class="bto" onclick="cls('ov-ma')" data-i18n="cancel_btn">Abbrechen</button>
@@ -3048,7 +3055,7 @@ function rwarn(){
 function gofill(dt){
   document.getElementById("inp-d").value=dt;
   cD=dt;
-  presentToday=new Set(MA.filter(m=>!m.archived).map(m=>m.id));
+  presentToday=new Set(MA.filter(m=>!m.archived && !m.long_absent).map(m=>m.id));
   sBV=null;
   document.getElementById("bvnx").disabled=true;
   document.getElementById("nb-nr").value="";
@@ -3138,7 +3145,7 @@ function getMissPerMa(){
     const dw=d.getDay();
     if(dw===0||dw===6) continue;
     const ds=d.toISOString().split("T")[0];
-    MA.filter(m=>!m.archived).forEach(m=>{
+    MA.filter(m=>!m.archived && !m.long_absent).forEach(m=>{
       if(isMaAbsentOn(m.id,ds)) return;
       if(EN.some(e=>e.ma_id===m.id && e.datum===ds && Number(e.stunden)>0)) return;
       out.push({ma:m,ds});
@@ -3359,7 +3366,7 @@ async function n2bv(){
   if(!d){alert(tr("pick_date_first"));return;}
   cD=d;
   // Anwesenheit: standardmäßig ist jeder da, außer im Editor (Abwesenheiten & Urlaub) ist für diesen Tag etwas anderes hinterlegt
-  presentToday=new Set(MA.filter(m=>!m.archived && !isMaAbsentOn(m.id,d)).map(m=>m.id));
+  presentToday=new Set(MA.filter(m=>!m.archived && !m.long_absent && !isMaAbsentOn(m.id,d)).map(m=>m.id));
   document.getElementById("bvsub").textContent=fd(d);
   sBV=null;
   document.getElementById("bvnx").disabled=true;
@@ -3472,7 +3479,7 @@ async function handleAddBV(nrId, nmId, blIdId, autoSelect) {
 function n2st(){
   if(!sBV)return;
   document.getElementById("stsub").textContent=`${fd(cD)} · BV ${sBV.nr}`;
-  teamSel = presentToday.size ? new Set(MA.filter(m=>presentToday.has(m.id)).map(m=>m.id)) : new Set(MA.map(m=>m.id));
+  teamSel = presentToday.size ? new Set(MA.filter(m=>presentToday.has(m.id)).map(m=>m.id)) : new Set(MA.filter(m=>!m.long_absent).map(m=>m.id));
   sameTime=true;
   curPause=30;
   indivPause={};
@@ -3492,12 +3499,19 @@ function n2st(){
 }
 
 function rTeam(){
-  document.getElementById("tml").innerHTML=MA.map(m=>`
+  const active=MA.filter(m=>!m.long_absent);
+  const longAbsent=MA.filter(m=>m.long_absent);
+  const rowHtml=m=>`
     <div class="tmr">
       <div class="tmcb ${teamSel.has(m.id)?"on":""}" onclick="toggleTeam('${m.id}')">${teamSel.has(m.id)?"✓":""}</div>
       <div class="av" style="background:${m.bg};color:${m.tc};width:36px;height:36px;font-size:12px">${m.k||"?"}</div>
       <div class="mn" style="font-size:14px">${m.name}</div>
-    </div>`).join("");
+    </div>`;
+  let html=active.map(rowHtml).join("");
+  if(longAbsent.length){
+    html+=`<div class="lbl" style="margin-top:14px">Bis auf weiteres abwesend</div>${longAbsent.map(rowHtml).join("")}`;
+  }
+  document.getElementById("tml").innerHTML=html;
 }
 function toggleTeam(id){
   if(teamSel.has(id)) teamSel.delete(id); else teamSel.add(id);
@@ -4349,7 +4363,7 @@ async function svbv(){
 function rmam(){
   document.getElementById("maml").innerHTML=MA.map((m,i)=>`
     <div class="mmr"><div class="av" style="background:${m.bg};color:${m.tc};width:42px;height:42px">${m.k||"?"}</div>
-    <div style="flex:1"><div style="font-size:16px;font-weight:600">${m.name}</div><div style="font-size:12px;color:var(--s)">Kürzel: ${m.k||"—"}</div></div>
+    <div style="flex:1"><div style="font-size:16px;font-weight:600">${m.name}</div><div style="font-size:12px;color:var(--s)">Kürzel: ${m.k||"—"}${m.long_absent?` · <span style="color:#e67e22">bis auf weiteres abwesend</span>`:""}</div></div>
     <button class="eb" onclick="opma(${i})">${ICON_EDIT}</button></div>`).join("");
 }
 
@@ -4360,6 +4374,7 @@ function opma(i){
   document.getElementById("man").value=m.name||"";
   document.getElementById("mak").value=m.k||"";
   document.getElementById("mar").value=maRate(m.id);
+  document.getElementById("maea-longabs-tgl").classList.toggle("on",!!m.long_absent);
   selC=-1;
   document.getElementById("cpick").innerHTML=CLRS.map((c,ci)=>`
     <div class="cpc ${m.bg===c.bg?"sel":""}" id="cp${ci}" onclick="pkc(${ci})" style="background:${c.bg}">
@@ -4370,6 +4385,9 @@ function pkc(ci){
   selC=ci;
   document.querySelectorAll(".cpc").forEach((el,i)=>el.classList.toggle("sel",i===ci));
 }
+function toggleMaLongAbsent(){
+  document.getElementById("maea-longabs-tgl").classList.toggle("on");
+}
 
 async function svma(){
   if(eMA<0)return;
@@ -4378,8 +4396,9 @@ async function svma(){
   const k=document.getElementById("mak").value.trim().toUpperCase().slice(0,2);
   if(!name||!k){alert(tr("name_and_initials_required"));return;}
   const c=selC>=0?CLRS[selC]:{bg:m.bg,tc:m.tc};
+  const long_absent=document.getElementById("maea-longabs-tgl").classList.contains("on");
 
-  await sbUpd("ma",m.id,{name,k,bg:c.bg,tc:c.tc,sort_order:eMA});
+  await sbUpd("ma",m.id,{name,k,bg:c.bg,tc:c.tc,sort_order:eMA,long_absent});
   maRateSet(m.id, document.getElementById("mar").value.trim());
   await syncDown();
   cls("ov-ma");
