@@ -2109,33 +2109,42 @@ async function rgImport(){
     .map(l=>l.trim())
     .filter(l=>l!=="" && !/^(\|\s*:?-+:?\s*)+\|?$/.test(l));
 
-  let addedRg=0, addedAbr=0, skipped=0;
-  const rgMap={};
+  let addedRg=0, updatedRg=0, addedAbr=0, skipped=0;
+  const headers={};      // rgnr -> {datum,firma,rgnr,text,betrag,faelligkeit,bv_id}
+  const calcMap={};      // fallback-Rechnungen aus Stunden berechnet (kein Kopf vorhanden)
+  const blockByRgnr={};  // rgnr -> Sammelrechnungs-Block aus den Abrechnungszeilen
   const abrRows=[];
 
   for(const line of lines){
     const cols=rgSplitLine(line);
-    if(!cols || cols.length < 6){ 
-      skipped++; 
-      continue; 
-    }
+    if(!cols || cols.length < 5){ skipped++; continue; }
 
     const datum=rgParseDatum(cols[0]);
-    if(!datum){ 
-      skipped++; 
-      continue; 
+    if(!datum){ skipped++; continue; }
+
+    // Rechnungskopf-Zeile: Datum, Kundennr, Firma, Rgnr, Text, Betrag, [Zahlungsziel]
+    const isHeader = cols.length>=6 && /rechnung/i.test(cols[4]||"") && rgParseBetrag(cols[5])>0;
+
+    if(isHeader){
+      const rgnr=String(cols[3]||"").trim();
+      const firma=String(cols[2]||"").trim() || "Seith Energietechnik GmbH & Co. KG";
+      const text=String(cols[4]||"").trim();
+      const betrag=rgParseBetrag(cols[5]);
+      const faelligkeit=cols[6] ? rgParseDatum(cols[6]) : null;
+      if(!rgnr || !betrag){ skipped++; continue; }
+      headers[rgnr]={ rgnr, datum, firma, text, betrag, faelligkeit, bv_id: rgDetectBvId(firma,text) };
+      continue;
     }
 
+    // Abrechnungszeile: Datum, BV-Nr, Mitarbeiter, Stunden, Rgnr, Block
+    if(cols.length<6){ skipped++; continue; }
     const bv_nr=String(cols[1]||"").trim();
     const ma_name=String(cols[2]||"").trim();
     const stunden=rgParseBetrag(cols[3]);
     const rgnr=String(cols[4]||"").trim();
     const block=String(cols[5]||"").trim();
 
-    if(!bv_nr || !ma_name || !rgnr || !stunden){
-      skipped++;
-      continue;
-    }
+    if(!bv_nr || !ma_name || !rgnr || !stunden){ skipped++; continue; }
 
     const bv=BV.find(b=>String(b.nr||"").trim()===bv_nr);
     const bv_id=bv ? bv.id : null;
@@ -2153,38 +2162,64 @@ async function rgImport(){
     });
     addedAbr++;
 
-    const k = block ? rgNormBlock(block) : rgnr;
+    if(block) blockByRgnr[rgnr]=block;
 
-    if(!rgMap[k]){
-      rgMap[k]={
-        id: rgUid(),
-        datum,
-        firma: "Seith Energietechnik GmbH & Co. KG",
-        rgnr: block ? null : rgnr,
-        text: block || `Rechnung BV ${bv_nr}`,
-        betrag: 0,
-        bezahltAm: null,
-        bv_id: bv_id || null,
-        block: block || null
-      };
-      addedRg++;
-    }
-
-    rgMap[k].betrag += stunden * (ma_name==="Sayim Aslan" ? 37 : 35);
-
-    // wenn innerhalb derselben Sammelrechnung mehrere BVs vorkommen,
-    // dann keine einzelne BV-Zuordnung am Kopf behalten
-    if(rgMap[k].bv_id && bv_id && rgMap[k].bv_id !== bv_id){
-      rgMap[k].bv_id = null;
-    }
-
-    // für eine Sammelrechnung das neueste Datum merken
-    if(datum > rgMap[k].datum){
-      rgMap[k].datum = datum;
+    // Nur wenn für diese Rgnr KEIN echter Rechnungskopf vorliegt (weder in diesem
+    // Paste noch schon gespeichert), wird der Betrag hilfsweise aus den Stunden
+    // berechnet (alte Vorgehensweise). Sobald echte Kopfdaten da sind, gelten
+    // ausschließlich deren Betrag/Datum/Fälligkeit.
+    const existingReal = RG.find(r=>String(r.rgnr||"").trim()===rgnr);
+    if(!headers[rgnr] && !existingReal){
+      const k = block ? rgNormBlock(block) : rgnr;
+      if(!calcMap[k]){
+        calcMap[k]={
+          id: rgUid(), datum, firma: "Seith Energietechnik GmbH & Co. KG",
+          rgnr: block ? null : rgnr, text: block || `Rechnung BV ${bv_nr}`,
+          betrag: 0, bezahltAm: null, bv_id: bv_id || null,
+          block: block ? rgNormBlock(block) : null
+        };
+      }
+      calcMap[k].betrag += stunden * (ma_name==="Sayim Aslan" ? 37 : 35);
+      if(calcMap[k].bv_id && bv_id && calcMap[k].bv_id !== bv_id) calcMap[k].bv_id=null;
+      if(datum > calcMap[k].datum) calcMap[k].datum=datum;
     }
   }
 
-  const newRgRows=Object.values(rgMap);
+  // Sammelrechnungs-Block aus den Abrechnungszeilen auf die zugehörigen Kopfdaten übertragen
+  Object.keys(blockByRgnr).forEach(rgnr=>{
+    if(headers[rgnr]) headers[rgnr].block = rgNormBlock(blockByRgnr[rgnr]);
+  });
+
+  const newRgRows=[];
+  const updateRgRows=[];
+
+  Object.values(headers).forEach(h=>{
+    const existing=RG.find(r=>String(r.rgnr||"").trim()===h.rgnr);
+    if(existing){
+      updateRgRows.push({ id:existing.id, changes:{
+        datum:h.datum, firma:h.firma, text:h.text, betrag:h.betrag,
+        faelligkeit:h.faelligkeit||null, bv_id:h.bv_id||existing.bv_id||null,
+        block:h.block||existing.block||null
+      }});
+      updatedRg++;
+    } else {
+      newRgRows.push({
+        id:rgUid(), datum:h.datum, firma:h.firma, rgnr:h.rgnr, text:h.text,
+        betrag:h.betrag, bezahltAm:null, faelligkeit:h.faelligkeit||null,
+        bv_id:h.bv_id||null, block:h.block||null
+      });
+      addedRg++;
+    }
+  });
+
+  Object.values(calcMap).forEach(c=>{
+    newRgRows.push({
+      id:c.id, datum:c.datum, firma:c.firma, rgnr:c.rgnr, text:c.text,
+      betrag:Math.round(c.betrag*100)/100, bezahltAm:null,
+      bv_id:c.bv_id, block:c.block
+    });
+    addedRg++;
+  });
 
   syn("w",tr("sync_now"));
 
@@ -2194,6 +2229,17 @@ async function rgImport(){
       syn("e",tr("sync_error"));
       alert(tr("save_failed"));
       return;
+    }
+  }
+
+  if(updateRgRows.length){
+    for(const u of updateRgRows){
+      const resU=await sbUpd("rg",u.id,u.changes);
+      if(!resU){
+        syn("e",tr("sync_error"));
+        alert(tr("save_failed"));
+        return;
+      }
     }
   }
 
@@ -2210,7 +2256,7 @@ async function rgImport(){
   syn("",tr("sync_saved"));
 
   document.getElementById("rg-import-st").textContent =
-    `${addedRg} Rechnung(en), ${addedAbr} Abrechnungszeile(n) übernommen` +
+    `${addedRg} Rechnung(en) neu, ${updatedRg} aktualisiert, ${addedAbr} Abrechnungszeile(n) übernommen` +
     (skipped ? `, ${skipped} übersprungen` : "");
 
   document.getElementById("rg-paste").value="";
@@ -2295,9 +2341,13 @@ async function rgGroupPayAll(key, pay){
   rRech();
 }
 
+function rgFaellig(r){
+  if(r.faelligkeit){ const d=new Date(r.faelligkeit); d.setHours(0,0,0,0); return d; }
+  const d=new Date(r.datum); d.setDate(d.getDate()+14); d.setHours(0,0,0,0); return d;
+}
 function rgStatus(r){
   if(r.bezahltAm) return "bezahlt";
-  const ziel=new Date(r.datum); ziel.setDate(ziel.getDate()+14);
+  const ziel=rgFaellig(r);
   const today=new Date(); today.setHours(0,0,0,0);
   return today>ziel ? "ueberfaellig" : "offen";
 }
@@ -3228,8 +3278,8 @@ function checkInvoiceOverdue(){
     const key2=key+"_"+today;
     if(notified[key2])return;
     const sum=openRows.reduce((a,r)=>a+r.betrag,0);
-    const [datum,firma]=key.split("|");
-    const ziel=new Date(datum); ziel.setDate(ziel.getDate()+14);
+    const firma=openRows[0]?.firma || key.split("|")[1] || "";
+    const ziel=openRows.map(rgFaellig).sort((a,b)=>a-b)[0];
     const days=Math.round((new Date(today)-ziel)/86400000);
     sendNotify("Rechnung überfällig", `${firma}: ${rgFmtMoney(sum)} · seit ${days} Tag(en) überfällig`, "aslan-invoice-"+key);
     notified[key2]=true;
@@ -3804,9 +3854,9 @@ let unbilledSum=0;
   const deadlineRows=[];
   Object.keys(groups).forEach(key=>{
     const rows=groups[key];
-    const anyOpen=rows.some(r=>rgStatus(r)!=="bezahlt");
-    if(!anyOpen) return;
-    const sum=rows.filter(r=>rgStatus(r)!=="bezahlt").reduce((a,r)=>a+r.betrag,0);
+    const openRows=rows.filter(r=>rgStatus(r)!=="bezahlt");
+    if(!openRows.length) return;
+    const sum=openRows.reduce((a,r)=>a+r.betrag,0);
     let datum="", firma="";
 if(key.startsWith("block|")){
   firma = rows[0]?.firma || "";
@@ -3814,8 +3864,7 @@ if(key.startsWith("block|")){
 }else{
   [datum,firma]=key.split("|");
 }
-const ziel=new Date(datum); 
-ziel.setDate(ziel.getDate()+14);
+const ziel=openRows.map(rgFaellig).sort((a,b)=>a-b)[0];
     const days=Math.round((ziel-today)/86400000);
     deadlineRows.push({firma,datum,sum,days,isSammel:rows.length>1});
   });
