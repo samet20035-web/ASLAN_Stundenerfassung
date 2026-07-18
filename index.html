@@ -256,7 +256,8 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       <div class="stc" id="dc-invover"><div class="stn money" id="s-ru">0 €</div><div class="stl" data-i18n="dash_inv_over">Überfällig</div></div>
       <div class="stc" id="dc-invtotal"><div class="stn money" id="s-rt">0 €</div><div class="stl" data-i18n="dash_inv_total">Umsatz gesamt</div></div>
       <div class="stc" id="dc-invnext"><div class="stn" id="s-rf">–</div><div class="stl" data-i18n="dash_inv_next">Nächste Frist</div></div>
-      <div class="stc" id="dc-unbilled" style="background:#eaf2ff;border-color:#bcd6ff"><div class="stn money" id="s-ub" style="color:#2f6fed">0 €</div><div class="stl" data-i18n="dash_inv_unbilled">Noch nicht abgerechnet</div><div id="s-ubh" style="font-size:11px;color:#2f6fed;opacity:.8;margin-top:2px;font-weight:600">0 h</div></div>
+      <div class="stc" id="dc-unbilled" style="background:#eaf2ff;border-color:#bcd6ff"><div class="stn money" id="s-ub" style="color:#2f6fed">0 €</div><div class="stl" data-i18n="dash_inv_unbilled">Noch nicht abgerechnet</div></div>
+      <div class="stc" id="dc-unbilled-h" style="background:#0f2a5c;border-color:#0f2a5c"><div class="stn" id="s-ubh2" style="color:#fff">0 h</div><div class="stl" style="color:#cfe0ff">Offene Stunden</div></div>
     </div>
 
     <div id="dc-deadlines" style="padding:0 16px;margin-top:14px">
@@ -3842,10 +3843,11 @@ function dashToggles(){
 function saveDashToggles(t){ lsSet("dashToggles",t); applyDashToggles(); }
 function applyDashToggles(){
   const t=dashToggles();
-  const map={invopen:"dc-invopen",invover:"dc-invover",invtotal:"dc-invtotal",invnext:"dc-invnext",deadlines:"dc-deadlines",unbilled:"dc-unbilled"};
+  const map={invopen:"dc-invopen",invover:"dc-invover",invtotal:"dc-invtotal",invnext:"dc-invnext",deadlines:"dc-deadlines",unbilled:"dc-unbilled",unbilledH:"dc-unbilled-h"};
+  const tt=Object.assign({},t,{unbilledH:t.unbilled});
   Object.keys(map).forEach(k=>{
     const el=document.getElementById(map[k]);
-    if(el) el.style.display = t[k]===false ? "none" : "";
+    if(el) el.style.display = tt[k]===false ? "none" : "";
   });
 }
 function rgDashStats(){
@@ -3883,7 +3885,7 @@ let unbilledHours=0;
     }
   });
   const ubEl=document.getElementById("s-ub"); if(ubEl){ ubEl.textContent=rgFmtMoney(unbilledSum); }
-  const ubhEl=document.getElementById("s-ubh"); if(ubhEl){ ubhEl.textContent=`${unbilledHours.toFixed(1).replace(/\.0$/,"")} h`; }
+  const ubh2El=document.getElementById("s-ubh2"); if(ubh2El){ ubh2El.textContent=`${unbilledHours.toFixed(1).replace(/\.0$/,"")} h`; }
 
   // Überfällig-Kachel nur zeigen, wenn wirklich etwas überfällig ist
   const dcOver=document.getElementById("dc-invover");
