@@ -2863,20 +2863,49 @@ function rwaList(){
     return;
   }
 
-  c.innerHTML=`<div class="crd" style="margin:12px 16px">${
-    groups.map(g=>{
-      const bv=bvById(g.bv_id);
-      const sent=WA.has(g.key);
-      return `<div class="li">
-        <div class="tmcb ${sent?"on":""}" onclick="toggleWaSent('${g.key}')" style="margin-top:2px">${sent?"✓":""}</div>
-        <div class="lii" onclick="toggleWaSent('${g.key}')" style="cursor:pointer">
-          <div class="lid">${fd(g.datum)}</div>
-          <div class="lib">BV ${bv?.nr||"?"} · ${bv?.name||"—"}</div>
-          <div class="pills"><span class="pill" style="${sent?"":"opacity:.6"}">${sent?tr("wa_sent_label"):tr("wa_open_label")}</span></div>
-        </div>
-      </div>`;
-    }).join("")
-  }</div><div style="height:24px"></div>`;
+  const [curMon,curSun]=waWeekBounds(0);
+  const [lastMon,lastSun]=waWeekBounds(-1);
+
+  const bucketThis=[], bucketLast=[], bucketOlder=[];
+  groups.forEach(g=>{
+    if(g.datum>=curMon && g.datum<=curSun) bucketThis.push(g);
+    else if(g.datum>=lastMon && g.datum<=lastSun) bucketLast.push(g);
+    else bucketOlder.push(g);
+  });
+
+  function waRowHtml(g, colorBg, colorTxt){
+    const bv=bvById(g.bv_id);
+    const sent=WA.has(g.key);
+    return `<div class="li" style="${sent?"":`background:${colorBg}`}">
+      <div class="tmcb ${sent?"on":""}" onclick="toggleWaSent('${g.key}')" style="margin-top:2px">${sent?"✓":""}</div>
+      <div class="lii" onclick="toggleWaSent('${g.key}')" style="cursor:pointer">
+        <div class="lid">${fd(g.datum)}</div>
+        <div class="lib">BV ${bv?.nr||"?"} · ${bv?.name||"—"}</div>
+        <div class="pills"><span class="pill" style="${sent?"":`color:${colorTxt};border-color:${colorTxt};font-weight:700`}">${sent?tr("wa_sent_label"):tr("wa_open_label")}</span></div>
+      </div>
+    </div>`;
+  }
+
+  function waSectionHtml(title, list, colorBg, colorTxt){
+    if(!list.length) return "";
+    return `<div class="bvrubric" style="color:${colorTxt}">${title} (${list.length})</div>
+      <div class="crd" style="margin:0 16px 18px">${list.map(g=>waRowHtml(g,colorBg,colorTxt)).join("")}</div>`;
+  }
+
+  const html =
+    waSectionHtml(LANG==="tr"?"Bu hafta":"Diese Woche", bucketThis, "#fdf1e6", "#e67e22") +
+    waSectionHtml(LANG==="tr"?"Geçen hafta":"Letzte Woche", bucketLast, "#fbe4e0", "#c0392b") +
+    waSectionHtml(LANG==="tr"?"Daha eski":"Älter", bucketOlder, "#f6d1cb", "#a5281c");
+
+  c.innerHTML = html + `<div style="height:24px"></div>`;
+}
+function waWeekBounds(offsetWeeks){
+  const d=new Date();
+  const dow=d.getDay()||7;
+  d.setDate(d.getDate()-dow+1+offsetWeeks*7); // Montag dieser/letzter Woche
+  const mon=d.toISOString().slice(0,10);
+  const sun=new Date(d); sun.setDate(sun.getDate()+6);
+  return [mon, sun.toISOString().slice(0,10)];
 }
 async function toggleWaSent(key){
   const wasSent=WA.has(key);
@@ -4205,7 +4234,7 @@ function getFilteredGroups(){
   const fVon=document.getElementById("vfilter-von")?.value||"";
   const fBis=document.getElementById("vfilter-bis")?.value||"";
 
-  let groups=groupedEntries();
+  let groups=groupedEntries().slice().sort((a,b)=>b.datum.localeCompare(a.datum));
   if(fBv) groups=groups.filter(g=>g.bv_id===fBv);
   if(fMa) groups=groups.filter(g=>g.rows.some(r=>r.ma_id===fMa));
   if(fVon) groups=groups.filter(g=>g.datum>=fVon);
