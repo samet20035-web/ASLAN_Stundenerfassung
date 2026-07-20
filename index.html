@@ -5096,10 +5096,17 @@ function bxls(data,von,bis){
       const bv=bvById(e.bv_id);
       const ma=maById(e.ma_id);
       const stdVal=Number(e.stunden)||0;
-      r1.push([fd(e.datum),bv?.nr||"",ma?.name||"",stdVal,"","",e.beginn||"",(e.pause_min!=null?e.pause_min:""),e.ende||""]);
+      const dtVal=e.datum?new Date(e.datum+"T00:00:00"):"";
+      r1.push([dtVal,bv?.nr||"",ma?.name||"",stdVal,"","",e.beginn||"",(e.pause_min!=null?e.pause_min:""),e.ende||""]);
     });
-    const ws1=XLSX.utils.aoa_to_sheet(r1);
+    const ws1=XLSX.utils.aoa_to_sheet(r1,{cellDates:true});
     ws1["!cols"]=[{wch:12},{wch:12},{wch:22},{wch:10},{wch:2},{wch:2},{wch:10},{wch:12},{wch:10}];
+    for(let r=1;r<r1.length;r++){
+      const rowIdx=r+1; // Zeile 2 = erste Datenzeile
+      const aA=XLSX.utils.encode_cell({r:r,c:0}); if(ws1[aA])ws1[aA].z="dd\\.mm\\.yyyy";
+      const aB=XLSX.utils.encode_cell({r:r,c:1}); if(ws1[aB])ws1[aB].z="0";
+      const aD=XLSX.utils.encode_cell({r:r,c:3}); if(ws1[aD])ws1[aD].z="0.00";
+    }
     XLSX.utils.book_append_sheet(wb,ws1,"Seith_Stunden");
 
     const r2=[["BV-Nummer","Adresse / Beschreibung"]];
