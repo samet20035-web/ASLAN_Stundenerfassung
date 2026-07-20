@@ -5091,24 +5091,23 @@ function bxls(data,von,bis){
   try{
     const wb=XLSX.utils.book_new();
     const sorted=[...data].sort((a,b)=>a.datum.localeCompare(b.datum));
-    const r1=[["Datum","BV_NUMMER","Name Mitarbeiter","Stunden","","Anfang","Pause (Min)","Ende"]];
+    const r1=[["Datum","BV_NUMMER","Name Mitarbeiter","Stunden","","","Anfang","Pause (Min)","Ende"]];
     sorted.forEach(e=>{
       const bv=bvById(e.bv_id);
       const ma=maById(e.ma_id);
       const stdVal=Number(e.stunden)||0;
-      r1.push([fd(e.datum),bv?.nr||"",ma?.name||"",stdVal,"",e.beginn||"",(e.pause_min!=null?e.pause_min:""),e.ende||""]);
+      r1.push([fd(e.datum),bv?.nr||"",ma?.name||"",stdVal,"","",e.beginn||"",(e.pause_min!=null?e.pause_min:""),e.ende||""]);
     });
     const ws1=XLSX.utils.aoa_to_sheet(r1);
-    ws1["!cols"]=[{wch:12},{wch:12},{wch:22},{wch:10},{wch:2},{wch:10},{wch:12},{wch:10}];
+    ws1["!cols"]=[{wch:12},{wch:12},{wch:22},{wch:10},{wch:2},{wch:2},{wch:10},{wch:12},{wch:10}];
     XLSX.utils.book_append_sheet(wb,ws1,"Seith_Stunden");
 
-    const r2=[["BV-Nummer","Adresse / Beschreibung","Bauleiter"]];
+    const r2=[["BV-Nummer","Adresse / Beschreibung"]];
     [...BV].sort((a,b)=>a.nr.localeCompare(b.nr)).forEach(b=>{
-      const bl = blById(b.bl_id);
-      r2.push([b.nr, b.name, bl?.name || ""]);
+      r2.push([b.nr, b.name]);
     });
     const ws2=XLSX.utils.aoa_to_sheet(r2);
-    ws2["!cols"]=[{wch:12},{wch:45},{wch:25}];
+    ws2["!cols"]=[{wch:12},{wch:45}];
     XLSX.utils.book_append_sheet(wb,ws2,"Seith_BV-Adresse");
 
     const lbl=(von||bis)?`_${von||""}bis${bis||""}`:"_alle";
