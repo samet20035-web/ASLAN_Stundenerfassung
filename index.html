@@ -3321,7 +3321,7 @@ function getMissPerMa(){
     const d=new Date(today); d.setDate(d.getDate()-back);
     const dw=d.getDay();
     if(dw===0||dw===6) continue;
-    const ds=d.toISOString().split("T")[0];
+    const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
     MA.filter(m=>!m.archived && !m.long_absent).forEach(m=>{
       if(isMaAbsentOn(m.id,ds)) return;
       if(EN.some(e=>e.ma_id===m.id && e.datum===ds && Number(e.stunden)>0)) return;
