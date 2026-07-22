@@ -3317,7 +3317,7 @@ function rAbw(){
 function getMissPerMa(){
   const out=[];
   const today=new Date(); today.setHours(0,0,0,0);
-  for(let back=1;back<=2;back++){
+  for(let back=0;back<=2;back++){
     const d=new Date(today); d.setDate(d.getDate()-back);
     const dw=d.getDay();
     if(dw===0||dw===6) continue;
@@ -3325,7 +3325,7 @@ function getMissPerMa(){
     MA.filter(m=>!m.archived && !m.long_absent).forEach(m=>{
       if(isMaAbsentOn(m.id,ds)) return;
       if(EN.some(e=>e.ma_id===m.id && e.datum===ds && Number(e.stunden)>0)) return;
-      out.push({ma:m,ds});
+      out.push({ma:m,ds,isToday:back===0});
     });
   }
   return out;
@@ -3333,11 +3333,25 @@ function getMissPerMa(){
 function rwarnMa(){
   const s=document.getElementById("warn-ma");
   if(!s) return;
-  const m=getMissPerMa();
-  if(!m.length){ s.style.display="none"; return; }
+  const all=getMissPerMa();
+  const past=all.filter(x=>!x.isToday);
+  const todayMissing=all.filter(x=>x.isToday);
+  const todayDs=td();
+  const hasAnyEntryToday=EN.some(e=>e.datum===todayDs && Number(e.stunden)>0);
+
+  let html="";
+  if(past.length){
+    html+=`<div class="wb"><div class="wh"><span style="display:inline-flex">${ICON_WARN}</span><div class="wht">Fehlende Einträge (letzte 2 Tage)</div></div>
+    <div class="wbd">${past.map(x=>`<div class="wdi" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><div class="wdd"></div>${x.ma.name} – ${fd(x.ds)}</span><button class="wfb" style="margin:0;padding:5px 9px;font-size:11px" onclick="quickMarkAbsent('${x.ma.id}','${x.ds}')">als abwesend markieren</button></div>`).join("")}</div></div>`;
+  }
+  if(hasAnyEntryToday && todayMissing.length){
+    html+=`<div class="wb" style="border-color:var(--g);margin-top:${past.length?"9px":"0"}"><div class="wh" style="background:var(--g)"><span style="display:inline-flex">${ICON_WARN}</span><div class="wht">Heute noch fehlend</div></div>
+    <div class="wbd">${todayMissing.map(x=>`<div class="wdi" style="justify-content:space-between;border-bottom-color:rgba(31,110,82,.2)"><span style="display:flex;align-items:center;gap:8px"><div class="wdd" style="background:var(--g)"></div>${x.ma.name} – ${fd(x.ds)}</span><button class="wfb" style="margin:0;padding:5px 9px;font-size:11px;background:var(--g)" onclick="quickMarkAbsent('${x.ma.id}','${x.ds}')">als abwesend markieren</button></div>`).join("")}</div></div>`;
+  }
+
+  if(!html){ s.style.display="none"; s.innerHTML=""; return; }
   s.style.display="block";
-  s.innerHTML=`<div class="wb"><div class="wh"><span style="display:inline-flex">${ICON_WARN}</span><div class="wht">Fehlende Einträge (letzte 2 Tage)</div></div>
-    <div class="wbd">${m.map(x=>`<div class="wdi" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><div class="wdd"></div>${x.ma.name} – ${fd(x.ds)}</span><button class="wfb" style="margin:0;padding:5px 9px;font-size:11px" onclick="quickMarkAbsent('${x.ma.id}','${x.ds}')">als abwesend markieren</button></div>`).join("")}</div></div>`;
+  s.innerHTML=html;
 }
 async function quickMarkAbsent(maId,ds){
   syn("w",tr("sync_now"));
