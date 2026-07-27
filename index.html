@@ -310,6 +310,12 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       <div class="ar">›</div>
     </button>
 
+    <button class="ba" onclick="go('pg-misscal')">
+      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 3v3M16 3v3"/></svg></div>
+      <div><div class="at" data-i18n="home_misscal_title">Kalender & fehlende Einträge</div><div class="as" data-i18n="home_misscal_sub">Übersicht wer noch nicht erfasst wurde</div></div>
+      <div class="ar">›</div>
+    </button>
+
     <button class="ba" onclick="go('pg-verl')">
       <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div>
       <div><div class="at" data-i18n="home_entries_title">Einträge & Bearbeiten</div><div class="as" data-i18n="home_entries_sub">Alle gespeicherten Tage</div></div>
@@ -468,6 +474,24 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     <button class="kwb" onclick="woff++;rw()" data-i18n="next_week">Nächste ▶</button>
   </div>
   <div class="sc" id="wbody" style="padding-bottom:24px"></div>
+</div>
+
+<div class="pg" id="pg-misscal">
+  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="misscal_title">Kalender & fehlende Einträge</div><div class="hs" id="misscal-hs">—</div></div></div>
+  <div class="kwnav">
+    <button class="kwb" onclick="misscalNav(-1)" data-i18n="prev_week">◀ Vormonat</button>
+    <div style="font-size:16px;font-weight:700" id="misscal-l">—</div>
+    <button class="kwb" onclick="misscalNav(1)" data-i18n="next_week">Nächster ▶</button>
+  </div>
+  <div class="sc" id="misscal-body" style="padding-bottom:24px"></div>
+</div>
+
+<div class="ov" id="ov-missdetail" onclick="clov('ov-missdetail',event)">
+  <div class="sh" onclick="event.stopPropagation()">
+    <div class="shh"></div><div class="sht" id="missdetail-t" data-i18n="stat_day">Tag</div>
+    <div class="crd" id="missdetail-body" style="margin-bottom:14px"></div>
+    <button class="bto" onclick="cls('ov-missdetail')" data-i18n="stat_close">Schliessen</button>
+  </div>
 </div>
 
 <div class="pg" id="pg-verl">
@@ -1120,6 +1144,19 @@ const I18N = {
     home_add_sub: "Datum · Baustelle · Mitarbeiter",
     home_week_title: "Wochenübersicht",
     home_week_sub: "Stunden pro Mitarbeiter & BV",
+    home_misscal_title: "Kalender & fehlende Einträge",
+    home_misscal_sub: "Übersicht wer noch nicht erfasst wurde",
+    misscal_title: "Kalender & fehlende Einträge",
+    misscal_leg_weekend: "Wochenende",
+    misscal_leg_complete: "Alle erfasst",
+    misscal_leg_1: "1 fehlt",
+    misscal_leg_2: "2 fehlen",
+    misscal_leg_3: "3 fehlen",
+    misscal_leg_more: "4+ / niemand erfasst",
+    misscal_weekend_note: "Wochenende – keine Erfassung erforderlich",
+    misscal_no_active: "Keine aktiven Mitarbeiter an diesem Tag",
+    misscal_status_ok: "Erfasst",
+    misscal_status_missing: "Fehlt",
     home_entries_title: "Einträge & Bearbeiten",
     home_entries_sub: "Alle gespeicherten Tage",
     home_ma_title: "Mitarbeiter verwalten",
@@ -1532,6 +1569,19 @@ const I18N = {
     home_add_sub: "Tarih · Şantiye · Çalışan",
     home_week_title: "Haftalık özet",
     home_week_sub: "Çalışan ve şantiye bazında saatler",
+    home_misscal_title: "Takvim & eksik girişler",
+    home_misscal_sub: "Kimin henüz girmediğine genel bakış",
+    misscal_title: "Takvim & eksik girişler",
+    misscal_leg_weekend: "Hafta sonu",
+    misscal_leg_complete: "Hepsi girildi",
+    misscal_leg_1: "1 eksik",
+    misscal_leg_2: "2 eksik",
+    misscal_leg_3: "3 eksik",
+    misscal_leg_more: "4+ / hiç girilmedi",
+    misscal_weekend_note: "Hafta sonu – giriş gerekmiyor",
+    misscal_no_active: "Bu gün için aktif çalışan yok",
+    misscal_status_ok: "Girildi",
+    misscal_status_missing: "Eksik",
     home_entries_title: "Kayıtlar ve düzenleme",
     home_entries_sub: "Kaydedilmiş tüm günler",
     home_ma_title: "Çalışanları yönet",
@@ -1976,6 +2026,7 @@ function applyTranslations() {
 let BV=[], MA=[], EN=[], BL=[], AB=[], LV=[];
 let WA=new Set(), waFilterOpen=true; // Standardmäßig nur offene (noch nicht abgehakte) Rapporte anzeigen
 let statTab="ma", statScope="month", statPeriod="", calMonth="";
+let misscalMonth="";
 let sBV=null, cD="", eGroupKey="", eBV=null, eMA=-1, eBL=-1, selC=-1, woff=0;
 let pstack=["pg-home"];
 let toastT=null;
@@ -2803,6 +2854,7 @@ function go(id){
   if(id==="pg-abw")rAbw();
   if(id==="pg-bv-editor")rEditorBv();
   if(id==="pg-woche"){woff=0;rw();}
+  if(id==="pg-misscal"){misscalMonth=td().slice(0,7);rMissCal();}
   if(id==="pg-wa"){rwaList();syncDown();}
   if(id==="pg-stat"){statSetTab(statTab);syncDown();}
   if(id==="pg-rg"){rgFillBvSelect();rRech();syncDown();}
@@ -2825,6 +2877,7 @@ function bk(to){
   if(to==="pg-abw")rAbw();
   if(to==="pg-bv-editor")rEditorBv();
   if(to==="pg-woche")rw();
+  if(to==="pg-misscal")rMissCal();
   if(to==="pg-wa"){rwaList();syncDown();}
   if(to==="pg-stat"){statSetTab(statTab);syncDown();}
   if(to==="pg-editor")rEditor();
@@ -3139,6 +3192,95 @@ function openCalDay(ds){
     }).join("")+`<div class="li" style="background:var(--gl)"><div class="lii"><div class="lib">${tr("stat_total")}</div></div><div class="statrv">${fmtH(tot)}</div></div>`;
   }
   opov("ov-caldetail");
+}
+
+// ═══ KALENDER & FEHLENDE EINTRÄGE ═══
+function misscalNav(dir){
+  if(!misscalMonth) misscalMonth=td().slice(0,7);
+  const [y,m]=misscalMonth.split("-").map(Number);
+  const d=new Date(y,m-1+dir,1);
+  misscalMonth=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+  rMissCal();
+}
+function missActiveMaForDay(ds){
+  return MA.filter(m=>!m.archived && !m.long_absent && !isMaAbsentOn(m.id,ds));
+}
+function missColor(missing,total){
+  if(total<=0) return {bg:"var(--c)",bd:"var(--b)",tc:"var(--t)"};
+  if(missing<=0) return {bg:"var(--miss-ok-bg,#2d9d5c)",bd:"var(--miss-ok-bg,#2d9d5c)",tc:"#fff"};
+  const shades=[
+    {bg:"#fbdada",tc:"#7a1f1f"},
+    {bg:"#f4a3a3",tc:"#5c1414"},
+    {bg:"#ea6b6b",tc:"#fff"},
+    {bg:"#d63838",tc:"#fff"},
+    {bg:"#b31f1f",tc:"#fff"}
+  ];
+  const idx=Math.min(missing,shades.length)-1;
+  const s=shades[idx];
+  return {bg:s.bg,bd:s.bg,tc:s.tc};
+}
+function rMissCal(){
+  if(!misscalMonth) misscalMonth=td().slice(0,7);
+  const body=document.getElementById("misscal-body");
+  if(!body)return;
+  const [y,m]=misscalMonth.split("-").map(Number);
+  const mn=tr("month_"+String(m).padStart(2,"0"));
+  document.getElementById("misscal-hs").textContent=`${mn} ${y}`;
+  document.getElementById("misscal-l").textContent=`${tr("month_short_"+String(m).padStart(2,"0"))} ${y}`;
+
+  const first=new Date(y,m-1,1);
+  const startDow=(first.getDay()||7)-1; // Mo=0
+  const daysInMonth=new Date(y,m,0).getDate();
+  const dow=["Mo","Di","Mi","Do","Fr","Sa","So"];
+
+  let cells=dow.map(d=>`<div class="caldow">${d}</div>`).join("");
+  for(let i=0;i<startDow;i++) cells+=`<div class="calcell empty"></div>`;
+  for(let d=1;d<=daysInMonth;d++){
+    const ds=`${misscalMonth}-${String(d).padStart(2,"0")}`;
+    const dow2=new Date(ds+"T00:00:00").getDay(); // 0=So,6=Sa
+    if(dow2===0||dow2===6){
+      cells+=`<div class="calcell" style="background:var(--gl);border-color:var(--b);color:var(--s);opacity:.6" onclick="openMissDay('${ds}')">${d}</div>`;
+      continue;
+    }
+    const active=missActiveMaForDay(ds);
+    const enteredIds=new Set(EN.filter(e=>e.datum===ds).map(e=>e.ma_id));
+    const missing=active.filter(m=>!enteredIds.has(m.id)).length;
+    const c=missColor(missing,active.length);
+    cells+=`<div class="calcell" style="background:${c.bg};border-color:${c.bd};color:${c.tc}" onclick="openMissDay('${ds}')">${d}</div>`;
+  }
+
+  body.innerHTML=`<div class="calgrid">${cells}</div>
+    <div class="callegend" style="flex-wrap:wrap;gap:10px 14px">
+      <span style="display:flex;align-items:center;gap:5px"><div class="calcell" style="background:var(--gl);opacity:.6"></div>${tr("misscal_leg_weekend")}</span>
+      <span style="display:flex;align-items:center;gap:5px"><div class="calcell" style="background:#2d9d5c"></div>${tr("misscal_leg_complete")}</span>
+      <span style="display:flex;align-items:center;gap:5px"><div class="calcell" style="background:#fbdada"></div>${tr("misscal_leg_1")}</span>
+      <span style="display:flex;align-items:center;gap:5px"><div class="calcell" style="background:#f4a3a3"></div>${tr("misscal_leg_2")}</span>
+      <span style="display:flex;align-items:center;gap:5px"><div class="calcell" style="background:#ea6b6b"></div>${tr("misscal_leg_3")}</span>
+      <span style="display:flex;align-items:center;gap:5px"><div class="calcell" style="background:#b31f1f"></div>${tr("misscal_leg_more")}</span>
+    </div><div style="height:24px"></div>`;
+}
+function openMissDay(ds){
+  const dow2=new Date(ds+"T00:00:00").getDay();
+  document.getElementById("missdetail-t").textContent=fd(ds);
+  const c=document.getElementById("missdetail-body");
+  if(dow2===0||dow2===6){
+    c.innerHTML=`<div class="statrow" style="text-align:center;color:var(--s)">${tr("misscal_weekend_note")}</div>`;
+    opov("ov-missdetail");
+    return;
+  }
+  const active=missActiveMaForDay(ds);
+  const enteredIds=new Set(EN.filter(e=>e.datum===ds).map(e=>e.ma_id));
+  if(!active.length){
+    c.innerHTML=`<div class="statrow" style="text-align:center;color:var(--s)">${tr("misscal_no_active")}</div>`;
+  }else{
+    c.innerHTML=active.map(m=>{
+      const ok=enteredIds.has(m.id);
+      return `<div class="li"><div class="lii">
+        <div class="lib">${m.name}</div>
+      </div><div class="statrv" style="color:${ok?"#2d9d5c":"#c62828"};font-weight:700">${ok?tr("misscal_status_ok"):tr("misscal_status_missing")}</div></div>`;
+    }).join("");
+  }
+  opov("ov-missdetail");
 }
 
 function rblSel() {
