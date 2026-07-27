@@ -1148,15 +1148,19 @@ const I18N = {
     home_misscal_sub: "Übersicht wer noch nicht erfasst wurde",
     misscal_title: "Kalender & fehlende Einträge",
     misscal_leg_weekend: "Wochenende",
+    misscal_leg_future: "Zukünftig",
     misscal_leg_complete: "Alle erfasst",
+    misscal_leg_rapport: "Rapport fehlt",
     misscal_leg_1: "1 fehlt",
     misscal_leg_2: "2 fehlen",
     misscal_leg_3: "3 fehlen",
     misscal_leg_more: "4+ / niemand erfasst",
     misscal_weekend_note: "Wochenende – keine Erfassung erforderlich",
+    misscal_future_note: "Zukünftiger Tag – noch keine Erfassung erforderlich",
     misscal_no_active: "Keine aktiven Mitarbeiter an diesem Tag",
     misscal_status_ok: "Erfasst",
     misscal_status_missing: "Fehlt",
+    misscal_status_rapport_missing: "Rapport fehlt",
     home_entries_title: "Einträge & Bearbeiten",
     home_entries_sub: "Alle gespeicherten Tage",
     home_ma_title: "Mitarbeiter verwalten",
@@ -1573,15 +1577,19 @@ const I18N = {
     home_misscal_sub: "Kimin henüz girmediğine genel bakış",
     misscal_title: "Takvim & eksik girişler",
     misscal_leg_weekend: "Hafta sonu",
+    misscal_leg_future: "Gelecek",
     misscal_leg_complete: "Hepsi girildi",
+    misscal_leg_rapport: "Rapor eksik",
     misscal_leg_1: "1 eksik",
     misscal_leg_2: "2 eksik",
     misscal_leg_3: "3 eksik",
     misscal_leg_more: "4+ / hiç girilmedi",
     misscal_weekend_note: "Hafta sonu – giriş gerekmiyor",
+    misscal_future_note: "Gelecek tarih – henüz giriş gerekmiyor",
     misscal_no_active: "Bu gün için aktif çalışan yok",
     misscal_status_ok: "Girildi",
     misscal_status_missing: "Eksik",
+    misscal_status_rapport_missing: "Rapor eksik",
     home_entries_title: "Kayıtlar ve düzenleme",
     home_entries_sub: "Kaydedilmiş tüm günler",
     home_ma_title: "Çalışanları yönet",
@@ -3205,9 +3213,24 @@ function misscalNav(dir){
 function missActiveMaForDay(ds){
   return MA.filter(m=>!m.archived && !m.long_absent && !isMaAbsentOn(m.id,ds));
 }
-function missColor(missing,total){
+function missGroupsUnconfirmed(ds){
+  const bvIds=new Set(EN.filter(e=>e.datum===ds).map(e=>e.bv_id));
+  for(const bvId of bvIds){ if(!WA.has(`${ds}_${bvId}`)) return true; }
+  return false;
+}
+function missEmployeeStatus(m,ds){
+  const rows=EN.filter(e=>e.datum===ds && e.ma_id===m.id);
+  if(!rows.length) return {label:tr("misscal_status_missing"),color:"#c62828"};
+  const unconfirmed=rows.some(e=>!WA.has(`${ds}_${e.bv_id}`));
+  if(unconfirmed) return {label:tr("misscal_status_rapport_missing"),color:"#c9932a"};
+  return {label:tr("misscal_status_ok"),color:"#2d9d5c"};
+}
+function missColor(missing,total,rapportOpen){
   if(total<=0) return {bg:"var(--c)",bd:"var(--b)",tc:"var(--t)"};
-  if(missing<=0) return {bg:"var(--miss-ok-bg,#2d9d5c)",bd:"var(--miss-ok-bg,#2d9d5c)",tc:"#fff"};
+  if(missing<=0){
+    if(rapportOpen) return {bg:"#f6d861",bd:"#f6d861",tc:"#5c4a06"};
+    return {bg:"var(--miss-ok-bg,#2d9d5c)",bd:"var(--miss-ok-bg,#2d9d5c)",tc:"#fff"};
+  }
   const shades=[
     {bg:"#fbdada",tc:"#7a1f1f"},
     {bg:"#f4a3a3",tc:"#5c1414"},
@@ -3232,12 +3255,17 @@ function rMissCal(){
   const startDow=(first.getDay()||7)-1; // Mo=0
   const daysInMonth=new Date(y,m,0).getDate();
   const dow=["Mo","Di","Mi","Do","Fr","Sa","So"];
+  const today=td();
 
   let cells=dow.map(d=>`<div class="caldow">${d}</div>`).join("");
   for(let i=0;i<startDow;i++) cells+=`<div class="calcell empty"></div>`;
   for(let d=1;d<=daysInMonth;d++){
     const ds=`${misscalMonth}-${String(d).padStart(2,"0")}`;
     const dow2=new Date(ds+"T00:00:00").getDay(); // 0=So,6=Sa
+    if(ds>today){
+      cells+=`<div class="calcell" style="background:var(--c);border-color:var(--b);color:var(--s);opacity:.35" onclick="openMissDay('${ds}')">${d}</div>`;
+      continue;
+    }
     if(dow2===0||dow2===6){
       cells+=`<div class="calcell" style="background:var(--gl);border-color:var(--b);color:var(--s);opacity:.6" onclick="openMissDay('${ds}')">${d}</div>`;
       continue;
@@ -3245,14 +3273,17 @@ function rMissCal(){
     const active=missActiveMaForDay(ds);
     const enteredIds=new Set(EN.filter(e=>e.datum===ds).map(e=>e.ma_id));
     const missing=active.filter(m=>!enteredIds.has(m.id)).length;
-    const c=missColor(missing,active.length);
+    const rapportOpen=missGroupsUnconfirmed(ds);
+    const c=missColor(missing,active.length,rapportOpen);
     cells+=`<div class="calcell" style="background:${c.bg};border-color:${c.bd};color:${c.tc}" onclick="openMissDay('${ds}')">${d}</div>`;
   }
 
   body.innerHTML=`<div class="calgrid">${cells}</div>
     <div class="callegend" style="flex-wrap:wrap;gap:10px 14px">
+      <span style="display:flex;align-items:center;gap:5px"><div class="calcell" style="background:var(--c);opacity:.35"></div>${tr("misscal_leg_future")}</span>
       <span style="display:flex;align-items:center;gap:5px"><div class="calcell" style="background:var(--gl);opacity:.6"></div>${tr("misscal_leg_weekend")}</span>
       <span style="display:flex;align-items:center;gap:5px"><div class="calcell" style="background:#2d9d5c"></div>${tr("misscal_leg_complete")}</span>
+      <span style="display:flex;align-items:center;gap:5px"><div class="calcell" style="background:#f6d861"></div>${tr("misscal_leg_rapport")}</span>
       <span style="display:flex;align-items:center;gap:5px"><div class="calcell" style="background:#fbdada"></div>${tr("misscal_leg_1")}</span>
       <span style="display:flex;align-items:center;gap:5px"><div class="calcell" style="background:#f4a3a3"></div>${tr("misscal_leg_2")}</span>
       <span style="display:flex;align-items:center;gap:5px"><div class="calcell" style="background:#ea6b6b"></div>${tr("misscal_leg_3")}</span>
@@ -3260,24 +3291,29 @@ function rMissCal(){
     </div><div style="height:24px"></div>`;
 }
 function openMissDay(ds){
+  const today=td();
   const dow2=new Date(ds+"T00:00:00").getDay();
   document.getElementById("missdetail-t").textContent=fd(ds);
   const c=document.getElementById("missdetail-body");
+  if(ds>today){
+    c.innerHTML=`<div class="statrow" style="text-align:center;color:var(--s)">${tr("misscal_future_note")}</div>`;
+    opov("ov-missdetail");
+    return;
+  }
   if(dow2===0||dow2===6){
     c.innerHTML=`<div class="statrow" style="text-align:center;color:var(--s)">${tr("misscal_weekend_note")}</div>`;
     opov("ov-missdetail");
     return;
   }
   const active=missActiveMaForDay(ds);
-  const enteredIds=new Set(EN.filter(e=>e.datum===ds).map(e=>e.ma_id));
   if(!active.length){
     c.innerHTML=`<div class="statrow" style="text-align:center;color:var(--s)">${tr("misscal_no_active")}</div>`;
   }else{
     c.innerHTML=active.map(m=>{
-      const ok=enteredIds.has(m.id);
+      const st=missEmployeeStatus(m,ds);
       return `<div class="li"><div class="lii">
         <div class="lib">${m.name}</div>
-      </div><div class="statrv" style="color:${ok?"#2d9d5c":"#c62828"};font-weight:700">${ok?tr("misscal_status_ok"):tr("misscal_status_missing")}</div></div>`;
+      </div><div class="statrv" style="color:${st.color};font-weight:700">${st.label}</div></div>`;
     }).join("");
   }
   opov("ov-missdetail");
