@@ -3288,7 +3288,53 @@ function rMissCal(){
       <span style="display:flex;align-items:center;gap:5px"><div class="calcell" style="background:#f4a3a3"></div>${tr("misscal_leg_2")}</span>
       <span style="display:flex;align-items:center;gap:5px"><div class="calcell" style="background:#ea6b6b"></div>${tr("misscal_leg_3")}</span>
       <span style="display:flex;align-items:center;gap:5px"><div class="calcell" style="background:#b31f1f"></div>${tr("misscal_leg_more")}</span>
-    </div><div style="height:24px"></div>`;
+    </div>
+    ${rMissRapportListHtml(y,m)}
+    <div style="height:24px"></div>`;
+}
+function fdShort(ds){
+  const [yy,mm,dd]=ds.split("-");
+  return `${dd}.${mm}.${yy.slice(2)}`;
+}
+function rMissRapportListHtml(y,m){
+  const today=td();
+  const daysInMonth=new Date(y,m,0).getDate();
+  const rows=[];
+  for(let d=1;d<=daysInMonth;d++){
+    const ds=`${misscalMonth}-${String(d).padStart(2,"0")}`;
+    if(ds>today) continue;
+    const dow2=new Date(ds+"T00:00:00").getDay();
+    if(dow2===0||dow2===6) continue;
+    const dayEntries=EN.filter(e=>e.datum===ds);
+    if(!dayEntries.length) continue;
+    const byBv={};
+    dayEntries.forEach(e=>{
+      if(!byBv[e.bv_id]) byBv[e.bv_id]=[];
+      const ma=maById(e.ma_id);
+      if(ma) byBv[e.bv_id].push(ma.name);
+    });
+    Object.keys(byBv).forEach(bvId=>{
+      if(!WA.has(`${ds}_${bvId}`)){
+        const bv=bvById(bvId);
+        rows.push({ds,bv,names:byBv[bvId]});
+      }
+    });
+  }
+  if(!rows.length) return "";
+  rows.sort((a,b)=>a.ds<b.ds?-1:a.ds>b.ds?1:0);
+  const items=rows.map(r=>{
+    const nr=r.bv?r.bv.nr:"?";
+    const addr=r.bv?(r.bv.name||"—"):"—";
+    return `<div class="li" style="cursor:pointer" onclick="openMissDay('${r.ds}')">
+      <div class="lii">
+        <div class="lib">${fdShort(r.ds)} · BV ${nr}</div>
+        <div class="lid">${addr}${r.names.length?` — ${r.names.join(", ")}`:""}</div>
+      </div>
+      <div class="ar" style="align-self:center">›</div>
+    </div>`;
+  }).join("");
+  return `<div class="lbl" style="margin-top:20px">${tr("misscal_leg_rapport")}</div>
+    <div class="crd" style="margin:0 16px">${items}</div>`;
 }
 function openMissDay(ds){
   const today=td();
