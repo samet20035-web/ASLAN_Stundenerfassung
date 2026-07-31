@@ -54,6 +54,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg
 .sp.on{background:var(--g);}
 .sp.dn{background:var(--gm);}
 .lbl{font-size:12px;font-weight:700;color:var(--s);text-transform:uppercase;letter-spacing:.07em;margin:18px 18px 8px;}
+.grp{font-size:13px;font-weight:800;color:var(--g);text-transform:uppercase;letter-spacing:.08em;margin:26px 16px 10px;padding-bottom:6px;border-bottom:2px solid var(--g);display:flex;align-items:center;}
+.grp:first-of-type{margin-top:14px;}
 input[type=date],input[type=text],input[type=number],input[type=password],input[type=time],input[type=month],select{width:100%;padding:13px 14px;font-size:16px;background:var(--c);color:var(--t);border:.5px solid var(--bs);border-radius:var(--rs);-webkit-appearance:none;outline:none;font-family:inherit;}
 input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-calendar-picker-indicator,input[type=month]::-webkit-calendar-picker-indicator{filter:var(--icon-filter,none);}
 @media(prefers-color-scheme:dark){input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-calendar-picker-indicator,input[type=month]::-webkit-calendar-picker-indicator{filter:invert(1) brightness(1.6);}}
@@ -298,33 +300,10 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       <div class="crd" id="miss-info-list" style="border-color:var(--danger-border);"></div>
     </div>
 
+    <div class="grp" data-i18n="grp_erfassen">Erfassen</div>
     <button class="ba p" onclick="go('pg-datum')">
       <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
       <div><div class="at" data-i18n="home_add_title">Stunden eintragen</div><div class="as" data-i18n="home_add_sub">Datum · Baustelle · Mitarbeiter</div></div>
-      <div class="ar">›</div>
-    </button>
-
-    <button class="ba" onclick="go('pg-woche')">
-      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 20V10M12 20V4M18 20v-6"/></svg></div>
-      <div><div class="at" data-i18n="home_week_title">Wochenübersicht</div><div class="as" data-i18n="home_week_sub">Stunden pro Mitarbeiter & BV</div></div>
-      <div class="ar">›</div>
-    </button>
-
-    <button class="ba" onclick="go('pg-misscal')">
-      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 3v3M16 3v3"/></svg></div>
-      <div><div class="at" data-i18n="home_misscal_title">Kalender & fehlende Einträge</div><div class="as" data-i18n="home_misscal_sub">Übersicht wer noch nicht erfasst wurde</div></div>
-      <div class="ar">›</div>
-    </button>
-
-    <button class="ba" onclick="go('pg-verl')">
-      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div>
-      <div><div class="at" data-i18n="home_entries_title">Einträge & Bearbeiten</div><div class="as" data-i18n="home_entries_sub">Alle gespeicherten Tage</div></div>
-      <div class="ar">›</div>
-    </button>
-
-    <button class="ba" onclick="go('pg-bvm')">
-      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v17M12 21V9a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v12M4 21h16M7 7h1M7 11h1M7 15h1"/></svg></div>
-      <div><div class="at" data-i18n="home_bv_title">Baustellen verwalten</div><div class="as" data-i18n="home_bv_sub">BV-Adressen bearbeiten</div></div>
       <div class="ar">›</div>
     </button>
 
@@ -334,33 +313,36 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       <div class="ar">›</div>
     </button>
 
-    <button class="ba" onclick="go('pg-rep-date')">
-      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></div>
-      <div><div class="at" data-i18n="report_link">Tagesbericht</div><div class="as" data-i18n="report_sub">Rapport-Daten zum Kopieren</div></div>
-      <div class="ar">›</div>
-    </button>
-
-    <button class="ba" onclick="go('pg-stat')">
+    <div class="grp" data-i18n="grp_uebersicht">Übersicht & Auswertung</div>
+    <button class="ba" onclick="go('pg-uebersicht')">
       <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-9"/><path d="M15 6h6v6"/></svg></div>
-      <div><div class="at" data-i18n="stat_link">Auswertung</div><div class="as" data-i18n="stat_sub">Statistik pro Mitarbeiter, Baustelle & Kalender</div></div>
+      <div><div class="at" data-i18n="grp_uebersicht_title">Übersicht & Auswertung</div><div class="as" data-i18n="grp_uebersicht_sub">Woche, Kalender, Einträge, Auswertung, Tagesbericht</div></div>
       <div class="ar">›</div>
     </button>
 
+    <div class="grp" data-i18n="grp_verwaltung">Verwaltung</div>
+    <button class="ba" onclick="go('pg-bvm')">
+      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v17M12 21V9a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v12M4 21h16M7 7h1M7 11h1M7 15h1"/></svg></div>
+      <div><div class="at" data-i18n="home_bv_title">Baustellen verwalten</div><div class="as" data-i18n="home_bv_sub">BV-Adressen bearbeiten</div></div>
+      <div class="ar">›</div>
+    </button>
+
+    <div class="grp" data-i18n="grp_abrechnung">Abrechnung & Versand</div>
     <button class="ba" onclick="go('pg-wa')">
       <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 10-10"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
       <div><div class="at" data-i18n="wa_link">WhatsApp-Versand</div><div class="as" data-i18n="wa_sub">Rapporte an Frau Peters abhaken</div></div>
       <div class="ar">›</div>
     </button>
 
-    <button class="ba" onclick="go('pg-exp')">
-      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg></div>
-      <div><div class="at" data-i18n="home_export_title">Export als Excel</div><div class="as" data-i18n="home_export_sub">Seith_Stunden + BV-Adressen</div></div>
-      <div class="ar">›</div>
-    </button>
-
     <button class="ba" onclick="go('pg-rg')">
       <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14l2 2 4-4"/><path d="M5 3h9l5 5v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/></svg></div>
       <div><div class="at" data-i18n="rg_link">Rechnungen</div><div class="as" data-i18n="rg_link_sub">Übersicht &amp; Zahlungsziel</div></div>
+      <div class="ar">›</div>
+    </button>
+
+    <button class="ba" onclick="go('pg-exp')">
+      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg></div>
+      <div><div class="at" data-i18n="home_export_title">Export als Excel</div><div class="as" data-i18n="home_export_sub">Seith_Stunden + BV-Adressen</div></div>
       <div class="ar">›</div>
     </button>
 
@@ -466,8 +448,43 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
   </div></div>
 </div>
 
+<div class="pg" id="pg-uebersicht">
+  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="grp_uebersicht_title">Übersicht & Auswertung</div><div class="hs" data-i18n="grp_uebersicht_sub">Woche, Kalender, Einträge, Auswertung, Tagesbericht</div></div></div>
+  <div class="sc">
+    <button class="ba" style="margin-top:10px" onclick="go('pg-woche')">
+      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 20V10M12 20V4M18 20v-6"/></svg></div>
+      <div><div class="at" data-i18n="home_week_title">Wochenübersicht</div><div class="as" data-i18n="home_week_sub">Stunden pro Mitarbeiter & BV</div></div>
+      <div class="ar">›</div>
+    </button>
+
+    <button class="ba" onclick="go('pg-misscal')">
+      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 3v3M16 3v3"/></svg></div>
+      <div><div class="at" data-i18n="home_misscal_title">Kalender & fehlende Einträge</div><div class="as" data-i18n="home_misscal_sub">Übersicht wer noch nicht erfasst wurde</div></div>
+      <div class="ar">›</div>
+    </button>
+
+    <button class="ba" onclick="go('pg-verl')">
+      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div>
+      <div><div class="at" data-i18n="home_entries_title">Einträge & Bearbeiten</div><div class="as" data-i18n="home_entries_sub">Alle gespeicherten Tage</div></div>
+      <div class="ar">›</div>
+    </button>
+
+    <button class="ba" onclick="go('pg-stat')">
+      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-9"/><path d="M15 6h6v6"/></svg></div>
+      <div><div class="at" data-i18n="stat_link">Auswertung</div><div class="as" data-i18n="stat_sub">Statistik pro Mitarbeiter, Baustelle & Kalender</div></div>
+      <div class="ar">›</div>
+    </button>
+
+    <button class="ba" style="margin-bottom:16px" onclick="go('pg-rep-date')">
+      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></div>
+      <div><div class="at" data-i18n="report_link">Tagesbericht</div><div class="as" data-i18n="report_sub">Rapport-Daten zum Kopieren</div></div>
+      <div class="ar">›</div>
+    </button>
+  </div>
+</div>
+
 <div class="pg" id="pg-woche">
-  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="week_title">Wochenübersicht</div><div class="hs" id="whs">—</div></div></div>
+  <div class="hdr"><button class="bck" onclick="bk('pg-uebersicht')">‹</button><div><div class="ht" data-i18n="week_title">Wochenübersicht</div><div class="hs" id="whs">—</div></div></div>
   <div class="kwnav">
     <button class="kwb" onclick="woff--;rw()" data-i18n="prev_week">◀ Vorwoche</button>
     <div style="font-size:16px;font-weight:700" id="kwl">KW —</div>
@@ -477,7 +494,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 </div>
 
 <div class="pg" id="pg-misscal">
-  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="misscal_title">Kalender & fehlende Einträge</div><div class="hs" id="misscal-hs">—</div></div></div>
+  <div class="hdr"><button class="bck" onclick="bk('pg-uebersicht')">‹</button><div><div class="ht" data-i18n="misscal_title">Kalender & fehlende Einträge</div><div class="hs" id="misscal-hs">—</div></div></div>
   <div class="kwnav">
     <button class="kwb" onclick="misscalNav(-1)" data-i18n="prev_week">◀ Vormonat</button>
     <div style="font-size:16px;font-weight:700" id="misscal-l">—</div>
@@ -495,7 +512,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 </div>
 
 <div class="pg" id="pg-verl">
-  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="entries_title">Einträge</div></div>
+  <div class="hdr"><button class="bck" onclick="bk('pg-uebersicht')">‹</button><div><div class="ht" data-i18n="entries_title">Einträge</div></div>
     <button onclick="toggleBulkMode()" id="bulk-toggle-btn" style="margin-left:auto;padding:7px 11px;background:transparent;border:.5px solid var(--bs);border-radius:var(--rs);color:var(--t);font-size:13px;font-weight:700;cursor:pointer" data-i18n="bulk_select_btn">Auswählen</button>
     <button id="del-all-btn" onclick="cDA()" style="margin-left:8px;padding:7px 11px;background:transparent;border:.5px solid var(--danger-border);border-radius:var(--rs);color:var(--danger-txt);font-size:13px;font-weight:700;cursor:pointer">Alle löschen</button>
   </div>
@@ -592,7 +609,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 </div>
 
 <div class="pg" id="pg-bv-editor">
-  <div class="hdr"><button class="bck" onclick="bk('pg-editor')">‹</button><div><div class="ht" data-i18n="editor_bv_list">Baustellen</div><div class="hs" data-i18n="bvm_manage_settings">Verwalten & Einstellungen</div></div></div>
+  <div class="hdr"><button class="bck" onclick="bk('pg-bvm')">‹</button><div><div class="ht" data-i18n="editor_bv_list">Baustellen</div><div class="hs" data-i18n="bvm_manage_settings">Verwalten & Einstellungen</div></div></div>
   <div class="sc">
     <div class="lbl" data-i18n="editor_bv_list" style="margin-top:12px">Baustellen</div>
     <div class="crd" id="edbvl" style="margin-bottom:16px"></div>
@@ -617,12 +634,18 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     </div>
     <div class="lbl" data-i18n="all_bv">Alle Baustellen</div>
     <div class="crd" id="bvml" style="margin-bottom:16px"></div>
+
+    <button class="ba" onclick="go('pg-bv-editor')" style="margin-bottom:16px">
+      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 9 6v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21V12h6v9"/></svg></div>
+      <div><div class="at" data-i18n="editor_bv_list">Sätze, Budget & Archiv</div><div class="as" data-i18n="editor_bvm_menu_sub">Sätze, Budget, Archivieren, Warnungen</div></div>
+      <div class="ar">›</div>
+    </button>
   </div>
 </div>
 
 <div class="pg" id="pg-rep-date">
   <div class="hdr">
-    <button class="bck" onclick="bk('pg-home')">‹</button>
+    <button class="bck" onclick="bk('pg-uebersicht')">‹</button>
     <div>
         <div class="ht" data-i18n="report_title">Tagesbericht</div>
         <div class="hs" data-i18n="report_pick_date">Datum wählen</div>
@@ -672,7 +695,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 
 
 <div class="pg" id="pg-stat">
-  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="stat_title">Auswertung</div><div class="hs" id="stat-hs">—</div></div></div>
+  <div class="hdr"><button class="bck" onclick="bk('pg-uebersicht')">‹</button><div><div class="ht" data-i18n="stat_title">Auswertung</div><div class="hs" id="stat-hs">—</div></div></div>
   <div class="stattabs">
     <button class="stattab" id="stt-ma" onclick="statSetTab('ma')" data-i18n="stat_tab_ma">Mitarbeiter</button>
     <button class="stattab" id="stt-bv" onclick="statSetTab('bv')" data-i18n="stat_tab_bv">Baustellen</button>
@@ -758,12 +781,6 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     <button class="ba" onclick="go('pg-bl')" style="margin-bottom:10px">
       <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-3-3.87M13 3.13a4 4 0 0 1 0 7.75"/><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM1 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg></div>
       <div><div class="at" data-i18n="home_bl_title">Bauleiter verwalten</div><div class="as" data-i18n="home_bl_sub">Zuweisung für Baustellen</div></div>
-      <div class="ar">›</div>
-    </button>
-
-    <button class="ba" onclick="go('pg-bv-editor')" style="margin-bottom:16px">
-      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 9 6v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21V12h6v9"/></svg></div>
-      <div><div class="at" data-i18n="home_bv_title">Baustellen verwalten</div><div class="as" data-i18n="editor_bvm_menu_sub">Sätze, Budget, Archivieren, Warnungen</div></div>
       <div class="ar">›</div>
     </button>
 
@@ -1163,6 +1180,12 @@ const I18N = {
     misscal_status_rapport_missing: "Rapport fehlt",
     home_entries_title: "Einträge & Bearbeiten",
     home_entries_sub: "Alle gespeicherten Tage",
+    grp_erfassen: "Erfassen",
+    grp_uebersicht: "Übersicht & Auswertung",
+    grp_uebersicht_title: "Übersicht & Auswertung",
+    grp_uebersicht_sub: "Woche, Kalender, Einträge, Auswertung, Tagesbericht",
+    grp_verwaltung: "Verwaltung",
+    grp_abrechnung: "Abrechnung & Versand",
     home_ma_title: "Mitarbeiter verwalten",
     home_ma_sub: "Namen ändern, neu anlegen",
     home_bl_title: "Bauleiter verwalten",
@@ -1592,6 +1615,12 @@ const I18N = {
     misscal_status_rapport_missing: "Rapor eksik",
     home_entries_title: "Kayıtlar ve düzenleme",
     home_entries_sub: "Kaydedilmiş tüm günler",
+    grp_erfassen: "Giriş yap",
+    grp_uebersicht: "Genel bakış & Değerlendirme",
+    grp_uebersicht_title: "Genel bakış & Değerlendirme",
+    grp_uebersicht_sub: "Hafta, takvim, kayıtlar, değerlendirme, günlük rapor",
+    grp_verwaltung: "Yönetim",
+    grp_abrechnung: "Faturalama & Gönderim",
     home_ma_title: "Çalışanları yönet",
     home_ma_sub: "İsim değiştir, yeni ekle",
     home_bl_title: "Şantiye Şefleri",
