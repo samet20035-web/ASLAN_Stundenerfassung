@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -229,6 +230,28 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 .pbar{height:7px;border-radius:4px;background:var(--bg);overflow:hidden;margin-top:8px;border:.5px solid var(--b);}
 .pbar>div{height:100%;background:var(--g);}
 .pbar.over>div{background:#c0392b;}
+
+/* --- Auswertung: Mitarbeiter & Baustellen Karten --- */
+.statlist{padding:12px 16px 4px;display:flex;flex-direction:column;gap:10px;}
+.statcard{background:var(--c);border-radius:var(--r);padding:14px 15px 13px;border:.5px solid var(--b);box-shadow:0 1px 4px rgba(10,12,14,.05);position:relative;}
+.statrank{position:absolute;top:12px;right:13px;font-size:10.5px;font-weight:800;color:var(--s);background:var(--bg);padding:3px 9px 3px 8px;border-radius:20px;display:flex;align-items:center;gap:3px;}
+.statrank.r1{background:linear-gradient(135deg,#ffe1a8,#f7b955);color:#7a4a00;}
+.statrank.r2{background:linear-gradient(135deg,#e7e9eb,#c3c8cc);color:#3c4045;}
+.statrank.r3{background:linear-gradient(135deg,#f0c6a2,#d99a68);color:#5a3418;}
+.statcard .statrh{gap:12px;padding-right:44px;}
+.statcard .av{width:44px;height:44px;font-size:14px;box-shadow:0 2px 6px rgba(10,12,14,.14);}
+.statcard .statrn{font-size:15.5px;line-height:1.25;}
+.statcard .statrv{font-size:17px;}
+.statcard .statrsub{margin-top:3px;}
+.statmini{height:6px;border-radius:4px;background:var(--bg);overflow:hidden;margin-top:11px;border:.5px solid var(--b);}
+.statmini>div{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--gm),var(--g));}
+.bvchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.bvchip{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;background:var(--gl);color:var(--gd);white-space:nowrap;}
+.bvicon{width:42px;height:42px;border-radius:12px;background:var(--gl);color:var(--gd);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.statbadge{font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:20px;letter-spacing:.2px;display:inline-block;margin-top:9px;}
+.statbadge.ok{background:var(--gl);color:var(--gd);}
+.statbadge.over{background:rgba(192,57,43,.13);color:#c0392b;}
+.statcard .pbar{margin-top:9px;}
 .calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;padding:12px 16px;}
 .caldow{text-align:center;font-size:11px;font-weight:700;color:var(--s);padding-bottom:2px;}
 .calcell{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer;border:.5px solid var(--b);background:var(--c);color:var(--t);}
@@ -3162,20 +3185,30 @@ function rStatMa(){
   const list=MA.filter(m=>byMa[m.id]).sort((a,b)=>byMa[b.id].h-byMa[a.id].h);
   if(!list.length){ body.innerHTML=`<div class="emp"><div class="eic">${ICON_EMPTY}</div>${tr("stat_no_hours")}</div>`; return; }
 
-  body.innerHTML=`<div class="crd" style="margin:12px 16px">${
-    list.map(m=>{
+  const maxH=byMa[list[0].id].h||1;
+  const rankBadge=(i)=> i===0?`<div class="statrank r1">🥇</div>`
+                       : i===1?`<div class="statrank r2">🥈</div>`
+                       : i===2?`<div class="statrank r3">🥉</div>`
+                       : `<div class="statrank">#${i+1}</div>`;
+
+  body.innerHTML=`<div class="statlist">${
+    list.map((m,i)=>{
       const s=byMa[m.id];
-      const bvLine=Object.entries(s.bv).sort((a,b)=>b[1]-a[1]).map(([bid,h])=>{
+      const bvChips=Object.entries(s.bv).sort((a,b)=>b[1]-a[1]).map(([bid,h])=>{
         const bv=bvById(bid);
-        return `BV ${bv?.nr||"?"}: ${fmtH(h)}`;
-      }).join(" · ");
-      return `<div class="statrow">
+        return `<div class="bvchip">BV ${bv?.nr||"?"} · ${fmtH(h)}</div>`;
+      }).join("");
+      const pct=Math.max(4,Math.round(s.h/maxH*100));
+      return `<div class="statcard">
+        ${rankBadge(i)}
         <div class="statrh">
           <div class="av" style="background:${m.bg||"#eee"};color:${m.tc||"#333"}">${m.k||"?"}</div>
           <div class="statrn">${m.name}</div>
           <div class="statrv">${fmtH(s.h)}</div>
         </div>
-        <div class="statrsub">${s.days.size} ${s.days.size===1?tr("stat_workday"):tr("stat_workdays")} · ${bvLine}</div>
+        <div class="statrsub">${s.days.size} ${s.days.size===1?tr("stat_workday"):tr("stat_workdays")}</div>
+        <div class="statmini"><div style="width:${pct}%"></div></div>
+        <div class="bvchips">${bvChips}</div>
       </div>`;
     }).join("")
   }</div><div style="height:24px"></div>`;
@@ -3195,19 +3228,27 @@ function rStatBv(){
 
   const list=Object.keys(byBv).map(id=>({bv:bvById(id),id,...byBv[id]})).sort((a,b)=>b.h-a.h);
 
-  body.innerHTML=`<div class="crd" style="margin:12px 16px">${
-    list.map(x=>{
+  const rankBadge=(i)=> i===0?`<div class="statrank r1">🥇</div>`
+                       : i===1?`<div class="statrank r2">🥈</div>`
+                       : i===2?`<div class="statrank r3">🥉</div>`
+                       : `<div class="statrank">#${i+1}</div>`;
+  const BV_ICON=`<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/><path d="M9 9h.01M15 9h.01M9 13h.01M15 13h.01"/></svg>`;
+
+  body.innerHTML=`<div class="statlist">${
+    list.map((x,i)=>{
       const bv=x.bv;
       const budget=bv?.budget_h;
       const pct = budget ? Math.min(100,Math.round(x.h/Number(budget)*100)) : null;
       const over = budget && x.h>Number(budget);
-      return `<div class="statrow">
+      return `<div class="statcard">
+        ${rankBadge(i)}
         <div class="statrh">
+          <div class="bvicon">${BV_ICON}</div>
           <div class="statrn">BV ${bv?.nr||"?"} · ${bv?.name||"—"}</div>
           <div class="statrv">${fmtH(x.h)}</div>
         </div>
-		<div class="statrsub">${x.days.size} ${x.days.size===1?tr("stat_day"):tr("stat_days")}</div>        
-		${budget?`<div class="pbar ${over?"over":""}"><div style="width:${pct}%"></div></div><div class="statrsub" style="margin-top:4px">${tr("stat_of_target",{ist:fmtH(x.h),soll:fmtH(Number(budget))})}${over?" · "+tr("stat_over_budget"):""}</div>`:""}
+        <div class="statrsub">${x.days.size} ${x.days.size===1?tr("stat_day"):tr("stat_days")}</div>
+        ${budget?`<div class="pbar ${over?"over":""}"><div style="width:${pct}%"></div></div><div class="statbadge ${over?"over":"ok"}">${over?"⚠ "+tr("stat_over_budget"):"✓ "+tr("stat_of_target",{ist:fmtH(x.h),soll:fmtH(Number(budget))})}</div>`:""}
       </div>`;
     }).join("")
   }</div><div style="height:24px"></div>`;
