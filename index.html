@@ -252,6 +252,30 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 .statbadge.ok{background:var(--gl);color:var(--gd);}
 .statbadge.over{background:rgba(192,57,43,.13);color:#c0392b;}
 .statcard .pbar{margin-top:9px;}
+
+/* --- Einträge Liste: Karten --- */
+.entrycard{background:var(--c);border-radius:var(--r);padding:13px 14px;border:.5px solid var(--b);box-shadow:0 1px 4px rgba(10,12,14,.05);display:flex;align-items:flex-start;gap:10px;}
+.entrytop{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.entrydate{font-size:11.5px;font-weight:800;color:var(--s);text-transform:uppercase;letter-spacing:.03em;}
+.entrytot{font-size:13.5px;font-weight:800;color:var(--gd);background:var(--gl);padding:3px 10px;border-radius:20px;flex-shrink:0;}
+.entrybv{font-size:15.5px;font-weight:700;margin-top:4px;}
+.pill2{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:4px 10px 4px 7px;border-radius:100px;background:var(--bg);color:var(--t);border:.5px solid var(--b);}
+.pilld{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.eb2{width:38px;height:38px;border-radius:11px;border:.5px solid var(--bs);background:var(--c);color:var(--gd);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;margin-top:1px;}
+.eb2:active{background:var(--gl);}
+
+/* --- Eintrag bearbeiten: Zeilen-Karten --- */
+.edtotal{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;color:var(--gd);background:var(--gl);padding:4px 11px;border-radius:20px;margin:-4px 0 12px;}
+.edrow{background:var(--bg);border-radius:12px;border:.5px solid var(--b);padding:12px;margin-bottom:10px;}
+.edrowhead{display:flex;align-items:center;gap:9px;margin-bottom:11px;}
+.edravatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;}
+.edrowhead select{flex:1;min-width:0;padding:9px 8px;font-size:15px;font-weight:700;border-radius:8px;border:.5px solid var(--bs);background:var(--c);color:var(--t);}
+.edrowdel{width:36px;height:36px;border-radius:9px;border:.5px solid var(--bs);background:var(--c);color:#c0392b;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;}
+.edrowtimes{display:flex;align-items:flex-end;gap:8px;}
+.edtf{flex:1;min-width:0;}
+.edtf label{display:block;font-size:11px;font-weight:700;color:var(--s);margin-bottom:4px;}
+.edtf input{width:100%;padding:9px 8px;font-size:15px;border-radius:8px;border:.5px solid var(--bs);background:var(--c);color:var(--t);}
+.edrowfoot{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:9px;}
 .calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;padding:12px 16px;}
 .caldow{text-align:center;font-size:11px;font-weight:700;color:var(--s);padding-bottom:2px;}
 .calcell{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer;border:.5px solid var(--b);background:var(--c);color:var(--t);}
@@ -4656,24 +4680,28 @@ function rverl(){
     return;
   }
 
-  c.innerHTML=bar+`<div class="crd" style="margin:12px 16px">${
+  c.innerHTML=bar+`<div class="statlist">${
     groups.map(g=>{
       const bv=bvById(g.bv_id);
+      const tot=g.rows.reduce((a,r)=>a+(Number(r.stunden)||0),0);
       const pills=g.rows.map(r=>{
         const ma=maById(r.ma_id);
         const hLbl = (r.stunden===null||r.stunden===undefined||r.stunden==="") ? "offen" : `${r.stunden}h`;
-        return `<span class="pill">${ma?.name?.split(" ")[0]||"?"}: ${hLbl}</span>`;
+        return `<span class="pill2"><span class="pilld" style="background:${ma?.bg||"#ccc"}"></span>${ma?.name?.split(" ")[0]||"?"} · ${hLbl}</span>`;
       }).join("");
       const checked=bulkSel.has(g.key);
 
-      return `<div class="li">
+      return `<div class="entrycard">
         ${bulkMode?`<div class="tmcb ${checked?"on":""}" onclick="toggleBulkSel('${g.key}')" style="margin-top:2px">${checked?"✓":""}</div>`:""}
-        <div class="lii" ${bulkMode?`onclick="toggleBulkSel('${g.key}')" style="cursor:pointer"`:""}>
-          <div class="lid">${fd(g.datum)}</div>
-          <div class="lib">BV ${bv?.nr||"?"} · ${bv?.name||"—"}</div>
-          <div class="pills">${pills||`<span class="pill" style="opacity:.5">${LANG==="tr"?"Saat yok":"Keine Stunden"}</span>`}</div>
+        <div class="lii" style="flex:1;min-width:0" ${bulkMode?`onclick="toggleBulkSel('${g.key}')" style="cursor:pointer;flex:1;min-width:0"`:""}>
+          <div class="entrytop">
+            <div class="entrydate">${fd(g.datum)}</div>
+            <div class="entrytot">${fmtH(tot)}</div>
+          </div>
+          <div class="entrybv">BV ${bv?.nr||"?"} · ${bv?.name||"—"}</div>
+          <div class="pills">${pills||`<span class="pill2" style="opacity:.6">${LANG==="tr"?"Saat yok":"Keine Stunden"}</span>`}</div>
         </div>
-        ${bulkMode?"":`<button class="eb" onclick="oped('${g.key}')">${ICON_EDIT}</button>`}
+        ${bulkMode?"":`<button class="eb2" onclick="oped('${g.key}')">${ICON_EDIT}</button>`}
       </div>`;
     }).join("")
   }</div><div style="height:24px"></div>`;
@@ -4745,31 +4773,35 @@ function edMoveChanged(){
 }
 
 function rEdRows(){
+  const tot=edRows.reduce((a,r)=>a+(Number(r.stunden)||0),0);
+  const totBadge=`<div class="edtotal">Σ ${fmtH(tot)}</div>`;
+
   const rowsHtml=edRows.map((r,i)=>{
+    const ma=maById(r.ma_id);
     const opts=MA.map(m=>`<option value="${m.id}" ${m.id===r.ma_id?"selected":""}>${m.name}</option>`).join("");
-    return `<div class="mr" style="flex-direction:column;align-items:stretch;padding:12px 0;border-bottom:.5px solid var(--b);gap:8px">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="flex-shrink:0"><div class="lbl" style="margin:0 0 4px">${tr("edrow_employee")}</div>
-        <select id="ed-ma-${i}" onchange="edRowMaChange(${i})" style="width:100%;min-width:0;padding:9px 8px;font-size:15px;font-weight:700;border-radius:8px;border:.5px solid var(--bs);background:var(--c);color:var(--t)">${opts}</select></div>
-        <button class="eb" onclick="edRemoveRow(${i})" title="${tr("delete_entry")}" style="margin-top:20px">${ICON_TRASH}</button>
+    return `<div class="edrow">
+      <div class="edrowhead">
+        <div class="edravatar" style="background:${ma?.bg||"#eee"};color:${ma?.tc||"#333"}">${ma?.k||"?"}</div>
+        <select id="ed-ma-${i}" onchange="edRowMaChange(${i})">${opts}</select>
+        <button class="edrowdel" onclick="edRemoveRow(${i})" title="${tr("delete_entry")}">${ICON_TRASH}</button>
       </div>
-      <div style="display:flex;align-items:flex-end;gap:8px">
-        <div style="flex:1;min-width:0"><div class="lbl" style="margin:0 0 4px">${tr("edrow_start")}</div>
-        <input type="text" id="ed-start-${i}" value="${r.beginn||""}" placeholder="07:00" inputmode="numeric" oninput="edRowTimeChange(${i})" style="width:100%;padding:9px 8px;font-size:15px;border-radius:8px;border:.5px solid var(--bs);background:var(--c);color:var(--t)"></div>
-        <div style="flex:1;min-width:0"><div class="lbl" style="margin:0 0 4px">${tr("edrow_end")}</div>
-        <input type="text" id="ed-end-${i}" value="${r.ende||""}" placeholder="16:00" inputmode="numeric" oninput="edRowTimeChange(${i})" style="width:100%;padding:9px 8px;font-size:15px;border-radius:8px;border:.5px solid var(--bs);background:var(--c);color:var(--t)"></div>
-        <div style="flex:1;min-width:0"><div class="lbl" style="margin:0 0 4px">${tr("edrow_pause")}</div>
-        <input type="number" id="ed-pause-${i}" value="${r.pause_min||0}" min="0" max="180" step="5" inputmode="numeric" oninput="edRowTimeChange(${i})" style="width:100%;padding:9px 8px;font-size:15px;border-radius:8px;border:.5px solid var(--bs);background:var(--c);color:var(--t)"></div>
+      <div class="edrowtimes">
+        <div class="edtf"><label>${tr("edrow_start")}</label>
+        <input type="text" id="ed-start-${i}" value="${r.beginn||""}" placeholder="07:00" inputmode="numeric" oninput="edRowTimeChange(${i})"></div>
+        <div class="edtf"><label>${tr("edrow_end")}</label>
+        <input type="text" id="ed-end-${i}" value="${r.ende||""}" placeholder="16:00" inputmode="numeric" oninput="edRowTimeChange(${i})"></div>
+        <div class="edtf"><label>${tr("edrow_pause")}</label>
+        <input type="number" id="ed-pause-${i}" value="${r.pause_min||0}" min="0" max="180" step="5" inputmode="numeric" oninput="edRowTimeChange(${i})"></div>
       </div>
-      <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px">
+      <div class="edrowfoot">
         <div style="font-size:12px;color:var(--s)" id="ed-calc-note-${i}"></div>
         <input type="number" class="hi" id="ed-h-${i}" value="${r.stunden===null||r.stunden===undefined?"":r.stunden}" min="0" max="24" step="0.25" inputmode="decimal" oninput="edRowHoursTouched(${i})">
         <div class="hu">h</div>
       </div>
     </div>`;
   }).join("");
-  document.getElementById("ema").innerHTML = rowsHtml +
-    `<button class="bto" onclick="edAddRow()" style="margin-top:10px" data-i18n="editor_add_row">Mitarbeiter hinzufügen</button>`;
+  document.getElementById("ema").innerHTML = totBadge + rowsHtml +
+    `<button class="bto" onclick="edAddRow()" style="margin-top:2px" data-i18n="editor_add_row">Mitarbeiter hinzufügen</button>`;
 }
 function edRowTimeChange(i){
   const sEl=document.getElementById("ed-start-"+i), eEl=document.getElementById("ed-end-"+i), pEl=document.getElementById("ed-pause-"+i);
