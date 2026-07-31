@@ -368,6 +368,10 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
   <div class="hdr"><button class="bck" onclick="bk('pg-datum')">‹</button><div><div class="ht" data-i18n="step2_title">Schritt 2 – Baustelle</div><div class="hs" id="bvsub">—</div></div></div>
   <div class="stp"><div class="sp dn"></div><div class="sp on"></div><div class="sp"></div></div>
   <div class="sc">
+    <button type="button" class="bvb lager-btn" style="width:100%;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--gl);border:1.5px dashed var(--g);" onclick="pkLager()">
+      <span style="font-size:20px;line-height:1">📦</span>
+      <span style="font-size:15px;font-weight:800;color:var(--gd)" data-i18n="lager_btn">Lager (kein Bauvorhaben)</span>
+    </button>
     <div class="nbv">
       <div style="font-size:13px;font-weight:700;color:var(--gd);text-transform:uppercase;letter-spacing:.06em" data-i18n="new_bv">Neue Baustelle</div>
       <div class="nbv-grid">
@@ -1210,6 +1214,7 @@ const I18N = {
     to_bv_btn: "Zur Baustelle →",
 
     step2_title: "Schritt 2 – Baustelle",
+    lager_btn: "Lager (kein Bauvorhaben)",
     new_bv: "Neue Baustelle",
     bv_nr: "BV-Nr.",
     bv_nr_invalid: "Hinweis: Diese BV-Nummer entspricht nicht dem Schema (5-stellig, beginnt mit 64, 65 oder 66).",
@@ -1645,6 +1650,7 @@ const I18N = {
     to_bv_btn: "Şantiyeye git →",
 
     step2_title: "Adım 2 – Şantiye",
+    lager_btn: "Depo (şantiye değil)",
     new_bv: "Yeni şantiye",
     bv_nr: "Şantiye No.",
     bv_nr_invalid: "Not: Bu BV numarası standart şemaya uymuyor (5 haneli, 64, 65 veya 66 ile başlar).",
@@ -2941,7 +2947,23 @@ function gkw(ds){
 function bvById(id){ return BV.find(b=>b.id===id); }
 function maById(id){ return MA.find(m=>m.id===id); }
 function blById(id){ return BL.find(b=>b.id===id); }
-function validBVNr(nr){ return /^6[456]\d{3}$/.test(String(nr||"").trim()); }
+function validBVNr(nr){
+  const v=String(nr||"").trim().toUpperCase();
+  if(v==="LAGER") return true;
+  return /^6[456]\d{3}$/.test(v);
+}
+
+async function pkLager(){
+  let lg=BV.find(b=>String(b.nr||"").trim().toUpperCase()==="LAGER");
+  if(!lg){
+    syn("w", tr("sync_now"));
+    await sbIns("bv",[{nr:"LAGER", name:"Lager", bl_id:null}]);
+    await syncDown();
+    syn("", tr("sync_ok"));
+    lg=BV.find(b=>String(b.nr||"").trim().toUpperCase()==="LAGER");
+  }
+  if(lg) pkBV(lg.id);
+}
 function bvNrBadge(nr){ return validBVNr(nr) ? "" : ` <span title="${tr("bv_nr_invalid_short")}" style="color:var(--danger-txt);font-weight:bold;display:inline-flex;vertical-align:middle">${ICON_WARN}</span>`; }
 
 function groupedEntries(){
@@ -3844,7 +3866,10 @@ function bvTile(b){
     <div class="bvnr">BV ${b.nr}${bvNrBadge(b.nr)}</div><div class="bvnm">${b.name}</div></div>`;
 }
 function rbvg(){
-  const all=[...BV].filter(b=>!b.archived).sort((a,b)=>a.nr.localeCompare(b.nr));
+  const lagerBtn=document.querySelector(".lager-btn");
+  if(lagerBtn) lagerBtn.classList.toggle("sl", !!(sBV && String(sBV.nr||"").trim().toUpperCase()==="LAGER"));
+
+  const all=[...BV].filter(b=>!b.archived && String(b.nr||"").trim().toUpperCase()!=="LAGER").sort((a,b)=>a.nr.localeCompare(b.nr));
   const favIds=new Set(getFavBvIds());
   const favs=all.filter(b=>favIds.has(b.id));
 
