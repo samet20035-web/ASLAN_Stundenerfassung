@@ -3107,16 +3107,34 @@ function rStat(){
   if(sumEl){
     if(statTab==="cal"){ sumEl.innerHTML=""; }
     else{
-      const rows=statEntriesInPeriod();
-      const days=Object.keys(byDay);
-      const avgMa = days.length ? (days.reduce((a,d)=>a+byDay[d].ma.size,0)/days.length) : 0;
-      const avgVerdienstTag = days.length ? (days.reduce((a,d)=>a+byDay[d].verdienst,0)/days.length) : 0;
-      const totalVerdienst = days.reduce((a,d)=>a+byDay[d].verdienst,0);
-      const weeks=new Set(days.map(d=>{ const dt=new Date(d+"T00:00:00"); return dt.getFullYear()+"-"+gkw(d); }));
-      const avgVerdienstWoche = weeks.size ? (totalVerdienst/weeks.size) : 0;
-      sumEl.innerHTML=`<div class="sts" style="padding:0 16px 4px">
-        <div class="stc"><div class="stn">${avgMa.toFixed(1)}</div><div class="stl">${tr("stat_avg_ma_day")}</div></div>
-      </div>`;
+      const rows = statEntriesInPeriod();
+
+const byDay = {};
+rows.forEach(e => {
+  if (!byDay[e.datum]) byDay[e.datum] = { ma: new Set(), verdienst: 0 };
+  byDay[e.datum].ma.add(e.ma_id);
+  byDay[e.datum].verdienst += (Number(e.stunden) || 0) * maRateForDate(e.ma_id, e.datum);
+});
+
+const days = Object.keys(byDay);
+const avgMa = days.length
+  ? (days.reduce((a, d) => a + byDay[d].ma.size, 0) / days.length)
+  : 0;
+
+const totalVerdienst = days.reduce((a, d) => a + byDay[d].verdienst, 0);
+const avgVerdienstTag = days.length ? (totalVerdienst / days.length) : 0;
+
+const weeks = new Set(
+  days.map(d => {
+    const dt = new Date(d + "T00:00:00");
+    return dt.getFullYear() + "-" + gkw(d);
+  })
+);
+const avgVerdienstWoche = weeks.size ? (totalVerdienst / weeks.size) : 0;
+
+sumEl.innerHTML = `<div class="sts" style="padding:0 16px 4px">
+  <div class="stc"><div class="stn">${avgMa.toFixed(1)}</div><div class="stl">${tr("stat_avg_ma_day")}</div></div>
+</div>`;
     }
   }
   if(statTab==="ma") rStatMa();
