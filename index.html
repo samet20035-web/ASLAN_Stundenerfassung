@@ -816,6 +816,15 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 <div class="pg" id="pg-editor">
   <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="editor_title">Editor-Modus</div><div class="hs" data-i18n="editor_sub">Baustellen-Einstellungen</div></div></div>
   <div class="sc">
+    <div class="crd" style="margin:0 0 16px">
+      <div style="padding:14px 16px">
+        <div class="toggle-row">
+          <div class="lbl2" data-i18n="editor_warn_off_global">Warnung "Bauleiter fehlt" für alle Baustellen deaktivieren</div>
+          <button class="tgl" id="gtgl-warnoff" onclick="toggleGlobalWarnOff()"></button>
+        </div>
+        <div style="font-size:11px;color:var(--s);opacity:.75;margin-top:8px" data-i18n="editor_warn_off_global_hint">Gilt geräteübergreifend für alle Nutzer. Einzelne Baustellen können weiterhin über "Sätze, Budget & Archiv" separat behandelt werden.</div>
+      </div>
+    </div>
     <button class="ba" onclick="go('pg-ma')" style="margin-bottom:10px">
       <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
       <div><div class="at" data-i18n="home_ma_title">Mitarbeiter verwalten</div><div class="as" data-i18n="home_ma_sub">Namen ändern, neu anlegen</div></div>
@@ -1301,6 +1310,8 @@ const I18N = {
     editor_bv_edit: "bearbeiten",
     editor_warn_off: "Warnung \"Fehlende Angaben\" für diese Baustelle deaktivieren",
     editor_warn_is_off: "Warnung deaktiviert",
+    editor_warn_off_global: "Warnung \"Bauleiter fehlt\" für alle Baustellen deaktivieren",
+    editor_warn_off_global_hint: "Gilt geräteübergreifend für alle Nutzer. Einzelne Baustellen können weiterhin über \"Sätze, Budget & Archiv\" separat behandelt werden.",
     editor_bv_delete: "Baustelle löschen",
     editor_bv_in_use: "Diese Baustelle hat bereits Einträge und kann nicht gelöscht werden.",
     editor_bv_delete_title: "Baustelle löschen",
@@ -1737,6 +1748,8 @@ const I18N = {
     editor_bv_edit: "düzenle",
     editor_warn_off: "Bu şantiye için \"Eksik Bilgiler\" uyarısını kapat",
     editor_warn_is_off: "Uyarı kapalı",
+    editor_warn_off_global: "Tüm şantiyeler için \"Şantiye şefi eksik\" uyarısını kapat",
+    editor_warn_off_global_hint: "Tüm kullanıcılar ve cihazlar için geçerlidir. Tek tek şantiyeler \"Fiyatlar, Bütçe & Arşiv\" altında ayrıca yönetilebilir.",
     editor_bv_delete: "Şantiyeyi sil",
     editor_bv_in_use: "Bu şantiyenin kayıtları var, silinemez.",
     editor_bv_delete_title: "Şantiyeyi sil",
@@ -2113,6 +2126,8 @@ function applyTranslations() {
 
 // ═══ STATE ═══
 let BV=[], MA=[], EN=[], BL=[], AB=[], LV=[];
+let SETTINGS=lsGet("settings",{});
+let GLOBAL_WARN_OFF = SETTINGS["global_warn_off"]==="1";
 let WA=new Set(), waFilterOpen=true; // Standardmäßig nur offene (noch nicht abgehakte) Rapporte anzeigen
 let statTab="ma", statScope="month", statPeriod="", calMonth="";
 let misscalMonth="";
@@ -2871,7 +2886,7 @@ async function syncDown(first=false){
   syn("w",tr("sync_now"));
   await seedIfEmpty();
 
-const [rbv,rma,ren,rbl,rws,rrg,rabr,rab,rlv]=await Promise.all([
+const [rbv,rma,ren,rbl,rws,rrg,rabr,rab,rlv,rst]=await Promise.all([
   sbSel("bv","&order=nr.asc"),
   sbSel("ma","&order=sort_order.asc"),
   sbSel("en","&order=datum.asc"),
@@ -2880,7 +2895,8 @@ const [rbv,rma,ren,rbl,rws,rrg,rabr,rab,rlv]=await Promise.all([
   sbSel("rg","&order=datum.desc"),
   sbSel("abr","&order=datum.desc"),
   sbSel("absences","&order=datum.desc"),
-  sbSel("leave_periods","&order=start_date.desc")
+  sbSel("leave_periods","&order=start_date.desc"),
+  sbSel("settings","")
 ]);
 
   if(rbv) BV=rbv;
@@ -2892,6 +2908,11 @@ const [rbv,rma,ren,rbl,rws,rrg,rabr,rab,rlv]=await Promise.all([
   if(rabr) ABR=rabr;
   if(rab) AB=rab;
   if(rlv) LV=rlv;
+  if(rst){
+    SETTINGS={};
+    rst.forEach(r=>{ SETTINGS[r.key]=r.value; });
+    GLOBAL_WARN_OFF = SETTINGS["global_warn_off"]==="1";
+  }
 
   lsSet("bv",BV);
   lsSet("ma",MA);
@@ -2902,11 +2923,13 @@ const [rbv,rma,ren,rbl,rws,rrg,rabr,rab,rlv]=await Promise.all([
   lsSet("abr",ABR);
   lsSet("ab",AB);
   lsSet("lv",LV);
+  lsSet("settings",SETTINGS);
 
   ustats();
   rwarn();rwarnMa();
   rmissing();
   rblSel();
+  initEditorSettingsUI();
   if(document.getElementById("pg-abw")?.classList.contains("on")) rAbw();
   if(document.getElementById("pg-bv-editor")?.classList.contains("on")) rEditorBv();
 
@@ -3512,7 +3535,7 @@ function rmissing() {
   const list = document.getElementById("miss-info-list");
   if(!container || !list) return;
 
-  const missing = BV.filter(b => !b.warn_disabled && (!b.name || b.name === "—" || b.name.trim() === "" || !b.bl_id || !validBVNr(b.nr)));
+  const missing = GLOBAL_WARN_OFF ? [] : BV.filter(b => !b.warn_disabled && (!b.name || b.name === "—" || b.name.trim() === "" || !b.bl_id || !validBVNr(b.nr)));
   
   if (missing.length === 0) {
     container.style.display = "none";
@@ -5152,6 +5175,29 @@ function applyRgManualVisibility(){
 }
 function rEditor(){
   initDashTogglesUI();
+  initEditorSettingsUI();
+}
+function initEditorSettingsUI(){
+  document.getElementById("gtgl-warnoff")?.classList.toggle("on", !!GLOBAL_WARN_OFF);
+}
+async function toggleGlobalWarnOff(){
+  GLOBAL_WARN_OFF = !GLOBAL_WARN_OFF;
+  document.getElementById("gtgl-warnoff")?.classList.toggle("on", GLOBAL_WARN_OFF);
+  syn("w",tr("sync_now"));
+  const res = await sbIns("settings", [{ key:"global_warn_off", value: GLOBAL_WARN_OFF?"1":"0" }], "key");
+  if(!res){
+    // Rückgängig machen, wenn Speichern fehlschlägt
+    GLOBAL_WARN_OFF = !GLOBAL_WARN_OFF;
+    document.getElementById("gtgl-warnoff")?.classList.toggle("on", GLOBAL_WARN_OFF);
+    syn("e",tr("sync_error"));
+    alert(tr("save_failed"));
+    return;
+  }
+  SETTINGS["global_warn_off"]=GLOBAL_WARN_OFF?"1":"0";
+  lsSet("settings",SETTINGS);
+  rmissing();
+  await syncDown();
+  syn("",tr("sync_saved"));
 }
 function rEditorBv(){
   const active=[...BV].filter(b=>!b.archived).sort((a,b)=>a.nr.localeCompare(b.nr));
