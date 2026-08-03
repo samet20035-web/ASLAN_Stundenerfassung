@@ -3390,11 +3390,30 @@ function missGroupsUnconfirmed(ds){
   for(const bvId of bvIds){ if(!WA.has(`${ds}_${bvId}`)) return true; }
   return false;
 }
+function missOpenBvNumbersForMa(maId, ds){
+  const rows = EN.filter(e => e.datum===ds && String(e.ma_id)===String(maId));
+  const openBvIds = [...new Set(
+    rows
+      .filter(e => !WA.has(`${ds}_${e.bv_id}`))
+      .map(e => e.bv_id)
+  )];
+  return openBvIds
+    .map(id => bvById(id)?.nr)
+    .filter(Boolean)
+    .sort((a,b)=>String(a).localeCompare(String(b), undefined, {numeric:true}));
+}
 function missEmployeeStatus(m,ds){
-  const rows=EN.filter(e=>e.datum===ds && e.ma_id===m.id);
+  const rows=EN.filter(e=>e.datum===ds && String(e.ma_id)===String(m.id));
   if(!rows.length) return {label:tr("misscal_status_missing"),color:"#c62828"};
-  const unconfirmed=rows.some(e=>!WA.has(`${ds}_${e.bv_id}`));
-  if(unconfirmed) return {label:tr("misscal_status_rapport_missing"),color:"#c9932a"};
+
+  const openBvs = missOpenBvNumbersForMa(m.id, ds);
+  if(openBvs.length){
+    return {
+      label:`${tr("misscal_status_rapport_missing")} (${openBvs.join(", ")})`,
+      color:"#c9932a"
+    };
+  }
+
   return {label:tr("misscal_status_ok"),color:"#2d9d5c"};
 }
 function missColor(missing,total,rapportOpen){
