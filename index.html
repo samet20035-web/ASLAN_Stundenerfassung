@@ -3013,9 +3013,9 @@ function gkw(ds){
   return Math.ceil(((d-new Date(y,0,1))/864e5+1)/7);
 }
 
-function bvById(id){ return BV.find(b=>b.id===id); }
-function maById(id){ return MA.find(m=>m.id===id); }
-function blById(id){ return BL.find(b=>b.id===id); }
+function bvById(id){ return BV.find(b=>String(b.id)===String(id)); }
+function maById(id){ return MA.find(m=>String(m.id)===String(id)); }
+function blById(id){ return BL.find(b=>String(b.id)===String(id)); }
 function validBVNr(nr){
   const v=String(nr||"").trim().toUpperCase();
   if(v==="LAGER") return true;
@@ -3217,29 +3217,37 @@ function statEntriesInPeriod(){
 function rStatMa(){
   const body=document.getElementById("statbody");
   const rows=statEntriesInPeriod();
-  if(!rows.length){ body.innerHTML=`<div class="emp"><div class="eic">${ICON_EMPTY}</div>${tr("stat_no_hours")}</div>`; return; }
+  if(!rows.length){
+    body.innerHTML=`<div class="emp"><div class="eic">${ICON_EMPTY}</div>${tr("stat_no_hours")}</div>`;
+    return;
+  }
 
   const byMa={};
   rows.forEach(e=>{
-    if(!byMa[e.ma_id]) byMa[e.ma_id]={ h:0, days:new Set(), bv:{} };
-    const s=byMa[e.ma_id];
-    s.h+=Number(e.stunden)||0;
+    const mid=String(e.ma_id);
+    if(!byMa[mid]) byMa[mid]={ h:0, days:new Set(), bv:{} };
+    const s=byMa[mid];
+    s.h += Number(e.stunden)||0;
     s.days.add(e.datum);
-    s.bv[e.bv_id]=(s.bv[e.bv_id]||0)+(Number(e.stunden)||0);
+    const bid=String(e.bv_id);
+    s.bv[bid]=(s.bv[bid]||0)+(Number(e.stunden)||0);
   });
 
-  const list=MA.filter(m=>byMa[m.id]).sort((a,b)=>byMa[b.id].h-byMa[a.id].h);
-  if(!list.length){ body.innerHTML=`<div class="emp"><div class="eic">${ICON_EMPTY}</div>${tr("stat_no_hours")}</div>`; return; }
+  const list=MA.filter(m=>byMa[String(m.id)]).sort((a,b)=>byMa[String(b.id)].h-byMa[String(a.id)].h);
+  if(!list.length){
+    body.innerHTML=`<div class="emp"><div class="eic">${ICON_EMPTY}</div>${tr("stat_no_hours")}</div>`;
+    return;
+  }
 
-  const maxH=byMa[list[0].id].h||1;
+  const maxH=byMa[String(list[0].id)].h||1;
   const rankBadge=(i)=> i===0?`<div class="statrank r1">🥇</div>`
-                       : i===1?`<div class="statrank r2">🥈</div>`
-                       : i===2?`<div class="statrank r3">🥉</div>`
-                       : `<div class="statrank">#${i+1}</div>`;
+  : i===1?`<div class="statrank r2">🥈</div>`
+  : i===2?`<div class="statrank r3">🥉</div>`
+  : `<div class="statrank">#${i+1}</div>`;
 
   body.innerHTML=`<div class="statlist">${
     list.map((m,i)=>{
-      const s=byMa[m.id];
+      const s=byMa[String(m.id)];
       const bvChips=Object.entries(s.bv).sort((a,b)=>b[1]-a[1]).map(([bid,h])=>{
         const bv=bvById(bid);
         return `<div class="bvchip">BV ${bv?.nr||"?"} · ${fmtH(h)}</div>`;
@@ -3262,22 +3270,30 @@ function rStatMa(){
 function rStatBv(){
   const body=document.getElementById("statbody");
   const rows=statEntriesInPeriod();
-  if(!rows.length){ body.innerHTML=`<div class="emp"><div class="eic">${ICON_EMPTY}</div>${tr("stat_no_hours")}</div>`; return; }
+  if(!rows.length){
+    body.innerHTML=`<div class="emp"><div class="eic">${ICON_EMPTY}</div>${tr("stat_no_hours")}</div>`;
+    return;
+  }
 
   const byBv={};
   rows.forEach(e=>{
-	if(!byBv[e.bv_id]) byBv[e.bv_id]={ h:0, days:new Set() };
+    const bid=String(e.bv_id);
+    if(!byBv[bid]) byBv[bid]={ h:0, days:new Set() };
     const h=Number(e.stunden)||0;
-    byBv[e.bv_id].h+=h;
-    byBv[e.bv_id].days.add(e.datum);
+    byBv[bid].h+=h;
+    byBv[bid].days.add(e.datum);
   });
 
-  const list=Object.keys(byBv).map(id=>({bv:bvById(id),id,...byBv[id]})).sort((a,b)=>b.h-a.h);
+  const list=Object.keys(byBv)
+    .map(id=>({bv:bvById(id),id,...byBv[id]}))
+    .filter(x=>x.bv)
+    .sort((a,b)=>b.h-a.h);
 
   const rankBadge=(i)=> i===0?`<div class="statrank r1">🥇</div>`
-                       : i===1?`<div class="statrank r2">🥈</div>`
-                       : i===2?`<div class="statrank r3">🥉</div>`
-                       : `<div class="statrank">#${i+1}</div>`;
+  : i===1?`<div class="statrank r2">🥈</div>`
+  : i===2?`<div class="statrank r3">🥉</div>`
+  : `<div class="statrank">#${i+1}</div>`;
+
   const BV_ICON=`<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/><path d="M9 9h.01M15 9h.01M9 13h.01M15 13h.01"/></svg>`;
 
   body.innerHTML=`<div class="statlist">${
