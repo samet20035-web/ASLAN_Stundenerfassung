@@ -3535,7 +3535,7 @@ function rmissing() {
   const list = document.getElementById("miss-info-list");
   if(!container || !list) return;
 
-  const missing = GLOBAL_WARN_OFF ? [] : BV.filter(b => !b.warn_disabled && (!b.name || b.name === "—" || b.name.trim() === "" || !b.bl_id || !validBVNr(b.nr)));
+  const missing = BV.filter(b => !b.warn_disabled && (!b.name || b.name === "—" || b.name.trim() === "" || (!GLOBAL_WARN_OFF && !b.bl_id) || !validBVNr(b.nr)));
   
   if (missing.length === 0) {
     container.style.display = "none";
