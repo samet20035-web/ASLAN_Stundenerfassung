@@ -484,7 +484,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
   <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="empty_rep_title">Leer-Rapport erstellen</div><div class="hs" data-i18n="empty_rep_sub">Datum · Baustelle · Mitarbeiter</div></div></div>
   <div class="sc"><div style="padding:16px">
     <div class="lbl" style="margin:0 0 6px" data-i18n="empty_rep_date">Datum</div>
-    <input type="date" id="er-datum" style="margin-bottom:16px">
+    <input type="date" id="er-datum" style="margin-bottom:16px" onchange="rErTeam(this.value)">
 
     <div class="lbl" style="margin:0 0 6px" data-i18n="empty_rep_bv">Baustelle</div>
     <select id="er-bv" onchange="erBvChanged()" style="margin-bottom:6px"></select>
@@ -1092,13 +1092,18 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     <div style="margin-bottom:12px"><div class="lbl" style="margin:0 0 6px" data-i18n="short_code">Kürzel (2 Buchstaben)</div><input type="text" id="mak" data-i18n-ph="short_code" placeholder="z.B. SA" maxlength="3" style="text-transform:uppercase"></div>
     <div style="margin-bottom:14px"><div class="lbl" style="margin:0 0 8px" data-i18n="color">Farbe</div><div class="cpick" id="cpick"></div></div>
     <div style="margin-bottom:14px"><div class="lbl" style="margin:0 0 6px" data-i18n="rg_hourly_rate">Stundensatz (€/h)</div><input type="number" id="mar" inputmode="decimal" step="0.5" data-i18n-ph="rg_hourly_rate_ph" placeholder="z.B. 35"></div>
-    <div style="display:flex;align-items:center;gap:11px;padding:11px 0;margin-bottom:6px;border-top:.5px solid var(--b);border-bottom:.5px solid var(--b)">
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:600" data-i18n="ma_long_absent">Bis auf weiteres abwesend</div>
-        <div style="font-size:12px;color:var(--s);margin-top:2px" data-i18n="ma_long_absent_hint">Erscheint beim Stundeneintragen ganz unten, wird nicht automatisch ausgewählt</div>
-      </div>
-      <button class="tgl" id="maea-longabs-tgl" onclick="toggleMaLongAbsent()"></button>
-    </div>
+	<div style="display:flex;align-items:center;gap:11px;padding:11px 0;margin-bottom:6px;border-top:.5px solid var(--b);border-bottom:.5px solid var(--b)">
+	<div style="flex:1">
+	<div style="font-size:14px;font-weight:600" data-i18n="ma_long_absent">Bis auf weiteres abwesend</div>
+	<div style="font-size:12px;color:var(--s);margin-top:2px" data-i18n="ma_long_absent_hint">Erscheint beim Stundeneintragen ganz unten, wird nicht automatisch ausgewählt</div>
+	</div>
+	<button class="tgl" id="maea-longabs-tgl" onclick="toggleMaLongAbsent()"></button>
+	</div>
+
+	<div style="margin-bottom:14px">
+  		<div class="lbl" style="margin:0 0 6px" data-i18n="ma_long_absent_from">Ab wann</div>
+ 		<input type="date" id="maea-longabs-from">
+	</div>
     <button class="btn" onclick="svma()" data-i18n="save_changes">Speichern</button>
     <button class="btd" onclick="cDM()" data-i18n="delete_ma">Mitarbeiter löschen</button>
     <button class="bto" onclick="cls('ov-ma')" data-i18n="cancel_btn">Abbrechen</button>
@@ -1205,8 +1210,8 @@ const DBV=[
 ];
 
 const DMA=[
-  {name:"Sayim Aslan",k:"SA",bg:"#e2e6ea",tc:"#33404d",sort_order:0},
-  {name:"Ali Kantar",k:"AK",bg:"#e3ece6",tc:"#2c4d3c",sort_order:1}
+	{name:"Sayim Aslan",k:"SA",bg:"#e2e6ea",tc:"#33404d",sort_order:0,long_absent:false,long_absent_from:null},
+	{name:"Ali Kantar",k:"AK",bg:"#e3ece6",tc:"#2c4d3c",sort_order:1,long_absent:false,long_absent_from:null}
 ];
 
 // ═══ I18N ═══
@@ -1612,6 +1617,7 @@ const I18N = {
     rg_hourly_rate_ph: "z.B. 35",
     ma_long_absent: "Bis auf weiteres abwesend",
     ma_long_absent_hint: "Erscheint beim Stundeneintragen ganz unten, wird nicht automatisch ausgewählt",
+	ma_long_absent_from: "Ab wann",
     rg_import_summary: "{added} Rechnung(en) neu, {updated} aktualisiert, {abr} Abrechnungszeile(n) übernommen",
     rg_import_summary_skipped: ", {skipped} übersprungen",
     rg_manual_missing: "Bitte Datum und Firma angeben",
@@ -2050,6 +2056,7 @@ const I18N = {
     rg_hourly_rate_ph: "örn. 35",
     ma_long_absent: "İkinci bir emre kadar devamsız",
     ma_long_absent_hint: "Saat girişinde en altta görünür, otomatik seçilmez",
+	ma_long_absent_from: "Başlangıç tarihi",
     rg_import_summary: "{added} yeni fatura, {updated} güncellendi, {abr} faturalama satırı aktarıldı",
     rg_import_summary_skipped: ", {skipped} atlandı",
     rg_manual_missing: "Lütfen tarih ve firma girin",
@@ -2218,38 +2225,41 @@ function showBvList() {
 }
 
 // 2. Ausgewählte PDFs generieren
-function fillRapportPdf(form, dateStr, bvId, futureMaIds){
-    const bv = BV.find(x => x.id == bvId);
-    const bl = BL.find(x => x.id == bv.bl_id) || { name: "" };
-    // futureMaIds: falls gesetzt (Array), wird ein leerer Rapport für die gewählten Mitarbeiter erzeugt
-    // (Anfang/Ende/Pause/Stunden bleiben leer) statt der gespeicherten Stundeneinträge.
-    const rows = (futureMaIds && futureMaIds.length)
-        ? futureMaIds.map(maId => ({ ma_id: maId, beginn: "", ende: "", pause_min: null, stunden: "" }))
-        : EN.filter(e => e.datum === dateStr && e.bv_id == bvId);
+function fillRapportPdf(form, dateStr, bvId, futureMaIds, blankBvFields=false){
+const bv = BV.find(x => x.id == bvId) || {};
+const bl = BL.find(x => x.id == bv.bl_id) || { name: "" };
 
-    form.getTextField('text_3').setText(bv.nr || "");
-    form.getTextField('text_0').setText(formatDate(dateStr));
-    form.getTextField('text_111 (0)').setText(bv.name || "");
-    form.getTextField('text_9').setText(bl.name || "");
+// futureMaIds: falls gesetzt (Array), wird ein leerer Rapport für die gewählten Mitarbeiter erzeugt
+// (Anfang/Ende/Pause/Stunden bleiben leer) statt der gespeicherten Stundeneinträge.
+const rows = (futureMaIds && futureMaIds.length)
+? futureMaIds.map(maId => ({ ma_id: maId, beginn: "", ende: "", pause_min: null, stunden: "" }))
+: EN.filter(e => e.datum === dateStr && e.bv_id == bvId);
 
-    const empFields = [
-        { name: 'text_13', start: 'text_31', end: 'text_36', pause: 'text_41', hours: 'text_58' },
-        { name: 'text_15', start: 'text_32', end: 'text_37', pause: 'text_42', hours: 'text_59' },
-        { name: 'text_11', start: 'text_33', end: 'text_38', pause: 'text_43', hours: 'text_60' },
-        { name: 'text_18', start: 'text_34', end: 'text_39', pause: 'text_44', hours: 'text_61' },
-        { name: 'text_20', start: 'text_35', end: 'text_40', pause: 'text_45', hours: 'text_62' }
-    ];
-    rows.slice(0, 5).forEach((row, i) => {
-        const f = empFields[i];
-        if (!f) return;
-        const ma = MA.find(x => x.id == row.ma_id) || { name: "" };
-        form.getTextField(f.name).setText(ma.name);
-        form.getTextField(f.start).setText(formatTime(row.beginn));
-        form.getTextField(f.end).setText(formatTime(row.ende));
-        form.getTextField(f.pause).setText(formatVal(row.pause_min ? (row.pause_min / 60) : ""));
-        form.getTextField(f.hours).setText(formatVal(row.stunden));
-    });
-    return bv;
+// BV-Felder optional leer lassen
+form.getTextField('text_3').setText(blankBvFields ? "" : (bv.nr || ""));
+form.getTextField('text_0').setText(formatDate(dateStr));
+form.getTextField('text_111 (0)').setText(blankBvFields ? "" : (bv.name || ""));
+form.getTextField('text_9').setText(blankBvFields ? "" : (bl.name || ""));
+
+const empFields = [
+{ name: 'text_13', start: 'text_31', end: 'text_36', pause: 'text_41', hours: 'text_58' },
+{ name: 'text_15', start: 'text_32', end: 'text_37', pause: 'text_42', hours: 'text_59' },
+{ name: 'text_11', start: 'text_33', end: 'text_38', pause: 'text_43', hours: 'text_60' },
+{ name: 'text_18', start: 'text_34', end: 'text_39', pause: 'text_44', hours: 'text_61' },
+{ name: 'text_20', start: 'text_35', end: 'text_40', pause: 'text_45', hours: 'text_62' }
+];
+
+rows.slice(0, 5).forEach((row, i) => {
+const f = empFields[i];
+if (!f) return;
+const ma = MA.find(x => x.id == row.ma_id) || { name: "" };
+form.getTextField(f.name).setText(ma.name);
+form.getTextField(f.start).setText(formatTime(row.beginn));
+form.getTextField(f.end).setText(formatTime(row.ende));
+form.getTextField(f.pause).setText(formatVal(row.pause_min ? (row.pause_min / 60) : ""));
+form.getTextField(f.hours).setText(formatVal(row.stunden));
+});
+return bv;
 }
 
 // Direkter Druck-Weg: nach dem Speichern der Stunden fragen, ob eine Kopie zum Ausdrucken gewünscht ist.
@@ -3016,6 +3026,11 @@ function gkw(ds){
 function bvById(id){ return BV.find(b=>String(b.id)===String(id)); }
 function maById(id){ return MA.find(m=>String(m.id)===String(id)); }
 function blById(id){ return BL.find(b=>String(b.id)===String(id)); }
+function isLongAbsentForDate(ma, ds){
+  if(!ma || !ma.long_absent) return false;
+  if(!ma.long_absent_from) return true;
+  return ds >= ma.long_absent_from;
+}
 function validBVNr(nr){
   const v=String(nr||"").trim().toUpperCase();
   if(v==="LAGER") return true;
@@ -3972,8 +3987,9 @@ async function n2bv(){
   if(!d){alert(tr("pick_date_first"));return;}
   cD=d;
   // Anwesenheit: standardmäßig ist jeder da, außer im Editor (Abwesenheiten & Urlaub) ist für diesen Tag etwas anderes hinterlegt
-  presentToday=new Set(MA.filter(m=>!m.archived && !m.long_absent && !isMaAbsentOn(m.id,d)).map(m=>m.id));
-  document.getElementById("bvsub").textContent=fd(d);
+	presentToday=new Set(
+  	MA.filter(m=>!m.archived && !isLongAbsentForDate(m,d) && !isMaAbsentOn(m.id,d)).map(m=>m.id)
+	);  document.getElementById("bvsub").textContent=fd(d);
   sBV=null;
   document.getElementById("bvnx").disabled=true;
   document.getElementById("nb-nr").value="";
@@ -4108,19 +4124,21 @@ function n2st(){
 }
 
 function rTeam(){
-  const active=MA.filter(m=>!m.long_absent);
-  const longAbsent=MA.filter(m=>m.long_absent);
-  const rowHtml=m=>`
-    <div class="tmr">
-      <div class="tmcb ${teamSel.has(m.id)?"on":""}" onclick="toggleTeam('${m.id}')">${teamSel.has(m.id)?"✓":""}</div>
-      <div class="av" style="background:${m.bg};color:${m.tc};width:36px;height:36px;font-size:12px">${m.k||"?"}</div>
-      <div class="mn" style="font-size:14px">${m.name}</div>
-    </div>`;
-  let html=active.map(rowHtml).join("");
-  if(longAbsent.length){
-    html+=`<div class="lbl" style="margin-top:14px">Bis auf weiteres abwesend</div>${longAbsent.map(rowHtml).join("")}`;
-  }
-  document.getElementById("tml").innerHTML=html;
+const active=MA.filter(m=>!isLongAbsentForDate(m,cD));
+const longAbsent=MA.filter(m=>isLongAbsentForDate(m,cD));
+
+const rowHtml=m=>`
+<div class="tmr">
+<div class="tmcb ${teamSel.has(m.id)?"on":""}" onclick="toggleTeam('${m.id}')">${teamSel.has(m.id)?"✓":""}</div>
+<div class="av" style="background:${m.bg};color:${m.tc};width:36px;height:36px;font-size:12px">${m.k||"?"}</div>
+<div class="mn" style="font-size:14px">${m.name}</div>
+</div>`;
+
+let html=active.map(rowHtml).join("");
+if(longAbsent.length){
+html+=`<div class="lbl" style="margin-top:14px">Bis auf weiteres abwesend</div>${longAbsent.map(rowHtml).join("")}`;
+}
+document.getElementById("tml").innerHTML=html;
 }
 function toggleTeam(id){
   if(teamSel.has(id)) teamSel.delete(id); else teamSel.add(id);
@@ -4372,11 +4390,12 @@ let erTeamSel=new Set();
 function openEmptyRep(){
   document.getElementById("er-datum").value=td();
   erTeamSel=new Set();
+  const d=document.getElementById("er-datum").value||td();
   const sel=document.getElementById("er-bv");
   const active=[...BV].filter(b=>!b.archived).sort((a,b)=>a.nr.localeCompare(b.nr));
   sel.innerHTML=active.map(b=>`<option value="${b.id}">BV ${b.nr} – ${b.name||"—"}</option>`).join("");
   erBvChanged();
-  rErTeam();
+  rErTeam(d);
   go("pg-empty");
 }
 function erBvChanged(){
@@ -4384,23 +4403,51 @@ function erBvChanged(){
   const bl=b?blById(b.bl_id):null;
   document.getElementById("er-bl-info").textContent="Bauleiter: "+(bl?bl.name:"—");
 }
-function rErTeam(){
-  document.getElementById("er-tml").innerHTML=MA.map(m=>`
-    <div class="tmr">
-      <div class="tmcb ${erTeamSel.has(m.id)?"on":""}" onclick="toggleErTeam('${m.id}')">${erTeamSel.has(m.id)?"✓":""}</div>
-      <div class="av" style="background:${m.bg};color:${m.tc};width:36px;height:36px;font-size:12px">${m.k||"?"}</div>
-      <div class="mn" style="font-size:14px">${m.name}</div>
-    </div>`).join("");
+function rErTeam(ds){
+const dateStr=ds || document.getElementById("er-datum")?.value || td();
+const list=MA.filter(m=>!isLongAbsentForDate(m,dateStr));
+document.getElementById("er-tml").innerHTML=list.map(m=>`
+<div class="tmr">
+<div class="tmcb ${erTeamSel.has(m.id)?"on":""}" onclick="toggleErTeam('${m.id}')">${erTeamSel.has(m.id)?"✓":""}</div>
+<div class="av" style="background:${m.bg};color:${m.tc};width:36px;height:36px;font-size:12px">${m.k||"?"}</div>
+<div class="mn" style="font-size:14px">${m.name}</div>
+</div>`).join("");
 }
 function toggleErTeam(id){
   if(erTeamSel.has(id)) erTeamSel.delete(id); else erTeamSel.add(id);
   rErTeam();
 }
-function printEmptyRep(){
-  const datum=document.getElementById("er-datum").value;
-  const bvId=document.getElementById("er-bv").value;
-  if(!datum||!bvId){ toast("Bitte Datum und Baustelle wählen"); return; }
-  if(erTeamSel.size===0){ toast("Bitte mind. einen Mitarbeiter wählen"); return; }
+async function printEmptyRep(){
+const datum=document.getElementById("er-datum").value;
+const bvId=document.getElementById("er-bv").value;
+if(!datum||!bvId){ toast(tr("empty_rep_missing")); return; }
+if(erTeamSel.size===0){ toast(tr("empty_rep_missing_team")); return; }
+
+try{
+  const arrayBuffer = await getRapportTemplateBytes();
+  const { PDFDocument } = PDFLib;
+  const pdfDoc = await PDFDocument.load(arrayBuffer);
+  const form = pdfDoc.getForm();
+
+  // Leer-Rapport: Mitarbeiter + Datum, BV/Adresse/Bauleiter leer
+  fillRapportPdf(form, datum, bvId, [...erTeamSel], true);
+
+  const pdfBytes = await pdfDoc.save();
+  const blob = new Blob([pdfBytes], { type: "application/pdf" });
+  const blobUrl = URL.createObjectURL(blob);
+
+  const a=document.createElement("a");
+  a.href=blobUrl;
+  a.target="_blank";
+  a.download=`Leer_Rapport_${datum}.pdf`;
+  a.click();
+
+  setTimeout(()=>URL.revokeObjectURL(blobUrl), 60000);
+  toast(tr("empty_rep_saved"));
+}catch(e){
+  alert(tr("pdf_error_prefix") + e.message);
+}
+}
 
   // Kein Speichern in der Datenbank nötig - der Leer-Rapport wird direkt
   // als PDF geöffnet, damit er ausgedruckt werden kann (wie beim normalen Rapport).
@@ -4982,25 +5029,32 @@ async function svbv(){
 
 // ═══ MA MANAGE ═══
 function rmam(){
-  document.getElementById("maml").innerHTML=MA.map((m,i)=>`
-    <div class="mmr"><div class="av" style="background:${m.bg};color:${m.tc};width:42px;height:42px">${m.k||"?"}</div>
-    <div style="flex:1"><div style="font-size:16px;font-weight:600">${m.name}</div><div style="font-size:12px;color:var(--s)">Kürzel: ${m.k||"—"}${m.long_absent?` · <span style="color:var(--warn-txt)">bis auf weiteres abwesend</span>`:""}</div></div>
-    <button class="eb" onclick="opma(${i})">${ICON_EDIT}</button></div>`).join("");
+document.getElementById("maml").innerHTML=MA.map((m,i)=>`
+<div class="mmr"><div class="av" style="background:${m.bg};color:${m.tc};width:42px;height:42px">${m.k||"?"}</div>
+<div style="flex:1">
+  <div style="font-size:16px;font-weight:600">${m.name}</div>
+  <div style="font-size:12px;color:var(--s)">
+    Kürzel: ${m.k||"—"}
+    ${m.long_absent?` · <span style="color:var(--warn-txt)">bis auf weiteres abwesend${m.long_absent_from?` ab ${fd(m.long_absent_from)}`:""}</span>`:""}
+  </div>
+</div>
+<button class="eb" onclick="opma(${i})">${ICON_EDIT}</button></div>`).join("");
 }
 
 function opma(i){
-  eMA=i;
-  const m=MA[i];
-  document.getElementById("mat").textContent=`${m.name}`;
-  document.getElementById("man").value=m.name||"";
-  document.getElementById("mak").value=m.k||"";
-  document.getElementById("mar").value=maRate(m.id);
-  document.getElementById("maea-longabs-tgl").classList.toggle("on",!!m.long_absent);
-  selC=-1;
-  document.getElementById("cpick").innerHTML=CLRS.map((c,ci)=>`
-    <div class="cpc ${m.bg===c.bg?"sel":""}" id="cp${ci}" onclick="pkc(${ci})" style="background:${c.bg}">
-      <div style="width:10px;height:10px;border-radius:50%;background:${c.tc}"></div></div>`).join("");
-  opov("ov-ma");
+eMA=i;
+const m=MA[i];
+document.getElementById("mat").textContent=`${m.name}`;
+document.getElementById("man").value=m.name||"";
+document.getElementById("mak").value=m.k||"";
+document.getElementById("mar").value=maRate(m.id);
+document.getElementById("maea-longabs-tgl").classList.toggle("on",!!m.long_absent);
+document.getElementById("maea-longabs-from").value=m.long_absent_from||"";
+selC=-1;
+document.getElementById("cpick").innerHTML=CLRS.map((c,ci)=>`
+<div class="cpc ${m.bg===c.bg?"sel":""}" id="cp${ci}" onclick="pkc(${ci})" style="background:${c.bg}">
+<div style="width:10px;height:10px;border-radius:50%;background:${c.tc}"></div></div>`).join("");
+opov("ov-ma");
 }
 function pkc(ci){
   selC=ci;
@@ -5011,32 +5065,49 @@ function toggleMaLongAbsent(){
 }
 
 async function svma(){
-  if(eMA<0)return;
-  const m=MA[eMA];
-  const name=document.getElementById("man").value.trim();
-  const k=document.getElementById("mak").value.trim().toUpperCase().slice(0,2);
-  if(!name||!k){alert(tr("name_and_initials_required"));return;}
-  const c=selC>=0?CLRS[selC]:{bg:m.bg,tc:m.tc};
-  const long_absent=document.getElementById("maea-longabs-tgl").classList.contains("on");
+if(eMA<0)return;
+const m=MA[eMA];
+const name=document.getElementById("man").value.trim();
+const k=document.getElementById("mak").value.trim().toUpperCase().slice(0,2);
+if(!name||!k){alert(tr("name_and_initials_required"));return;}
+const c=selC>=0?CLRS[selC]:{bg:m.bg,tc:m.tc};
+const long_absent=document.getElementById("maea-longabs-tgl").classList.contains("on");
+const long_absent_from=document.getElementById("maea-longabs-from").value || null;
 
-  await sbUpd("ma",m.id,{name,k,bg:c.bg,tc:c.tc,sort_order:eMA,long_absent});
-  maRateSet(m.id, document.getElementById("mar").value.trim());
-  await syncDown();
-  cls("ov-ma");
-  rmam();
-  selC=-1;
+await sbUpd("ma",m.id,{
+  name,
+  k,
+  bg:c.bg,
+  tc:c.tc,
+  sort_order:eMA,
+  long_absent,
+  long_absent_from
+});
+maRateSet(m.id, document.getElementById("mar").value.trim());
+await syncDown();
+cls("ov-ma");
+rmam();
+selC=-1;
 }
 
 async function addMA(){
-  const name=document.getElementById("nm-n").value.trim();
-  if(!name){alert(tr("name_required"));return;}
-  const k=name.split(" ").map(w=>w[0]||"").join("").toUpperCase().slice(0,2)||"XX";
-  const c=CLRS[MA.length%CLRS.length];
-  await sbIns("ma",[{name,k,bg:c.bg,tc:c.tc,sort_order:MA.length}]);
-  await syncDown();
-  document.getElementById("nm-n").value="";
-  rmam();
-  toast(`${name}`);
+const name=document.getElementById("nm-n").value.trim();
+if(!name){alert(tr("name_required"));return;}
+const k=name.split(" ").map(w=>w[0]||"").join("").toUpperCase().slice(0,2)||"XX";
+const c=CLRS[MA.length%CLRS.length];
+await sbIns("ma",[{
+  name,
+  k,
+  bg:c.bg,
+  tc:c.tc,
+  sort_order:MA.length,
+  long_absent:false,
+  long_absent_from:null
+}]);
+await syncDown();
+document.getElementById("nm-n").value="";
+rmam();
+toast(`${name}`);
 }
 
 // ═══ BAULEITER MANAGE ═══
