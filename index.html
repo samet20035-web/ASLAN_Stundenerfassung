@@ -485,7 +485,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
   <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="empty_rep_title">Leer-Rapport erstellen</div><div class="hs" data-i18n="empty_rep_sub">Datum · Baustelle · Mitarbeiter</div></div></div>
   <div class="sc"><div style="padding:16px">
     <div class="lbl" style="margin:0 0 6px" data-i18n="empty_rep_date">Datum</div>
-    <input type="date" id="er-datum" style="margin-bottom:16px" onchange="rErTeam(this.value)">
+    <input type="date" id="er-datum" style="margin-bottom:16px">
 
     <div class="lbl" style="margin:0 0 6px" data-i18n="empty_rep_bv">Baustelle</div>
     <select id="er-bv" onchange="erBvChanged()" style="margin-bottom:6px"></select>
@@ -1096,10 +1096,6 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     <div style="display:flex;align-items:center;gap:11px;padding:11px 0;margin-bottom:6px;border-top:.5px solid var(--b);border-bottom:.5px solid var(--b)">
       <div style="flex:1">
         <div style="font-size:14px;font-weight:600" data-i18n="ma_long_absent">Bis auf weiteres abwesend</div>
-		<div style="margin-bottom:14px">
- 		<div class="lbl" style="margin:0 0 6px" data-i18n="ma_long_absent_from">Ab wann</div>
- 		<input type="date" id="maea-longabs-from">
-		</div>
         <div style="font-size:12px;color:var(--s);margin-top:2px" data-i18n="ma_long_absent_hint">Erscheint beim Stundeneintragen ganz unten, wird nicht automatisch ausgewählt</div>
       </div>
       <button class="tgl" id="maea-longabs-tgl" onclick="toggleMaLongAbsent()"></button>
@@ -1138,32 +1134,38 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 <script>
 // Hilfsfunktion: 0.5 -> 0,5
 const formatVal = (val) => {
-  if (val === null || val === undefined || val === "") return "";
-  return val.toString().replace('.', ',');
+    if (val === null || val === undefined) return "";
+    return val.toString().replace('.', ',');
 };
 
 // Hilfsfunktion: 6:00 -> 6, 6:30 -> 6:30
 const formatTime = (t) => {
-  if (!t) return "";
-  const parts = t.toString().split(":");
-  const hour = parseInt(parts[0], 10);
-  if (parts.length === 1 || parts[1] === "00") return hour.toString();
-  return hour + ":" + parts[1];
+    if (!t) return "";
+    
+    // Teile den String in Stunden und Minuten auf
+    const parts = t.toString().split(":");
+    const hour = parseInt(parts[0], 10); // Wandelt "06" in die Zahl 6 um
+    
+    // Fall 1: Volle Stunde (z.B. "06:00" oder "06") -> Gib nur die Zahl zurück
+    if (parts.length === 1 || parts[1] === "00") {
+        return hour.toString();
+    }
+    
+    // Fall 2: Mit Minuten (z.B. "06:15") -> Gib Zahl:Minuten zurück
+    return hour + ":" + parts[1];
 };
 
 // Hilfsfunktion: 2026-07-10 -> 10.07.2026
 const formatDate = (d) => {
-  if (!d) return "";
-  const [y, m, day] = d.split('-');
-  return `${day}.${m}.${y}`;
+    if (!d) return "";
+    const [y, m, day] = d.split('-');
+    return `${day}.${m}.${y}`;
 };
-
 // ═══ CONSTANTS ═══
 const SBU="https://orluvjqjkngjdmajtwvp.supabase.co";
 const SBK="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ybHV2anFqa25namRtYWp0d3ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0NDkyNDYsImV4cCI6MjA5NzAyNTI0Nn0.DsNorH_TZlT4rMC0IBYXipiMEAybZia_KMM-tTiAsgk";
 const LS="a3_";
 const EDITOR_PIN_DEFAULT="0705";
-
 function getEditorPin(){
   try{ return localStorage.getItem("aslan_editor_pin") || EDITOR_PIN_DEFAULT; }catch(e){ return EDITOR_PIN_DEFAULT; }
 }
@@ -1171,9 +1173,7 @@ function setEditorPin(pin){
   try{ localStorage.setItem("aslan_editor_pin", pin); }catch(e){}
 }
 
-function svgIcon(inner,size,sw){
-  return `<svg viewBox="0 0 24 24" width="${size||18}" height="${size||18}" fill="none" stroke="currentColor" stroke-width="${sw||2}" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
-}
+function svgIcon(inner,size,sw){ return `<svg viewBox="0 0 24 24" width="${size||18}" height="${size||18}" fill="none" stroke="currentColor" stroke-width="${sw||2}" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`; }
 const ICON_EMPTY = svgIcon('<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',40,1.6);
 const ICON_SEARCH = svgIcon('<circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>',40,1.6);
 const ICON_CHECK_CIRCLE = svgIcon('<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9"/>',40,1.6);
@@ -1206,890 +1206,890 @@ const DBV=[
 ];
 
 const DMA=[
-  {name:"Sayim Aslan",k:"SA",bg:"#e2e6ea",tc:"#33404d",sort_order:0,long_absent:false,long_absent_from:null},
-  {name:"Ali Kantar",k:"AK",bg:"#e3ece6",tc:"#2c4d3c",sort_order:1,long_absent:false,long_absent_from:null}
+  {name:"Sayim Aslan",k:"SA",bg:"#e2e6ea",tc:"#33404d",sort_order:0},
+  {name:"Ali Kantar",k:"AK",bg:"#e3ece6",tc:"#2c4d3c",sort_order:1}
 ];
 
 // ═══ I18N ═══
 let LANG = localStorage.getItem("app_lang") || "tr";
 
 const I18N = {
-de: {
-title: "ASLAN · Stundenerfassung",
-
-home_add_title: "Stunden eintragen",
-home_add_sub: "Datum · Baustelle · Mitarbeiter",
-home_week_title: "Wochenübersicht",
-home_week_sub: "Stunden pro Mitarbeiter & BV",
-home_misscal_title: "Kalender & fehlende Einträge",
-home_misscal_sub: "Übersicht wer noch nicht erfasst wurde",
-misscal_title: "Kalender & fehlende Einträge",
-misscal_leg_weekend: "Wochenende",
-misscal_leg_future: "Zukünftig",
-misscal_leg_complete: "Alle erfasst",
-misscal_leg_rapport: "Rapport fehlt",
-misscal_leg_1: "1 fehlt",
-misscal_leg_2: "2 fehlen",
-misscal_leg_3: "3 fehlen",
-misscal_leg_more: "4+ / niemand erfasst",
-misscal_weekend_note: "Wochenende – keine Erfassung erforderlich",
-misscal_future_note: "Zukünftiger Tag – noch keine Erfassung erforderlich",
-misscal_no_active: "Keine aktiven Mitarbeiter an diesem Tag",
-misscal_status_ok: "Erfasst",
-misscal_status_missing: "Fehlt",
-misscal_status_rapport_missing: "Rapport fehlt",
-home_entries_title: "Einträge & Bearbeiten",
-home_entries_sub: "Alle gespeicherten Tage",
-grp_erfassen: "Erfassen",
-grp_uebersicht: "Übersicht & Auswertung",
-grp_uebersicht_title: "Übersicht & Auswertung",
-grp_uebersicht_sub: "Woche, Kalender, Einträge, Auswertung, Tagesbericht",
-grp_verwaltung: "Verwaltung",
-grp_abrechnung: "Abrechnung & Versand",
-home_ma_title: "Mitarbeiter verwalten",
-home_ma_sub: "Namen ändern, neu anlegen",
-home_bl_title: "Bauleiter verwalten",
-home_bl_sub: "Zuweisung für Baustellen",
-home_bv_title: "Baustellen verwalten",
-home_bv_sub: "BV-Adressen bearbeiten",
-home_export_title: "Export als Excel",
-home_export_sub: "Seith_Stunden + BV-Adressen",
-home_push_title: "Erinnerung 18:00 Uhr",
-home_push_sub: "Täglich wenn Stunden fehlen",
-missing_info: "Fehlende Angaben",
-
-stat_today: "Heute h",
-stat_week: "Woche h",
-stat_entries: "Einträge",
-stat_revenue: "Umsatz Woche",
-
-step1_title: "Schritt 1 – Datum",
-step1_sub: "Welcher Tag?",
-today_btn: "Heute",
-yesterday_btn: "◀ Gestern",
-to_bv_btn: "Zur Baustelle →",
-
-step2_title: "Schritt 2 – Baustelle",
-lager_btn: "Lager (kein Bauvorhaben)",
-new_bv: "Neue Baustelle",
-bv_nr: "BV-Nr.",
-bv_nr_invalid: "Hinweis: Diese BV-Nummer entspricht nicht dem Schema (5-stellig, beginnt mit 64, 65 oder 66).",
-bv_nr_invalid_confirm: "Diese BV-Nummer entspricht nicht dem üblichen Schema (5-stellig, beginnt mit 64, 65 oder 66). Trotzdem anlegen?",
-bv_nr_invalid_short: "Ungültige BV-Nummer",
-bv_addr: "Adresse / Beschreibung",
-tap_bv: "Baustelle antippen",
-fav_bv_label: "Favoriten",
-yesterday_bv_label: "Baustellen von gestern",
-to_hours_btn: "Zu den Stunden →",
-
-step3_title: "Schritt 3 – Stunden",
-hours_label: "Stunden eintragen (0 = nicht dabei)",
-save_btn: "Speichern",
-
-team_label: "Wer hat mitgearbeitet?",
-team_same_time: "Alle haben den ganzen Tag zusammen gearbeitet (gleiche Zeiten)",
-times_label: "Arbeitszeit",
-start_time: "Anfang",
-end_time: "Ende",
-pause_label: "Pause",
-pause_none: "Keine",
-pause_30: "30 Min",
-pause_45: "45 Min",
-hours_confirm_lbl: "Stunden gearbeitet, richtig?",
-confirm_hours_title: "Stunden bestätigen",
-confirm_hours_msg: "{hours} Stunden gearbeitet, richtig? ({names})",
-confirm_hours_msg_multi: "Zeiten für {names} übernehmen?",
-warn_no_team_or_time: "Bitte Mitarbeiter auswählen und gültige Zeiten eingeben.",
-
-editor_link: "Editor-Modus",
-editor_pin_title: "Editor-Modus",
-editor_pin_sub: "PIN eingeben",
-editor_pin_wrong: "Falscher PIN",
-editor_title: "Editor-Modus",
-editor_sub: "Baustellen-Einstellungen",
-editor_bv_list: "Baustellen",
-editor_bv_edit: "bearbeiten",
-editor_warn_off: "Warnung \"Fehlende Angaben\" für diese Baustelle deaktivieren",
-editor_warn_is_off: "Warnung deaktiviert",
-editor_bv_delete: "Baustelle löschen",
-editor_bv_in_use: "Diese Baustelle hat bereits Einträge und kann nicht gelöscht werden.",
-editor_bv_delete_title: "Baustelle löschen",
-editor_bv_delete_msg: "BV {nr} wirklich endgültig löschen? Dies kann nicht rückgängig gemacht werden.",
-editor_bv_archived_list: "Archivierte Baustellen",
-editor_archived_badge: "Archiviert",
-editor_archive_toggle: "Baustelle archivieren (aus Auswahl ausblenden, Historie bleibt erhalten)",
-editor_pin_change_title: "PIN ändern",
-editor_pin_current: "Aktueller PIN",
-editor_pin_new: "Neuer PIN (4-stellig)",
-editor_pin_confirm: "Neuer PIN wiederholen",
-editor_pin_change_btn: "PIN ändern",
-editor_pin_invalid: "PIN muss 4-stellig sein.",
-editor_pin_mismatch: "Die neuen PINs stimmen nicht überein.",
-editor_pin_changed: "PIN geändert",
-editor_move_hint: "Datum oder Baustelle ändern, um den Eintrag zu verschieben",
-editor_move_bv_label: "Baustelle",
-editor_add_row: "Mitarbeiter hinzufügen",
-
-bulk_select_btn: "Auswählen",
-bulk_selected_count: "ausgewählt",
-bulk_move_btn: "Verschieben",
-bulk_move_title: "Ausgewählte Einträge verschieben",
-bulk_move_target: "Neue Baustelle",
-bulk_move_confirm: "Verschieben",
-bulk_select_first: "Bitte zuerst Einträge auswählen!",
-
-report_title: "Tagesbericht",
-report_sub: "Rapport-Daten zum Kopieren",
-report_link: "Tagesbericht",
-report_pick_date: "Datum wählen",
-report_pick_bv: "Baustelle wählen",
-report_no_entries: "Für diesen Tag und diese Baustelle liegen keine Einträge vor.",
-report_print_btn: "Rapport drucken",
-report_future_pick_ma: "Mitarbeiter auswählen",
-report_future_show_btn: "Rapport anzeigen",
-report_future_pick_one: "Bitte mindestens einen Mitarbeiter auswählen.",
-wa_link: "WhatsApp-Versand",
-wa_sub: "Rapporte an Frau Peters abhaken",
-wa_title: "WhatsApp-Versand",
-wa_hs: "Frau Peters",
-wa_empty: "Noch keine Rapporte vorhanden.",
-wa_filter_open: "Nur ausstehende",
-wa_filter_all: "Alle anzeigen",
-wa_sent_label: "Gesendet",
-wa_open_label: "Ausstehend",
-wa_progress: "{done} von {total} gesendet",
-
-stat_link: "Auswertung",
-stat_sub: "Statistik pro Mitarbeiter, Baustelle & Kalender",
-stat_title: "Auswertung",
-stat_tab_ma: "Mitarbeiter",
-stat_tab_bv: "Baustellen",
-stat_tab_cal: "Kalender",
-stat_scope_month: "Monat",
-stat_scope_year: "Jahr",
-stat_close: "Schliessen",
-stat_year_label: "Jahr {y}",
-stat_no_hours: "Keine Stunden in diesem Zeitraum.",
-stat_no_entries_day: "Keine Einträge an diesem Tag.",
-stat_total: "Total",
-stat_day: "Tag",
-stat_days: "Tage",
-stat_workday: "Einsatztag",
-stat_workdays: "Einsatztage",
-stat_over_budget: "über Budget",
-stat_of_target: "{ist} von {soll} Soll",
-stat_rate_label: "Stundensatz (CHF/h)",
-stat_budget_label: "Soll-Stunden",
-stat_heat_low: "wenig",
-stat_heat_high: "viel",
-month_01: "Januar", month_02: "Februar", month_03: "März", month_04: "April",
-month_05: "Mai", month_06: "Juni", month_07: "Juli", month_08: "August",
-month_09: "September", month_10: "Oktober", month_11: "November", month_12: "Dezember",
-month_short_01: "Jan", month_short_02: "Feb", month_short_03: "Mär", month_short_04: "Apr",
-month_short_05: "Mai", month_short_06: "Jun", month_short_07: "Jul", month_short_08: "Aug",
-month_short_09: "Sep", month_short_10: "Okt", month_short_11: "Nov", month_short_12: "Dez",
-
-pdf_no_data_for_date: "Keine Daten für dieses Datum.",
-pdf_select_one_bv: "Bitte mindestens eine Baustelle auswählen!",
-pdf_template_missing: "PDF-Vorlage nicht gefunden!",
-pdf_created_ok: "PDFs erfolgreich erstellt!",
-pdf_error_prefix: "Fehler: ",
-pdf_preparing: "PDF wird vorbereitet…",
-push_not_supported: "Dein Browser unterstützt keine Benachrichtigungen.",
-push_ios_add_home: "Auf dem iPhone funktionieren Benachrichtigungen nur, wenn die App zum Home-Bildschirm hinzugefügt wurde: In Safari auf \"Teilen\" und dann \"Zum Home-Bildschirm\" tippen. Danach die App von dort öffnen und Benachrichtigungen erneut aktivieren.",
-push_permission_denied: "Bitte Benachrichtigungen erlauben.",
-pick_date_first: "Bitte Datum wählen!",
-bv_nr_enter: "BV-Nummer eingeben!",
-bv_nr_exists: "BV bereits vorhanden!",
-bv_nr_taken: "BV-Nummer bereits vergeben!",
-save_failed: "Speichern fehlgeschlagen.",
-delete_failed: "Löschen fehlgeschlagen.",
-name_and_initials_required: "Name und Kürzel ausfüllen!",
-name_required: "Name eingeben!",
-network_error_prefix: "Netzwerkfehler / Fetch-Fehler:\n",
-duplicate_entry_error: "Für diesen Mitarbeiter existiert an diesem Tag auf dieser Baustelle bereits ein Eintrag. Bitte Seite neu laden und erneut versuchen.",
-db_error_prefix: "Es gab ein Problem beim Speichern (Fehlercode {code}). Bitte erneut versuchen.",
-edrow_employee: "Mitarbeiter",
-edrow_start: "Start",
-edrow_end: "Ende",
-edrow_pause: "Pause (Min)",
-edrow_time_invalid: "Ungültige Zeit",
-print_rapport_title: "Rapport ausdrucken?",
-print_rapport_msg: "Möchtest du eine Kopie zum Ausdrucken öffnen?",
-print_rapport_yes: "Ja, öffnen",
-safety_warning_title: "Bitte prüfen",
-safety_warning_continue: "Trotzdem speichern",
-safety_pause_warning: "{name}: {hours}h heute insgesamt, aber nur {pause} Min Pause erfasst (mind. {required} Min vorgeschrieben).",
-safety_hours_warning: "{name}: {hours}h heute insgesamt – das ist sehr viel. Bitte prüfen, ob das stimmt.",
-report_field_datum: "Datum",
-report_field_addr: "Adresse",
-report_field_bvnr: "BV-Nummer",
-report_field_bauleiter: "Bauleiter",
-report_field_bauleiter_missing: "Kein Bauleiter",
-report_field_start: "Anfang",
-report_field_end: "Ende",
-report_field_pause: "Pause",
-report_field_duration: "Arbeitsdauer",
-copy_btn: "Kopieren",
-copied_toast: "Kopiert!",
-
-saved_title: "Gespeichert!",
-more_bv_btn: "Weitere Baustelle",
-home_btn: "Zur Startseite",
-
-week_title: "Wochenübersicht",
-prev_week: "◀ Vorwoche",
-next_week: "Nächste ▶",
-
-entries_title: "Einträge",
-delete_all_btn: "Alle löschen",
-delete_range_btn: "Zeitraum löschen",
-no_entries: "Noch keine Einträge.",
-filter_search_ph: "Suche: Mitarbeiter, Baustelle, Datum…",
-filter_all_bv: "Alle Baustellen",
-filter_all_ma: "Alle Mitarbeiter",
-filter_from: "Von",
-filter_to: "Bis",
-filter_reset: "Filter zurücksetzen",
-no_search_results: "Keine Einträge für diese Suche gefunden.",
-
-ma_title: "Mitarbeiter",
-ma_sub: "Verwalten & anlegen",
-new_ma: "Neuer Mitarbeiter",
-full_name: "Vollständiger Name",
-ma_list: "Mitarbeiterliste",
-
-bl_title: "Bauleiter",
-new_bl: "Neuer Bauleiter",
-bl_list: "Bauleiterliste",
-edit_bl: "Bauleiter bearbeiten",
-delete_bl: "Bauleiter löschen",
-
-bvm_title: "Baustellen",
-bvm_sub: "BV-Adressen bearbeiten",
-all_bv: "Alle Baustellen",
-
-export_title: "Excel-Export",
-export_sub: "Seith_Stunden + BV-Adressen",
-export_range: "Zeitraum (optional)",
-export_btn: "Excel herunterladen",
-
-edit_entry: "Eintrag bearbeiten",
-save_changes: "Speichern",
-delete_entry: "Eintrag löschen",
-cancel_btn: "Abbrechen",
-
-edit_bv: "BV bearbeiten",
-edit_ma: "Mitarbeiter bearbeiten",
-short_code: "Kürzel (2 Buchstaben)",
-color: "Farbe",
-delete_ma: "Mitarbeiter löschen",
-
-warn_days_missing: "{count} Tag{plural} ohne Stunden!",
-warn_fill_now: "Jetzt nachtragen →",
-warn_missing: "Adresse oder Bauleiter fehlt. Trotzdem fortfahren?",
-
-confirm_title: "Sicher?",
-confirm_cancel: "Abbrechen",
-confirm_ok: "Weiter",
-
-sync_now: "Synchronisiere…",
-sync_ok: "Synchronisiert",
-sync_saved: "Gespeichert",
-sync_error: "Fehler beim Speichern",
-
-toast_sync: "Daten aktualisiert",
-toast_push_on: "Erinnerung aktiviert – täglich 18:00 Uhr",
-toast_push_off: "Erinnerung deaktiviert",
-toast_updated: "Aktualisiert",
-toast_deleted: "Gelöscht",
-toast_deleted_all: "Alle gelöscht",
-
-notify_title: "⏰ ASLAN Stundenerfassung",
-notify_body: "Stunden für heute noch nicht eingetragen!",
-push_settings_title: "Benachrichtigungen",
-push_master_title: "Benachrichtigungen aktivieren",
-push_time_lbl: "Erinnerungszeit, wenn Stunden fehlen",
-push_entry_title: "Benachrichtigung nach jedem Eintrag",
-push_safety_title: "Warnung bei ungewöhnlicher Arbeitszeit / zu wenig Pause",
-push_budget_title: "Warnung wenn Soll-Stunden einer Baustelle fast erreicht sind",
-push_wa_days_lbl: "Erinnerung \"Rapport nicht an Frau Peters geschickt\" nach X Tagen (mehrere mit Komma, z.B. 2,7)",
-push_ios_hint: "Hinweis iPhone: Benachrichtigungen funktionieren nur, wenn die Seite über Safari \"Teilen → Zum Home-Bildschirm\" installiert und von dort geöffnet wurde (ab iOS 16.4). Auf Android/Samsung funktioniert es direkt im Browser.",
-notify_entry_title: "✅ Eintrag gespeichert",
-notify_entry_body: "BV {bv}: {names} · {hours}h",
-notify_safety_title: "⚠️ Bitte prüfen",
-notify_budget_title: "📊 Soll-Stunden Baustelle",
-notify_budget_near: "BV {bv} ({name}): {used}h von {budget}h Soll-Stunden erreicht.",
-notify_budget_over: "BV {bv} ({name}): Soll-Stunden überschritten – {used}h von {budget}h.",
-notify_wa_title: "📋 Rapport noch offen",
-notify_wa_body: "BV {bv} vom {date} ist seit {days} Tagen noch nicht an Frau Peters geschickt.",
-
-excel_build: "⏳ Excel wird erstellt…",
-excel_empty: "Keine Einträge.",
-excel_done: "Datei heruntergeladen!",
-
-dash_inv_open: "Offene Rechnungen",
-dash_inv_over: "Überfällig",
-dash_inv_total: "Umsatz gesamt",
-dash_inv_unbilled: "Noch nicht abgerechnet",
-dash_inv_next: "Nächste Frist",
-dash_inv_deadlines_title: "Fristen Sammelrechnungen",
-dash_inv_none: "Keine offenen Rechnungen.",
-dash_inv_sammel: "Sammelrechnung",
-dash_inv_today: "heute",
-dash_inv_today_due: "heute fällig",
-dash_inv_in_days: "in {days} Tg.",
-dash_inv_days_left: "noch {days} Tage",
-dash_inv_overdue_days: "{days} Tg. überfällig",
-
-editor_dash_stats_title: "Dashboard-Statistiken",
-editor_dash_invopen: "Offene Rechnungen anzeigen",
-editor_dash_invover: "Überfällige Rechnungen anzeigen",
-editor_dash_invtotal: "Gesamtumsatz anzeigen",
-editor_dash_unbilled: "Noch nicht abgerechneten Umsatz anzeigen",
-editor_dash_invnext: "Nächste Frist anzeigen",
-editor_dash_deadlines: "Fristen-Liste (Sammelrechnungen) anzeigen",
-
-home_empty_title: "Leer-Rapport erstellen",
-home_empty_sub: "Datum, Bauleiter, Mitarbeiter – Stunden bleiben leer",
-empty_rep_title: "Leer-Rapport erstellen",
-empty_rep_sub: "Datum · Baustelle · Mitarbeiter",
-empty_rep_date: "Datum",
-empty_rep_bv: "Baustelle",
-empty_rep_bl_prefix: "Bauleiter",
-empty_rep_team: "Mitarbeiter",
-empty_rep_save: "Leer-Rapport drucken",
-empty_rep_missing: "Bitte Datum und Baustelle wählen",
-empty_rep_missing_team: "Bitte mind. einen Mitarbeiter wählen",
-empty_rep_saved: "Leer-Rapport gespeichert",
-entry_hours_open: "offen",
-
-push_invoice_title: "Benachrichtigung bei überfälligen Rechnungen",
-notify_invoice_title: "Rechnung überfällig",
-notify_invoice_body: "{firma}: {sum} · seit {days} Tag(en) überfällig",
-
-rg_filter_all: "Alle",
-rg_filter_open: "Offen",
-rg_filter_overdue: "Überfällig",
-rg_filter_paid: "Bezahlt",
-rg_overview: "Übersicht",
-rg_import_title: "Aus Excel einfügen",
-rg_import_btn: "Einfügen & übernehmen",
-rg_manual_title: "Manuell hinzufügen",
-rg_manual_btn: "Hinzufügen",
-rg_filter_label: "Filter",
-rg_none: "Noch keine Rechnungen erfasst.",
-rg_none_filter: "Keine Einträge für diesen Filter.",
-rg_status_paid: "Bezahlt",
-rg_status_overdue: "Überfällig",
-rg_status_open: "Offen",
-rg_paid_on: "bezahlt am {date}",
-rg_pay_group_on: "Ganze Sammelrechnung als bezahlt markieren",
-rg_pay_group_off: "Ganze Sammelrechnung als offen markieren",
-rg_btn_paid: "Bezahlt",
-rg_btn_undo: "Rückgängig",
-rg_sammel: "Sammelrechnung ({count})",
-
-dash_open_hours: "Offene Stunden",
-rg_link: "Rechnungen",
-rg_link_sub: "Übersicht & Zahlungsziel",
-rg_page_sub: "Übersicht & Zahlungsziel (14 Tage)",
-rg_single_employee: "Einzelner Mitarbeiter",
-rg_show_bv_btn: "Baustellen anzeigen",
-editor_rg_page_title: "Rechnungen-Seite",
-editor_rg_hide_manual: "Block \"Manuell hinzufügen\" ausblenden",
-rg_import_step1: "1. Rechnungstabelle",
-rg_import_step2: "2. Abrechnungs-/Stundentabelle",
-rg_paste_rg_ph: "Rechnungszeilen hier einfügen (Tab-getrennt, wie beim Kopieren aus Excel)…",
-rg_paste_abr_ph: "Abrechnungszeilen (Stunden je Mitarbeiter) hier einfügen…",
-rg_import_hint: "Beide Tabellen werden zusammen ausgewertet und einander automatisch zugeordnet.",
-rg_amount_ph: "Betrag €",
-rg_company_ph: "Firma",
-rg_bv_optional: "Baustelle (optional, wird sonst automatisch erkannt)",
-rg_invoice_nr_ph: "Rechnungs-Nr",
-rg_text_ph: "Text (z.B. Rechnung BV 6558)",
-rg_hourly_rate: "Stundensatz (€/h)",
-rg_hourly_rate_ph: "z.B. 35",
-ma_long_absent: "Bis auf weiteres abwesend",
-ma_long_absent_hint: "Erscheint beim Stundeneintragen ganz unten, wird nicht automatisch ausgewählt",
-ma_long_absent_from: "Ab wann",
-rg_import_summary: "{added} Rechnung(en) neu, {updated} aktualisiert, {abr} Abrechnungszeile(n) übernommen",
-rg_import_summary_skipped: ", {skipped} übersprungen",
-rg_manual_missing: "Bitte Datum und Firma angeben",
-rg_invoice_single: "Rechnung {first}",
-rg_invoice_range: "Rechnung {first} – {last}",
-stat_avg_ma_day: "Ø Mitarbeiter/Tag",
-select_ma_placeholder: "-- Mitarbeiter --",
-report_date_label: "Datum:",
-pdf_selected_btn: "Ausgewählte PDFs erstellen",
-editor_bvm_menu_sub: "Sätze, Budget, Archivieren, Warnungen",
-push_menu_sub: "Erinnerungen & Warnungen einstellen",
-
-abw_menu_title: "Abwesenheiten & Urlaub",
-abw_menu_sub: "Fehltage, Urlaub, Feiertage erfassen",
-abw_page_sub: "Fehltage, Urlaub, Feiertage",
-abw_intro: "Standardmäßig gilt jeder Mitarbeiter an jedem Tag als anwesend. Trage hier nur Ausnahmen ein (einzelner Fehltag, Urlaub, Feiertag, Krankheit) – nur diese hinterlegten Ausnahmen weichen von \"jeder ist da\" ab.",
-abw_single_title: "Einzelne Abwesenheit (Tag)",
-abw_reason_ph: "Grund (optional)",
-abw_add_btn: "Abwesenheit hinzufügen",
-abw_list_title: "Erfasste Abwesenheiten",
-abw_leave_title: "Urlaub / Feiertag (Zeitraum)",
-abw_whole_company: "Ganze Firma",
-abw_type_urlaub: "Urlaub",
-abw_type_feiertag: "Feiertag",
-abw_type_krankheit: "Krankheit",
-abw_type_sonstiges: "Sonstiges",
-abw_note_ph: "Notiz (optional)",
-abw_leave_add_btn: "Zeitraum hinzufügen",
-abw_leave_list_title: "Erfasster Urlaub / Feiertage",
-abw_select_ma_datum: "Mitarbeiter & Datum wählen",
-abw_fill_all: "Bitte Angaben vervollständigen",
-abw_none: "Keine Abwesenheiten erfasst.",
-abw_leave_none: "Kein Urlaub/Feiertag erfasst.",
-abw_missing_title: "Fehlende Einträge (letzte 2 Tage)",
-abw_mark_absent_btn: "als abwesend markieren",
-abw_marked_absent_toast: "Als abwesend markiert",
-abw_retro_reason: "nachträglich erfasst",
-bvm_manage_settings: "Verwalten & Einstellungen"
-},
-tr: {
-title: "ASLAN · Saat Takibi",
-
-home_add_title: "Saat gir",
-home_add_sub: "Tarih · Şantiye · Çalışan",
-home_week_title: "Haftalık özet",
-home_week_sub: "Çalışan ve şantiye bazında saatler",
-home_misscal_title: "Takvim & eksik girişler",
-home_misscal_sub: "Kimin henüz girmediğine genel bakış",
-misscal_title: "Takvim & eksik girişler",
-misscal_leg_weekend: "Hafta sonu",
-misscal_leg_future: "Gelecek",
-misscal_leg_complete: "Hepsi girildi",
-misscal_leg_rapport: "Rapor eksik",
-misscal_leg_1: "1 eksik",
-misscal_leg_2: "2 eksik",
-misscal_leg_3: "3 eksik",
-misscal_leg_more: "4+ / hiç girilmedi",
-misscal_weekend_note: "Hafta sonu – giriş gerekmiyor",
-misscal_future_note: "Gelecek tarih – henüz giriş gerekmiyor",
-misscal_no_active: "Bu gün için aktif çalışan yok",
-misscal_status_ok: "Girildi",
-misscal_status_missing: "Eksik",
-misscal_status_rapport_missing: "Rapor eksik",
-home_entries_title: "Kayıtlar ve düzenleme",
-home_entries_sub: "Kaydedilmiş tüm günler",
-grp_erfassen: "Giriş yap",
-grp_uebersicht: "Genel bakış & Değerlendirme",
-grp_uebersicht_title: "Genel bakış & Değerlendirme",
-grp_uebersicht_sub: "Hafta, takvim, kayıtlar, değerlendirme, günlük rapor",
-grp_verwaltung: "Yönetim",
-grp_abrechnung: "Faturalama & Gönderim",
-home_ma_title: "Çalışanları yönet",
-home_ma_sub: "İsim değiştir, yeni ekle",
-home_bl_title: "Şantiye Şefleri",
-home_bl_sub: "Şantiyeler için atama",
-home_bv_title: "Şantiyeleri yönet",
-home_bv_sub: "Şantiye adreslerini düzenle",
-home_export_title: "Excel dışa aktar",
-home_export_sub: "Seith_Stunden + şantiye adresleri",
-home_push_title: "18:00 hatırlatma",
-home_push_sub: "Saat eksikse her gün",
-missing_info: "Eksik Bilgiler",
-
-stat_today: "Bugün s",
-stat_week: "Hafta s",
-stat_entries: "Kayıt",
-stat_revenue: "Hafta ciro",
-
-step1_title: "Adım 1 – Tarih",
-step1_sub: "Hangi gün?",
-today_btn: "Bugün",
-yesterday_btn: "◀ Dün",
-to_bv_btn: "Şantiyeye git →",
-
-step2_title: "Adım 2 – Şantiye",
-lager_btn: "Depo (şantiye değil)",
-new_bv: "Yeni şantiye",
-bv_nr: "Şantiye No.",
-bv_nr_invalid: "Not: Bu BV numarası standart şemaya uymuyor (5 haneli, 64, 65 veya 66 ile başlar).",
-bv_nr_invalid_confirm: "Bu BV numarası standart şemaya uymuyor (5 haneli, 64, 65 veya 66 ile başlar). Yine de eklensin mi?",
-bv_nr_invalid_short: "Geçersiz BV numarası",
-bv_addr: "Adres / Açıklama",
-tap_bv: "Şantiyeye dokun",
-fav_bv_label: "Favoriler",
-yesterday_bv_label: "Dünkü şantiyeler",
-to_hours_btn: "Saatlere git →",
-
-step3_title: "Adım 3 – Saatler",
-hours_label: "Saat girin (0 = yoktu)",
-save_btn: "Kaydet",
-
-team_label: "Kimler birlikte çalıştı?",
-team_same_time: "Herkes bütün gün birlikte çalıştı (aynı saatler)",
-times_label: "Çalışma saati",
-start_time: "Başlangıç",
-end_time: "Bitiş",
-pause_label: "Mola",
-pause_none: "Yok",
-pause_30: "30 Dk",
-pause_45: "45 Dk",
-hours_confirm_lbl: "saat çalışıldı, doğru mu?",
-confirm_hours_title: "Saatleri onayla",
-confirm_hours_msg: "{hours} saat çalışıldı, doğru mu? ({names})",
-confirm_hours_msg_multi: "{names} için saatler kaydedilsin mi?",
-warn_no_team_or_time: "Lütfen çalışan seçin ve geçerli saat girin.",
-
-editor_link: "Editör modu",
-editor_pin_title: "Editör modu",
-editor_pin_sub: "PIN girin",
-editor_pin_wrong: "Yanlış PIN",
-editor_title: "Editör modu",
-editor_sub: "Şantiye ayarları",
-editor_bv_list: "Şantiyeler",
-editor_bv_edit: "düzenle",
-editor_warn_off: "Bu şantiye için \"Eksik Bilgiler\" uyarısını kapat",
-editor_warn_is_off: "Uyarı kapalı",
-editor_bv_delete: "Şantiyeyi sil",
-editor_bv_in_use: "Bu şantiyenin kayıtları var, silinemez.",
-editor_bv_delete_title: "Şantiyeyi sil",
-editor_bv_delete_msg: "BV {nr} kalıcı olarak silinsin mi? Bu işlem geri alınamaz.",
-editor_bv_archived_list: "Arşivlenmiş şantiyeler",
-editor_archived_badge: "Arşivlendi",
-editor_archive_toggle: "Şantiyeyi arşivle (seçim listesinden gizle, geçmiş kalır)",
-editor_pin_change_title: "PIN değiştir",
-editor_pin_current: "Mevcut PIN",
-editor_pin_new: "Yeni PIN (4 haneli)",
-editor_pin_confirm: "Yeni PIN tekrar",
-editor_pin_change_btn: "PIN değiştir",
-editor_pin_invalid: "PIN 4 haneli olmalı.",
-editor_pin_mismatch: "Yeni PIN'ler eşleşmiyor.",
-editor_pin_changed: "PIN değiştirildi",
-editor_move_hint: "Kaydı taşımak için tarih veya şantiyeyi değiştirin",
-editor_move_bv_label: "Şantiye",
-editor_add_row: "Çalışan ekle",
-
-bulk_select_btn: "Seç",
-bulk_selected_count: "seçildi",
-bulk_move_btn: "Taşı",
-bulk_move_title: "Seçilen kayıtları taşı",
-bulk_move_target: "Yeni şantiye",
-bulk_move_confirm: "Taşı",
-bulk_select_first: "Lütfen önce kayıt seçin!",
-
-report_title: "Günlük rapor",
-report_sub: "Kopyalanacak rapor verileri",
-report_link: "Günlük rapor",
-report_pick_date: "Tarih seç",
-report_pick_bv: "Şantiye seç",
-report_no_entries: "Bu tarih ve şantiye için kayıt yok.",
-report_print_btn: "Raporu yazdır",
-report_future_pick_ma: "Çalışan seç",
-report_future_show_btn: "Raporu göster",
-report_future_pick_one: "Lütfen en az bir çalışan seçin.",
-wa_link: "WhatsApp Gönderimi",
-wa_sub: "Bayan Peters'a gönderilenleri işaretle",
-wa_title: "WhatsApp Gönderimi",
-wa_hs: "Bayan Peters",
-wa_empty: "Henüz rapor yok.",
-wa_filter_open: "Sadece bekleyenler",
-wa_filter_all: "Hepsini göster",
-wa_sent_label: "Gönderildi",
-wa_open_label: "Bekliyor",
-wa_progress: "{total} raporun {done} tanesi gönderildi",
-
-stat_link: "Değerlendirme",
-stat_sub: "Çalışan, şantiye ve takvim istatistikleri",
-stat_title: "Değerlendirme",
-stat_tab_ma: "Çalışan",
-stat_tab_bv: "Şantiyeler",
-stat_tab_cal: "Takvim",
-stat_scope_month: "Ay",
-stat_scope_year: "Yıl",
-stat_close: "Kapat",
-stat_year_label: "{y} Yılı",
-stat_no_hours: "Bu dönemde saat kaydı yok.",
-stat_no_entries_day: "Bu günde kayıt yok.",
-stat_total: "Toplam",
-stat_day: "gün",
-stat_days: "gün",
-stat_workday: "çalışma günü",
-stat_workdays: "çalışma günü",
-stat_over_budget: "bütçe aşıldı",
-stat_of_target: "{soll} hedeften {ist}",
-stat_rate_label: "Saat ücreti (CHF/sa)",
-stat_budget_label: "Hedef saat",
-stat_heat_low: "az",
-stat_heat_high: "çok",
-month_01: "Ocak", month_02: "Şubat", month_03: "Mart", month_04: "Nisan",
-month_05: "Mayıs", month_06: "Haziran", month_07: "Temmuz", month_08: "Ağustos",
-month_09: "Eylül", month_10: "Ekim", month_11: "Kasım", month_12: "Aralık",
-month_short_01: "Oca", month_short_02: "Şub", month_short_03: "Mar", month_short_04: "Nis",
-month_short_05: "May", month_short_06: "Haz", month_short_07: "Tem", month_short_08: "Ağu",
-month_short_09: "Eyl", month_short_10: "Eki", month_short_11: "Kas", month_short_12: "Ara",
-
-pdf_no_data_for_date: "Bu tarih için veri yok.",
-pdf_select_one_bv: "Lütfen en az bir şantiye seçin!",
-pdf_template_missing: "PDF şablonu bulunamadı!",
-pdf_created_ok: "PDF'ler başarıyla oluşturuldu!",
-pdf_error_prefix: "Hata: ",
-pdf_preparing: "PDF hazırlanıyor…",
-push_not_supported: "Tarayıcınız bildirimleri desteklemiyor.",
-push_ios_add_home: "iPhone'da bildirimler yalnızca uygulama Ana Ekrana eklendiğinde çalışır: Safari'de \"Paylaş\" ve ardından \"Ana Ekrana Ekle\"ye dokunun. Sonra uygulamayı oradan açıp bildirimleri tekrar etkinleştirin.",
-push_permission_denied: "Lütfen bildirimlere izin verin.",
-pick_date_first: "Lütfen tarih seçin!",
-bv_nr_enter: "Şantiye numarasını girin!",
-bv_nr_exists: "Bu şantiye zaten mevcut!",
-bv_nr_taken: "Bu şantiye numarası zaten kullanılıyor!",
-save_failed: "Kaydetme başarısız oldu.",
-delete_failed: "Silme başarısız oldu.",
-name_and_initials_required: "Ad ve kısaltmayı doldurun!",
-name_required: "Ad girin!",
-network_error_prefix: "Ağ hatası / bağlantı hatası:\n",
-duplicate_entry_error: "Bu çalışan için bu tarihte ve bu şantiyede zaten bir kayıt var. Lütfen sayfayı yenileyip tekrar deneyin.",
-db_error_prefix: "Kaydederken bir sorun oluştu (hata kodu {code}). Lütfen tekrar deneyin.",
-edrow_employee: "Çalışan",
-edrow_start: "Başlangıç",
-edrow_end: "Bitiş",
-edrow_pause: "Mola (Dk)",
-edrow_time_invalid: "Geçersiz saat",
-print_rapport_title: "Rapor yazdırılsın mı?",
-print_rapport_msg: "Yazdırmak için bir kopya açmak ister misin?",
-print_rapport_yes: "Evet, aç",
-safety_warning_title: "Lütfen kontrol et",
-safety_warning_continue: "Yine de kaydet",
-safety_pause_warning: "{name}: bugün toplam {hours} saat, ama sadece {pause} dk mola girildi (en az {required} dk gerekli).",
-safety_hours_warning: "{name}: bugün toplam {hours} saat – bu çok fazla. Lütfen doğru olduğundan emin ol.",
-report_field_datum: "Tarih",
-report_field_addr: "Adres",
-report_field_bvnr: "BV numarası",
-report_field_bauleiter: "Şantiye Şefi",
-report_field_bauleiter_missing: "Şantiye şefi yok",
-report_field_start: "Başlangıç",
-report_field_end: "Bitiş",
-report_field_pause: "Mola",
-report_field_duration: "Çalışma süresi",
-copy_btn: "Kopyala",
-copied_toast: "Kopyalandı!",
-
-saved_title: "Kaydedildi!",
-more_bv_btn: "Başka şantiye",
-home_btn: "Ana sayfaya dön",
-
-week_title: "Haftalık özet",
-prev_week: "◀ Önceki hafta",
-next_week: "Sonraki ▶",
-
-entries_title: "Kayıtlar",
-delete_all_btn: "Hepsini sil",
-delete_range_btn: "Aralığı sil",
-no_entries: "Henüz kayıt yok.",
-filter_search_ph: "Ara: Personel, şantiye, tarih…",
-filter_all_bv: "Tüm şantiyeler",
-filter_all_ma: "Tüm personel",
-filter_from: "Başlangıç",
-filter_to: "Bitiş",
-filter_reset: "Filtreyi sıfırla",
-no_search_results: "Bu arama için kayıt bulunamadı.",
-
-ma_title: "Çalışanlar",
-ma_sub: "Yönet ve ekle",
-new_ma: "Yeni çalışan",
-full_name: "Ad soyad",
-ma_list: "Çalışan listesi",
-
-bl_title: "Şantiye Şefi",
-new_bl: "Yeni Şantiye Şefi",
-bl_list: "Şantiye Şefi listesi",
-edit_bl: "Şantiye Şefi düzenle",
-delete_bl: "Şantiye Şefi sil",
-
-bvm_title: "Şantiyeler",
-bvm_sub: "Şantiye adreslerini düzenle",
-all_bv: "Tüm şantiyeler",
-
-export_title: "Excel dışa aktar",
-export_sub: "Seith_Stunden + şantiye adresleri",
-export_range: "Tarih aralığı (isteğe bağlı)",
-export_btn: "Excel indir",
-
-edit_entry: "Kaydı düzenle",
-save_changes: "Kaydet",
-delete_entry: "Kaydı sil",
-cancel_btn: "İptal",
-
-edit_bv: "Şantiyeyi düzenle",
-edit_ma: "Çalışanı düzenle",
-short_code: "Kısaltma (2 harf)",
-color: "Renk",
-delete_ma: "Çalışanı sil",
-
-warn_days_missing: "{count} gün için saat girilmemiş!",
-warn_fill_now: "Şimdi tamamla →",
-warn_missing: "Adres veya Şantiye Şefi eksik. Yine de devam edilsin mi?",
-
-confirm_title: "Emin misin?",
-confirm_cancel: "İptal",
-confirm_ok: "Devam",
-
-sync_now: "Senkronize ediliyor…",
-sync_ok: "Senkronize edildi",
-sync_saved: "Kaydedildi",
-sync_error: "Kaydetme hatası",
-
-toast_sync: "Veriler güncellendi",
-toast_push_on: "Hatırlatma aktif – her gün 18:00",
-toast_push_off: "Hatırlatma kapatıldı",
-toast_updated: "Güncellendi",
-toast_deleted: "Silindi",
-toast_deleted_all: "Hepsi silindi",
-
-notify_title: "⏰ ASLAN Saat Takibi",
-notify_body: "Bugün için henüz saat girilmedi!",
-push_settings_title: "Bildirimler",
-push_master_title: "Bildirimleri etkinleştir",
-push_time_lbl: "Saat girilmediyse hatırlatma zamanı",
-push_entry_title: "Her kayıttan sonra bildirim",
-push_safety_title: "Olağandışı çalışma süresi / az mola uyarısı",
-push_budget_title: "Şantiye hedef saatine yaklaşınca uyar",
-push_wa_days_lbl: "\"Rapor Frau Peters'e gönderilmedi\" hatırlatması X gün sonra (virgülle birden fazla, örn. 2,7)",
-push_ios_hint: "iPhone notu: Bildirimler yalnızca sayfa Safari'de \"Paylaş → Ana Ekrana Ekle\" ile kurulup oradan açıldığında çalışır (iOS 16.4+). Android/Samsung'da doğrudan tarayıcıda çalışır.",
-notify_entry_title: "✅ Kayıt tamamlandı",
-notify_entry_body: "BV {bv}: {names} · {hours}sa",
-notify_safety_title: "⚠️ Lütfen kontrol edin",
-notify_budget_title: "📊 Şantiye hedef saatleri",
-notify_budget_near: "BV {bv} ({name}): {budget}sa hedefin {used}sa'ine ulaşıldı.",
-notify_budget_over: "BV {bv} ({name}): Hedef saat aşıldı – {used}sa / {budget}sa.",
-notify_wa_title: "📋 Rapor hâlâ açık",
-notify_wa_body: "BV {bv}, {date} tarihli rapor {days} gündür Frau Peters'e gönderilmedi.",
-
-excel_build: "⏳ Excel hazırlanıyor…",
-excel_empty: "Kayıt yok.",
-excel_done: "Dosya indirildi!",
-
-dash_inv_open: "Açık faturalar",
-dash_inv_over: "Vadesi geçmiş",
-dash_inv_total: "Toplam ciro",
-dash_inv_unbilled: "Henüz faturalanmadı",
-dash_inv_next: "Sonraki vade",
-dash_inv_deadlines_title: "Toplu fatura vadeleri",
-dash_inv_none: "Açık fatura yok.",
-dash_inv_sammel: "Toplu fatura",
-dash_inv_today: "bugün",
-dash_inv_today_due: "bugün vadesi doluyor",
-dash_inv_in_days: "{days} gün sonra",
-dash_inv_days_left: "{days} gün kaldı",
-dash_inv_overdue_days: "{days} gün gecikti",
-
-editor_dash_stats_title: "Panel istatistikleri",
-editor_dash_invopen: "Açık faturaları göster",
-editor_dash_invover: "Vadesi geçmiş faturaları göster",
-editor_dash_invtotal: "Toplam ciroyu göster",
-editor_dash_unbilled: "Henüz faturalanmamış ciroyu göster",
-editor_dash_invnext: "Sonraki vadeyi göster",
-editor_dash_deadlines: "Vade listesini göster (toplu faturalar)",
-
-home_empty_title: "Boş rapor oluştur",
-home_empty_sub: "Tarih, şantiye şefi, çalışan – saatler boş kalır",
-empty_rep_title: "Boş rapor oluştur",
-empty_rep_sub: "Tarih · Şantiye · Çalışan",
-empty_rep_date: "Tarih",
-empty_rep_bv: "Şantiye",
-empty_rep_bl_prefix: "Şantiye şefi",
-empty_rep_team: "Çalışanlar",
-empty_rep_save: "Boş raporu yazdır",
-empty_rep_missing: "Lütfen tarih ve şantiye seçin",
-empty_rep_missing_team: "Lütfen en az bir çalışan seçin",
-empty_rep_saved: "Boş rapor kaydedildi",
-entry_hours_open: "açık",
-
-push_invoice_title: "Vadesi geçen faturalarda bildirim",
-notify_invoice_title: "Fatura vadesi geçti",
-notify_invoice_body: "{firma}: {sum} · {days} gündür vadesi geçmiş",
-
-rg_filter_all: "Tümü",
-rg_filter_open: "Açık",
-rg_filter_overdue: "Vadesi geçmiş",
-rg_filter_paid: "Ödendi",
-rg_overview: "Genel bakış",
-rg_import_title: "Excel'den yapıştır",
-rg_import_btn: "Yapıştır ve aktar",
-rg_manual_title: "Elle ekle",
-rg_manual_btn: "Ekle",
-rg_filter_label: "Filtre",
-rg_none: "Henüz fatura yok.",
-rg_none_filter: "Bu filtre için kayıt yok.",
-rg_status_paid: "Ödendi",
-rg_status_overdue: "Vadesi geçmiş",
-rg_status_open: "Açık",
-rg_paid_on: "{date} tarihinde ödendi",
-rg_pay_group_on: "Tüm toplu faturayı ödendi olarak işaretle",
-rg_pay_group_off: "Tüm toplu faturayı açık olarak işaretle",
-rg_btn_paid: "Ödendi",
-rg_btn_undo: "Geri al",
-rg_sammel: "Toplu fatura ({count})",
-
-dash_open_hours: "Açık saatler",
-rg_link: "Faturalar",
-rg_link_sub: "Genel bakış ve vade",
-rg_page_sub: "Genel bakış ve vade (14 gün)",
-rg_single_employee: "Tek çalışan",
-rg_show_bv_btn: "Şantiyeleri göster",
-editor_rg_page_title: "Faturalar sayfası",
-editor_rg_hide_manual: "\"Elle ekle\" bölümünü gizle",
-rg_import_step1: "1. Fatura tablosu",
-rg_import_step2: "2. Faturalama/saat tablosu",
-rg_paste_rg_ph: "Fatura satırlarını buraya yapıştırın (Excel'den kopyalar gibi Tab ile ayrılmış)…",
-rg_paste_abr_ph: "Faturalama satırlarını (çalışan başına saat) buraya yapıştırın…",
-rg_import_hint: "Her iki tablo birlikte değerlendirilir ve otomatik olarak eşleştirilir.",
-rg_amount_ph: "Tutar €",
-rg_company_ph: "Firma",
-rg_bv_optional: "Şantiye (isteğe bağlı, aksi halde otomatik algılanır)",
-rg_invoice_nr_ph: "Fatura no",
-rg_text_ph: "Metin (örn. Fatura BV 6558)",
-rg_hourly_rate: "Saat ücreti (€/sa)",
-rg_hourly_rate_ph: "örn. 35",
-ma_long_absent: "İkinci bir emre kadar devamsız",
-ma_long_absent_hint: "Saat girişinde en altta görünür, otomatik seçilmez",
-ma_long_absent_from: "Başlangıç tarihi",
-rg_import_summary: "{added} yeni fatura, {updated} güncellendi, {abr} faturalama satırı aktarıldı",
-rg_import_summary_skipped: ", {skipped} atlandı",
-rg_manual_missing: "Lütfen tarih ve firma girin",
-rg_invoice_single: "Fatura {first}",
-rg_invoice_range: "Fatura {first} – {last}",
-stat_avg_ma_day: "Ort. çalışan/gün",
-select_ma_placeholder: "-- Çalışan --",
-report_date_label: "Tarih:",
-pdf_selected_btn: "Seçilenlerin PDF'lerini oluştur",
-editor_bvm_menu_sub: "Ücretler, bütçe, arşivleme, uyarılar",
-push_menu_sub: "Hatırlatmaları ve uyarıları ayarla",
-
-abw_menu_title: "Devamsızlık ve İzin",
-abw_menu_sub: "Devamsızlık, izin, resmi tatil kaydet",
-abw_page_sub: "Devamsızlık, izin, resmi tatil",
-abw_intro: "Varsayılan olarak her çalışan her gün mevcut kabul edilir. Burada yalnızca istisnaları girin (tek günlük devamsızlık, izin, resmi tatil, hastalık) – sadece kaydedilen bu istisnalar \"herkes burada\" durumundan sapar.",
-abw_single_title: "Tekil devamsızlık (gün)",
-abw_reason_ph: "Sebep (isteğe bağlı)",
-abw_add_btn: "Devamsızlık ekle",
-abw_list_title: "Kaydedilen devamsızlıklar",
-abw_leave_title: "İzin / Resmi tatil (dönem)",
-abw_whole_company: "Tüm firma",
-abw_type_urlaub: "İzin",
-abw_type_feiertag: "Resmi tatil",
-abw_type_krankheit: "Hastalık",
-abw_type_sonstiges: "Diğer",
-abw_note_ph: "Not (isteğe bağlı)",
-abw_leave_add_btn: "Dönem ekle",
-abw_leave_list_title: "Kaydedilen izin / resmi tatiller",
-abw_select_ma_datum: "Çalışan ve tarih seçin",
-abw_fill_all: "Lütfen bilgileri tamamlayın",
-abw_none: "Henüz devamsızlık kaydedilmedi.",
-abw_leave_none: "Henüz izin/resmi tatil kaydedilmedi.",
-abw_missing_title: "Eksik kayıtlar (son 2 gün)",
-abw_mark_absent_btn: "devamsız olarak işaretle",
-abw_marked_absent_toast: "Devamsız olarak işaretlendi",
-abw_retro_reason: "sonradan girildi",
-bvm_manage_settings: "Yönet ve ayarlar"
-}
+  de: {
+    title: "ASLAN · Stundenerfassung",
+
+    home_add_title: "Stunden eintragen",
+    home_add_sub: "Datum · Baustelle · Mitarbeiter",
+    home_week_title: "Wochenübersicht",
+    home_week_sub: "Stunden pro Mitarbeiter & BV",
+    home_misscal_title: "Kalender & fehlende Einträge",
+    home_misscal_sub: "Übersicht wer noch nicht erfasst wurde",
+    misscal_title: "Kalender & fehlende Einträge",
+    misscal_leg_weekend: "Wochenende",
+    misscal_leg_future: "Zukünftig",
+    misscal_leg_complete: "Alle erfasst",
+    misscal_leg_rapport: "Rapport fehlt",
+    misscal_leg_1: "1 fehlt",
+    misscal_leg_2: "2 fehlen",
+    misscal_leg_3: "3 fehlen",
+    misscal_leg_more: "4+ / niemand erfasst",
+    misscal_weekend_note: "Wochenende – keine Erfassung erforderlich",
+    misscal_future_note: "Zukünftiger Tag – noch keine Erfassung erforderlich",
+    misscal_no_active: "Keine aktiven Mitarbeiter an diesem Tag",
+    misscal_status_ok: "Erfasst",
+    misscal_status_missing: "Fehlt",
+    misscal_status_rapport_missing: "Rapport fehlt",
+    home_entries_title: "Einträge & Bearbeiten",
+    home_entries_sub: "Alle gespeicherten Tage",
+    grp_erfassen: "Erfassen",
+    grp_uebersicht: "Übersicht & Auswertung",
+    grp_uebersicht_title: "Übersicht & Auswertung",
+    grp_uebersicht_sub: "Woche, Kalender, Einträge, Auswertung, Tagesbericht",
+    grp_verwaltung: "Verwaltung",
+    grp_abrechnung: "Abrechnung & Versand",
+    home_ma_title: "Mitarbeiter verwalten",
+    home_ma_sub: "Namen ändern, neu anlegen",
+    home_bl_title: "Bauleiter verwalten",
+    home_bl_sub: "Zuweisung für Baustellen",
+    home_bv_title: "Baustellen verwalten",
+    home_bv_sub: "BV-Adressen bearbeiten",
+    home_export_title: "Export als Excel",
+    home_export_sub: "Seith_Stunden + BV-Adressen",
+    home_push_title: "Erinnerung 18:00 Uhr",
+    home_push_sub: "Täglich wenn Stunden fehlen",
+    missing_info: "Fehlende Angaben",
+
+    stat_today: "Heute h",
+    stat_week: "Woche h",
+    stat_entries: "Einträge",
+    stat_revenue: "Umsatz Woche",
+
+    step1_title: "Schritt 1 – Datum",
+    step1_sub: "Welcher Tag?",
+    today_btn: "Heute",
+    yesterday_btn: "◀ Gestern",
+    to_bv_btn: "Zur Baustelle →",
+
+    step2_title: "Schritt 2 – Baustelle",
+    lager_btn: "Lager (kein Bauvorhaben)",
+    new_bv: "Neue Baustelle",
+    bv_nr: "BV-Nr.",
+    bv_nr_invalid: "Hinweis: Diese BV-Nummer entspricht nicht dem Schema (5-stellig, beginnt mit 64, 65 oder 66).",
+    bv_nr_invalid_confirm: "Diese BV-Nummer entspricht nicht dem üblichen Schema (5-stellig, beginnt mit 64, 65 oder 66). Trotzdem anlegen?",
+    bv_nr_invalid_short: "Ungültige BV-Nummer",
+    bv_addr: "Adresse / Beschreibung",
+    tap_bv: "Baustelle antippen",
+    fav_bv_label: "Favoriten",
+    yesterday_bv_label: "Baustellen von gestern",
+    to_hours_btn: "Zu den Stunden →",
+
+    step3_title: "Schritt 3 – Stunden",
+    hours_label: "Stunden eintragen (0 = nicht dabei)",
+    save_btn: "Speichern",
+
+    team_label: "Wer hat mitgearbeitet?",
+    team_same_time: "Alle haben den ganzen Tag zusammen gearbeitet (gleiche Zeiten)",
+    times_label: "Arbeitszeit",
+    start_time: "Anfang",
+    end_time: "Ende",
+    pause_label: "Pause",
+    pause_none: "Keine",
+    pause_30: "30 Min",
+    pause_45: "45 Min",
+    hours_confirm_lbl: "Stunden gearbeitet, richtig?",
+    confirm_hours_title: "Stunden bestätigen",
+    confirm_hours_msg: "{hours} Stunden gearbeitet, richtig? ({names})",
+    confirm_hours_msg_multi: "Zeiten für {names} übernehmen?",
+    warn_no_team_or_time: "Bitte Mitarbeiter auswählen und gültige Zeiten eingeben.",
+
+    editor_link: "Editor-Modus",
+    editor_pin_title: "Editor-Modus",
+    editor_pin_sub: "PIN eingeben",
+    editor_pin_wrong: "Falscher PIN",
+    editor_title: "Editor-Modus",
+    editor_sub: "Baustellen-Einstellungen",
+    editor_bv_list: "Baustellen",
+    editor_bv_edit: "bearbeiten",
+    editor_warn_off: "Warnung \"Fehlende Angaben\" für diese Baustelle deaktivieren",
+    editor_warn_is_off: "Warnung deaktiviert",
+    editor_warn_off_global: "Warnung \"Bauleiter fehlt\" für alle Baustellen deaktivieren",
+    editor_warn_off_global_hint: "Gilt geräteübergreifend für alle Nutzer. Einzelne Baustellen können weiterhin über \"Sätze, Budget & Archiv\" separat behandelt werden.",
+    editor_bv_delete: "Baustelle löschen",
+    editor_bv_in_use: "Diese Baustelle hat bereits Einträge und kann nicht gelöscht werden.",
+    editor_bv_delete_title: "Baustelle löschen",
+    editor_bv_delete_msg: "BV {nr} wirklich endgültig löschen? Dies kann nicht rückgängig gemacht werden.",
+    editor_bv_archived_list: "Archivierte Baustellen",
+    editor_archived_badge: "Archiviert",
+    editor_archive_toggle: "Baustelle archivieren (aus Auswahl ausblenden, Historie bleibt erhalten)",
+    editor_pin_change_title: "PIN ändern",
+    editor_pin_current: "Aktueller PIN",
+    editor_pin_new: "Neuer PIN (4-stellig)",
+    editor_pin_confirm: "Neuer PIN wiederholen",
+    editor_pin_change_btn: "PIN ändern",
+    editor_pin_invalid: "PIN muss 4-stellig sein.",
+    editor_pin_mismatch: "Die neuen PINs stimmen nicht überein.",
+    editor_pin_changed: "PIN geändert",
+    editor_move_hint: "Datum oder Baustelle ändern, um den Eintrag zu verschieben",
+    editor_move_bv_label: "Baustelle",
+    editor_add_row: "Mitarbeiter hinzufügen",
+
+    bulk_select_btn: "Auswählen",
+    bulk_selected_count: "ausgewählt",
+    bulk_move_btn: "Verschieben",
+    bulk_move_title: "Ausgewählte Einträge verschieben",
+    bulk_move_target: "Neue Baustelle",
+    bulk_move_confirm: "Verschieben",
+    bulk_select_first: "Bitte zuerst Einträge auswählen!",
+
+    report_title: "Tagesbericht",
+    report_sub: "Rapport-Daten zum Kopieren",
+    report_link: "Tagesbericht",
+    report_pick_date: "Datum wählen",
+    report_pick_bv: "Baustelle wählen",
+    report_no_entries: "Für diesen Tag und diese Baustelle liegen keine Einträge vor.",
+    report_print_btn: "Rapport drucken",
+    report_future_pick_ma: "Mitarbeiter auswählen",
+    report_future_show_btn: "Rapport anzeigen",
+    report_future_pick_one: "Bitte mindestens einen Mitarbeiter auswählen.",
+    wa_link: "WhatsApp-Versand",
+    wa_sub: "Rapporte an Frau Peters abhaken",
+    wa_title: "WhatsApp-Versand",
+    wa_hs: "Frau Peters",
+    wa_empty: "Noch keine Rapporte vorhanden.",
+    wa_filter_open: "Nur ausstehende",
+    wa_filter_all: "Alle anzeigen",
+    wa_sent_label: "Gesendet",
+    wa_open_label: "Ausstehend",
+    wa_progress: "{done} von {total} gesendet",
+
+    stat_link: "Auswertung",
+    stat_sub: "Statistik pro Mitarbeiter, Baustelle & Kalender",
+    stat_title: "Auswertung",
+    stat_tab_ma: "Mitarbeiter",
+    stat_tab_bv: "Baustellen",
+    stat_tab_cal: "Kalender",
+    stat_scope_month: "Monat",
+    stat_scope_year: "Jahr",
+    stat_close: "Schliessen",
+    stat_year_label: "Jahr {y}",
+    stat_no_hours: "Keine Stunden in diesem Zeitraum.",
+    stat_no_entries_day: "Keine Einträge an diesem Tag.",
+    stat_total: "Total",
+    stat_day: "Tag",
+    stat_days: "Tage",
+    stat_workday: "Einsatztag",
+    stat_workdays: "Einsatztage",
+    stat_over_budget: "über Budget",
+    stat_of_target: "{ist} von {soll} Soll",
+    stat_rate_label: "Stundensatz (CHF/h)",
+    stat_budget_label: "Soll-Stunden",
+    stat_heat_low: "wenig",
+    stat_heat_high: "viel",
+    month_01: "Januar", month_02: "Februar", month_03: "März", month_04: "April",
+    month_05: "Mai", month_06: "Juni", month_07: "Juli", month_08: "August",
+    month_09: "September", month_10: "Oktober", month_11: "November", month_12: "Dezember",
+    month_short_01: "Jan", month_short_02: "Feb", month_short_03: "Mär", month_short_04: "Apr",
+    month_short_05: "Mai", month_short_06: "Jun", month_short_07: "Jul", month_short_08: "Aug",
+    month_short_09: "Sep", month_short_10: "Okt", month_short_11: "Nov", month_short_12: "Dez",
+
+    pdf_no_data_for_date: "Keine Daten für dieses Datum.",
+    pdf_select_one_bv: "Bitte mindestens eine Baustelle auswählen!",
+    pdf_template_missing: "PDF-Vorlage nicht gefunden!",
+    pdf_created_ok: "PDFs erfolgreich erstellt!",
+    pdf_error_prefix: "Fehler: ",
+    push_not_supported: "Dein Browser unterstützt keine Benachrichtigungen.",
+    push_ios_add_home: "Auf dem iPhone funktionieren Benachrichtigungen nur, wenn die App zum Home-Bildschirm hinzugefügt wurde: In Safari auf \"Teilen\" und dann \"Zum Home-Bildschirm\" tippen. Danach die App von dort öffnen und Benachrichtigungen erneut aktivieren.",
+    push_permission_denied: "Bitte Benachrichtigungen erlauben.",
+    pick_date_first: "Bitte Datum wählen!",
+    bv_nr_enter: "BV-Nummer eingeben!",
+    bv_nr_exists: "BV bereits vorhanden!",
+    bv_nr_taken: "BV-Nummer bereits vergeben!",
+    save_failed: "Speichern fehlgeschlagen.",
+    delete_failed: "Löschen fehlgeschlagen.",
+    name_and_initials_required: "Name und Kürzel ausfüllen!",
+    name_required: "Name eingeben!",
+    network_error_prefix: "Netzwerkfehler / Fetch-Fehler:\n",
+    duplicate_entry_error: "Für diesen Mitarbeiter existiert an diesem Tag auf dieser Baustelle bereits ein Eintrag. Bitte Seite neu laden und erneut versuchen.",
+    db_error_prefix: "Es gab ein Problem beim Speichern (Fehlercode {code}). Bitte erneut versuchen.",
+    edrow_employee: "Mitarbeiter",
+    edrow_start: "Start",
+    edrow_end: "Ende",
+    edrow_pause: "Pause (Min)",
+    edrow_time_invalid: "Ungültige Zeit",
+    print_rapport_title: "Rapport ausdrucken?",
+    print_rapport_msg: "Möchtest du eine Kopie zum Ausdrucken öffnen?",
+    print_rapport_yes: "Ja, öffnen",
+    safety_warning_title: "Bitte prüfen",
+    safety_warning_continue: "Trotzdem speichern",
+    safety_pause_warning: "{name}: {hours}h heute insgesamt, aber nur {pause} Min Pause erfasst (mind. {required} Min vorgeschrieben).",
+    safety_hours_warning: "{name}: {hours}h heute insgesamt – das ist sehr viel. Bitte prüfen, ob das stimmt.",
+    report_field_datum: "Datum",
+    report_field_addr: "Adresse",
+    report_field_bvnr: "BV-Nummer",
+    report_field_bauleiter: "Bauleiter",
+    report_field_bauleiter_missing: "Kein Bauleiter",
+    report_field_start: "Anfang",
+    report_field_end: "Ende",
+    report_field_pause: "Pause",
+    report_field_duration: "Arbeitsdauer",
+    copy_btn: "Kopieren",
+    copied_toast: "Kopiert!",
+
+    saved_title: "Gespeichert!",
+    more_bv_btn: "Weitere Baustelle",
+    home_btn: "Zur Startseite",
+
+    week_title: "Wochenübersicht",
+    prev_week: "◀ Vorwoche",
+    next_week: "Nächste ▶",
+
+    entries_title: "Einträge",
+    delete_all_btn: "Alle löschen",
+    delete_range_btn: "Zeitraum löschen",
+    no_entries: "Noch keine Einträge.",
+    filter_search_ph: "Suche: Mitarbeiter, Baustelle, Datum…",
+    filter_all_bv: "Alle Baustellen",
+    filter_all_ma: "Alle Mitarbeiter",
+    filter_from: "Von",
+    filter_to: "Bis",
+    filter_reset: "Filter zurücksetzen",
+    no_search_results: "Keine Einträge für diese Suche gefunden.",
+
+    ma_title: "Mitarbeiter",
+    ma_sub: "Verwalten & anlegen",
+    new_ma: "Neuer Mitarbeiter",
+    full_name: "Vollständiger Name",
+    ma_list: "Mitarbeiterliste",
+
+    bl_title: "Bauleiter",
+    new_bl: "Neuer Bauleiter",
+    bl_list: "Bauleiterliste",
+    edit_bl: "Bauleiter bearbeiten",
+    delete_bl: "Bauleiter löschen",
+
+    bvm_title: "Baustellen",
+    bvm_sub: "BV-Adressen bearbeiten",
+    all_bv: "Alle Baustellen",
+
+    export_title: "Excel-Export",
+    export_sub: "Seith_Stunden + BV-Adressen",
+    export_range: "Zeitraum (optional)",
+    export_btn: "Excel herunterladen",
+
+    edit_entry: "Eintrag bearbeiten",
+    save_changes: "Speichern",
+    delete_entry: "Eintrag löschen",
+    cancel_btn: "Abbrechen",
+
+    edit_bv: "BV bearbeiten",
+    edit_ma: "Mitarbeiter bearbeiten",
+    short_code: "Kürzel (2 Buchstaben)",
+    color: "Farbe",
+    delete_ma: "Mitarbeiter löschen",
+
+    warn_days_missing: "{count} Tag{plural} ohne Stunden!",
+    warn_fill_now: "Jetzt nachtragen →",
+    warn_missing: "Adresse oder Bauleiter fehlt. Trotzdem fortfahren?",
+
+    confirm_title: "Sicher?",
+    confirm_cancel: "Abbrechen",
+    confirm_ok: "Weiter",
+
+    sync_now: "Synchronisiere…",
+    sync_ok: "Synchronisiert",
+    sync_saved: "Gespeichert",
+    sync_error: "Fehler beim Speichern",
+
+    toast_sync: "Daten aktualisiert",
+    toast_push_on: "Erinnerung aktiviert – täglich 18:00 Uhr",
+    toast_push_off: "Erinnerung deaktiviert",
+    toast_updated: "Aktualisiert",
+    toast_deleted: "Gelöscht",
+    toast_deleted_all: "Alle gelöscht",
+
+    notify_title: "⏰ ASLAN Stundenerfassung",
+    notify_body: "Stunden für heute noch nicht eingetragen!",
+    push_settings_title: "Benachrichtigungen",
+    push_master_title: "Benachrichtigungen aktivieren",
+    push_time_lbl: "Erinnerungszeit, wenn Stunden fehlen",
+    push_entry_title: "Benachrichtigung nach jedem Eintrag",
+    push_safety_title: "Warnung bei ungewöhnlicher Arbeitszeit / zu wenig Pause",
+    push_budget_title: "Warnung wenn Soll-Stunden einer Baustelle fast erreicht sind",
+    push_wa_days_lbl: "Erinnerung \"Rapport nicht an Frau Peters geschickt\" nach X Tagen (mehrere mit Komma, z.B. 2,7)",
+    push_ios_hint: "Hinweis iPhone: Benachrichtigungen funktionieren nur, wenn die Seite über Safari \"Teilen → Zum Home-Bildschirm\" installiert und von dort geöffnet wurde (ab iOS 16.4). Auf Android/Samsung funktioniert es direkt im Browser.",
+    notify_entry_title: "✅ Eintrag gespeichert",
+    notify_entry_body: "BV {bv}: {names} · {hours}h",
+    notify_safety_title: "⚠️ Bitte prüfen",
+    notify_budget_title: "📊 Soll-Stunden Baustelle",
+    notify_budget_near: "BV {bv} ({name}): {used}h von {budget}h Soll-Stunden erreicht.",
+    notify_budget_over: "BV {bv} ({name}): Soll-Stunden überschritten – {used}h von {budget}h.",
+    notify_wa_title: "📋 Rapport noch offen",
+    notify_wa_body: "BV {bv} vom {date} ist seit {days} Tagen noch nicht an Frau Peters geschickt.",
+
+    excel_build: "⏳ Excel wird erstellt…",
+    excel_empty: "Keine Einträge.",
+    excel_done: "Datei heruntergeladen!",
+
+    dash_inv_open: "Offene Rechnungen",
+    dash_inv_over: "Überfällig",
+    dash_inv_total: "Umsatz gesamt",
+    dash_inv_unbilled: "Noch nicht abgerechnet",
+    dash_inv_next: "Nächste Frist",
+    dash_inv_deadlines_title: "Fristen Sammelrechnungen",
+    dash_inv_none: "Keine offenen Rechnungen.",
+    dash_inv_sammel: "Sammelrechnung",
+    dash_inv_today: "heute",
+    dash_inv_today_due: "heute fällig",
+    dash_inv_in_days: "in {days} Tg.",
+    dash_inv_days_left: "noch {days} Tage",
+    dash_inv_overdue_days: "{days} Tg. überfällig",
+
+    editor_dash_stats_title: "Dashboard-Statistiken",
+    editor_dash_invopen: "Offene Rechnungen anzeigen",
+    editor_dash_invover: "Überfällige Rechnungen anzeigen",
+    editor_dash_invtotal: "Gesamtumsatz anzeigen",
+    editor_dash_unbilled: "Noch nicht abgerechneten Umsatz anzeigen",
+    editor_dash_invnext: "Nächste Frist anzeigen",
+    editor_dash_deadlines: "Fristen-Liste (Sammelrechnungen) anzeigen",
+
+    home_empty_title: "Leer-Rapport erstellen",
+    home_empty_sub: "Datum, Bauleiter, Mitarbeiter – Stunden bleiben leer",
+    empty_rep_title: "Leer-Rapport erstellen",
+    empty_rep_sub: "Datum · Baustelle · Mitarbeiter",
+    empty_rep_date: "Datum",
+    empty_rep_bv: "Baustelle",
+    empty_rep_bl_prefix: "Bauleiter",
+    empty_rep_team: "Mitarbeiter",
+    empty_rep_save: "Leer-Rapport drucken",
+    empty_rep_missing: "Bitte Datum und Baustelle wählen",
+    empty_rep_missing_team: "Bitte mind. einen Mitarbeiter wählen",
+    empty_rep_saved: "Leer-Rapport gespeichert",
+    entry_hours_open: "offen",
+
+    push_invoice_title: "Benachrichtigung bei überfälligen Rechnungen",
+    notify_invoice_title: "Rechnung überfällig",
+    notify_invoice_body: "{firma}: {sum} · seit {days} Tag(en) überfällig",
+
+    rg_filter_all: "Alle",
+    rg_filter_open: "Offen",
+    rg_filter_overdue: "Überfällig",
+    rg_filter_paid: "Bezahlt",
+    rg_overview: "Übersicht",
+    rg_import_title: "Aus Excel einfügen",
+    rg_import_btn: "Einfügen & übernehmen",
+    rg_manual_title: "Manuell hinzufügen",
+    rg_manual_btn: "Hinzufügen",
+    rg_filter_label: "Filter",
+    rg_none: "Noch keine Rechnungen erfasst.",
+    rg_none_filter: "Keine Einträge für diesen Filter.",
+    rg_status_paid: "Bezahlt",
+    rg_status_overdue: "Überfällig",
+    rg_status_open: "Offen",
+    rg_paid_on: "bezahlt am {date}",
+    rg_pay_group_on: "Ganze Sammelrechnung als bezahlt markieren",
+    rg_pay_group_off: "Ganze Sammelrechnung als offen markieren",
+    rg_btn_paid: "Bezahlt",
+    rg_btn_undo: "Rückgängig",
+    rg_sammel: "Sammelrechnung ({count})",
+
+    dash_open_hours: "Offene Stunden",
+    rg_link: "Rechnungen",
+    rg_link_sub: "Übersicht & Zahlungsziel",
+    rg_page_sub: "Übersicht & Zahlungsziel (14 Tage)",
+    rg_single_employee: "Einzelner Mitarbeiter",
+    rg_show_bv_btn: "Baustellen anzeigen",
+    editor_rg_page_title: "Rechnungen-Seite",
+    editor_rg_hide_manual: "Block \"Manuell hinzufügen\" ausblenden",
+    rg_import_step1: "1. Rechnungstabelle",
+    rg_import_step2: "2. Abrechnungs-/Stundentabelle",
+    rg_paste_rg_ph: "Rechnungszeilen hier einfügen (Tab-getrennt, wie beim Kopieren aus Excel)…",
+    rg_paste_abr_ph: "Abrechnungszeilen (Stunden je Mitarbeiter) hier einfügen…",
+    rg_import_hint: "Beide Tabellen werden zusammen ausgewertet und einander automatisch zugeordnet.",
+    rg_amount_ph: "Betrag €",
+    rg_company_ph: "Firma",
+    rg_bv_optional: "Baustelle (optional, wird sonst automatisch erkannt)",
+    rg_invoice_nr_ph: "Rechnungs-Nr",
+    rg_text_ph: "Text (z.B. Rechnung BV 6558)",
+    rg_hourly_rate: "Stundensatz (€/h)",
+    rg_hourly_rate_ph: "z.B. 35",
+    ma_long_absent: "Bis auf weiteres abwesend",
+    ma_long_absent_hint: "Erscheint beim Stundeneintragen ganz unten, wird nicht automatisch ausgewählt",
+    rg_import_summary: "{added} Rechnung(en) neu, {updated} aktualisiert, {abr} Abrechnungszeile(n) übernommen",
+    rg_import_summary_skipped: ", {skipped} übersprungen",
+    rg_manual_missing: "Bitte Datum und Firma angeben",
+    rg_invoice_single: "Rechnung {first}",
+    rg_invoice_range: "Rechnung {first} – {last}",
+    stat_avg_ma_day: "Ø Mitarbeiter/Tag",
+    select_ma_placeholder: "-- Mitarbeiter --",
+    report_date_label: "Datum:",
+    pdf_selected_btn: "Ausgewählte PDFs erstellen",
+    editor_bvm_menu_sub: "Sätze, Budget, Archivieren, Warnungen",
+    push_menu_sub: "Erinnerungen & Warnungen einstellen",
+
+    abw_menu_title: "Abwesenheiten & Urlaub",
+    abw_menu_sub: "Fehltage, Urlaub, Feiertage erfassen",
+    abw_page_sub: "Fehltage, Urlaub, Feiertage",
+    abw_intro: "Standardmäßig gilt jeder Mitarbeiter an jedem Tag als anwesend. Trage hier nur Ausnahmen ein (einzelner Fehltag, Urlaub, Feiertag, Krankheit) – nur diese hinterlegten Ausnahmen weichen von \"jeder ist da\" ab.",
+    abw_single_title: "Einzelne Abwesenheit (Tag)",
+    abw_reason_ph: "Grund (optional)",
+    abw_add_btn: "Abwesenheit hinzufügen",
+    abw_list_title: "Erfasste Abwesenheiten",
+    abw_leave_title: "Urlaub / Feiertag (Zeitraum)",
+    abw_whole_company: "Ganze Firma",
+    abw_type_urlaub: "Urlaub",
+    abw_type_feiertag: "Feiertag",
+    abw_type_krankheit: "Krankheit",
+    abw_type_sonstiges: "Sonstiges",
+    abw_note_ph: "Notiz (optional)",
+    abw_leave_add_btn: "Zeitraum hinzufügen",
+    abw_leave_list_title: "Erfasster Urlaub / Feiertage",
+    abw_select_ma_datum: "Mitarbeiter & Datum wählen",
+    abw_fill_all: "Bitte Angaben vervollständigen",
+    abw_none: "Keine Abwesenheiten erfasst.",
+    abw_leave_none: "Kein Urlaub/Feiertag erfasst.",
+    abw_missing_title: "Fehlende Einträge (letzte 2 Tage)",
+    abw_mark_absent_btn: "als abwesend markieren",
+    abw_marked_absent_toast: "Als abwesend markiert",
+    abw_retro_reason: "nachträglich erfasst",
+    bvm_manage_settings: "Verwalten & Einstellungen"
+  },
+  tr: {
+    title: "ASLAN · Saat Takibi",
+
+    home_add_title: "Saat gir",
+    home_add_sub: "Tarih · Şantiye · Çalışan",
+    home_week_title: "Haftalık özet",
+    home_week_sub: "Çalışan ve şantiye bazında saatler",
+    home_misscal_title: "Takvim & eksik girişler",
+    home_misscal_sub: "Kimin henüz girmediğine genel bakış",
+    misscal_title: "Takvim & eksik girişler",
+    misscal_leg_weekend: "Hafta sonu",
+    misscal_leg_future: "Gelecek",
+    misscal_leg_complete: "Hepsi girildi",
+    misscal_leg_rapport: "Rapor eksik",
+    misscal_leg_1: "1 eksik",
+    misscal_leg_2: "2 eksik",
+    misscal_leg_3: "3 eksik",
+    misscal_leg_more: "4+ / hiç girilmedi",
+    misscal_weekend_note: "Hafta sonu – giriş gerekmiyor",
+    misscal_future_note: "Gelecek tarih – henüz giriş gerekmiyor",
+    misscal_no_active: "Bu gün için aktif çalışan yok",
+    misscal_status_ok: "Girildi",
+    misscal_status_missing: "Eksik",
+    misscal_status_rapport_missing: "Rapor eksik",
+    home_entries_title: "Kayıtlar ve düzenleme",
+    home_entries_sub: "Kaydedilmiş tüm günler",
+    grp_erfassen: "Giriş yap",
+    grp_uebersicht: "Genel bakış & Değerlendirme",
+    grp_uebersicht_title: "Genel bakış & Değerlendirme",
+    grp_uebersicht_sub: "Hafta, takvim, kayıtlar, değerlendirme, günlük rapor",
+    grp_verwaltung: "Yönetim",
+    grp_abrechnung: "Faturalama & Gönderim",
+    home_ma_title: "Çalışanları yönet",
+    home_ma_sub: "İsim değiştir, yeni ekle",
+    home_bl_title: "Şantiye Şefleri",
+    home_bl_sub: "Şantiyeler için atama",
+    home_bv_title: "Şantiyeleri yönet",
+    home_bv_sub: "Şantiye adreslerini düzenle",
+    home_export_title: "Excel dışa aktar",
+    home_export_sub: "Seith_Stunden + şantiye adresleri",
+    home_push_title: "18:00 hatırlatma",
+    home_push_sub: "Saat eksikse her gün",
+    missing_info: "Eksik Bilgiler",
+
+    stat_today: "Bugün s",
+    stat_week: "Hafta s",
+    stat_entries: "Kayıt",
+    stat_revenue: "Hafta ciro",
+
+    step1_title: "Adım 1 – Tarih",
+    step1_sub: "Hangi gün?",
+    today_btn: "Bugün",
+    yesterday_btn: "◀ Dün",
+    to_bv_btn: "Şantiyeye git →",
+
+    step2_title: "Adım 2 – Şantiye",
+    lager_btn: "Depo (şantiye değil)",
+    new_bv: "Yeni şantiye",
+    bv_nr: "Şantiye No.",
+    bv_nr_invalid: "Not: Bu BV numarası standart şemaya uymuyor (5 haneli, 64, 65 veya 66 ile başlar).",
+    bv_nr_invalid_confirm: "Bu BV numarası standart şemaya uymuyor (5 haneli, 64, 65 veya 66 ile başlar). Yine de eklensin mi?",
+    bv_nr_invalid_short: "Geçersiz BV numarası",
+    bv_addr: "Adres / Açıklama",
+    tap_bv: "Şantiyeye dokun",
+    fav_bv_label: "Favoriler",
+    yesterday_bv_label: "Dünkü şantiyeler",
+    to_hours_btn: "Saatlere git →",
+
+    step3_title: "Adım 3 – Saatler",
+    hours_label: "Saat girin (0 = yoktu)",
+    save_btn: "Kaydet",
+
+    team_label: "Kimler birlikte çalıştı?",
+    team_same_time: "Herkes bütün gün birlikte çalıştı (aynı saatler)",
+    times_label: "Çalışma saati",
+    start_time: "Başlangıç",
+    end_time: "Bitiş",
+    pause_label: "Mola",
+    pause_none: "Yok",
+    pause_30: "30 Dk",
+    pause_45: "45 Dk",
+    hours_confirm_lbl: "saat çalışıldı, doğru mu?",
+    confirm_hours_title: "Saatleri onayla",
+    confirm_hours_msg: "{hours} saat çalışıldı, doğru mu? ({names})",
+    confirm_hours_msg_multi: "{names} için saatler kaydedilsin mi?",
+    warn_no_team_or_time: "Lütfen çalışan seçin ve geçerli saat girin.",
+
+    editor_link: "Editör modu",
+    editor_pin_title: "Editör modu",
+    editor_pin_sub: "PIN girin",
+    editor_pin_wrong: "Yanlış PIN",
+    editor_title: "Editör modu",
+    editor_sub: "Şantiye ayarları",
+    editor_bv_list: "Şantiyeler",
+    editor_bv_edit: "düzenle",
+    editor_warn_off: "Bu şantiye için \"Eksik Bilgiler\" uyarısını kapat",
+    editor_warn_is_off: "Uyarı kapalı",
+    editor_warn_off_global: "Tüm şantiyeler için \"Şantiye şefi eksik\" uyarısını kapat",
+    editor_warn_off_global_hint: "Tüm kullanıcılar ve cihazlar için geçerlidir. Tek tek şantiyeler \"Fiyatlar, Bütçe & Arşiv\" altında ayrıca yönetilebilir.",
+    editor_bv_delete: "Şantiyeyi sil",
+    editor_bv_in_use: "Bu şantiyenin kayıtları var, silinemez.",
+    editor_bv_delete_title: "Şantiyeyi sil",
+    editor_bv_delete_msg: "BV {nr} kalıcı olarak silinsin mi? Bu işlem geri alınamaz.",
+    editor_bv_archived_list: "Arşivlenmiş şantiyeler",
+    editor_archived_badge: "Arşivlendi",
+    editor_archive_toggle: "Şantiyeyi arşivle (seçim listesinden gizle, geçmiş kalır)",
+    editor_pin_change_title: "PIN değiştir",
+    editor_pin_current: "Mevcut PIN",
+    editor_pin_new: "Yeni PIN (4 haneli)",
+    editor_pin_confirm: "Yeni PIN tekrar",
+    editor_pin_change_btn: "PIN değiştir",
+    editor_pin_invalid: "PIN 4 haneli olmalı.",
+    editor_pin_mismatch: "Yeni PIN'ler eşleşmiyor.",
+    editor_pin_changed: "PIN değiştirildi",
+    editor_move_hint: "Kaydı taşımak için tarih veya şantiyeyi değiştirin",
+    editor_move_bv_label: "Şantiye",
+    editor_add_row: "Çalışan ekle",
+
+    bulk_select_btn: "Seç",
+    bulk_selected_count: "seçildi",
+    bulk_move_btn: "Taşı",
+    bulk_move_title: "Seçilen kayıtları taşı",
+    bulk_move_target: "Yeni şantiye",
+    bulk_move_confirm: "Taşı",
+    bulk_select_first: "Lütfen önce kayıt seçin!",
+
+    report_title: "Günlük rapor",
+    report_sub: "Kopyalanacak rapor verileri",
+    report_link: "Günlük rapor",
+    report_pick_date: "Tarih seç",
+    report_pick_bv: "Şantiye seç",
+    report_no_entries: "Bu tarih ve şantiye için kayıt yok.",
+    report_print_btn: "Raporu yazdır",
+    report_future_pick_ma: "Çalışan seç",
+    report_future_show_btn: "Raporu göster",
+    report_future_pick_one: "Lütfen en az bir çalışan seçin.",
+    wa_link: "WhatsApp Gönderimi",
+    wa_sub: "Bayan Peters'a gönderilenleri işaretle",
+    wa_title: "WhatsApp Gönderimi",
+    wa_hs: "Bayan Peters",
+    wa_empty: "Henüz rapor yok.",
+    wa_filter_open: "Sadece bekleyenler",
+    wa_filter_all: "Hepsini göster",
+    wa_sent_label: "Gönderildi",
+    wa_open_label: "Bekliyor",
+    wa_progress: "{total} raporun {done} tanesi gönderildi",
+
+    stat_link: "Değerlendirme",
+    stat_sub: "Çalışan, şantiye ve takvim istatistikleri",
+    stat_title: "Değerlendirme",
+    stat_tab_ma: "Çalışan",
+    stat_tab_bv: "Şantiyeler",
+    stat_tab_cal: "Takvim",
+    stat_scope_month: "Ay",
+    stat_scope_year: "Yıl",
+    stat_close: "Kapat",
+    stat_year_label: "{y} Yılı",
+    stat_no_hours: "Bu dönemde saat kaydı yok.",
+    stat_no_entries_day: "Bu günde kayıt yok.",
+    stat_total: "Toplam",
+    stat_day: "gün",
+    stat_days: "gün",
+    stat_workday: "çalışma günü",
+    stat_workdays: "çalışma günü",
+    stat_over_budget: "bütçe aşıldı",
+    stat_of_target: "{soll} hedeften {ist}",
+    stat_rate_label: "Saat ücreti (CHF/sa)",
+    stat_budget_label: "Hedef saat",
+    stat_heat_low: "az",
+    stat_heat_high: "çok",
+    month_01: "Ocak", month_02: "Şubat", month_03: "Mart", month_04: "Nisan",
+    month_05: "Mayıs", month_06: "Haziran", month_07: "Temmuz", month_08: "Ağustos",
+    month_09: "Eylül", month_10: "Ekim", month_11: "Kasım", month_12: "Aralık",
+    month_short_01: "Oca", month_short_02: "Şub", month_short_03: "Mar", month_short_04: "Nis",
+    month_short_05: "May", month_short_06: "Haz", month_short_07: "Tem", month_short_08: "Ağu",
+    month_short_09: "Eyl", month_short_10: "Eki", month_short_11: "Kas", month_short_12: "Ara",
+
+    pdf_no_data_for_date: "Bu tarih için veri yok.",
+    pdf_select_one_bv: "Lütfen en az bir şantiye seçin!",
+    pdf_template_missing: "PDF şablonu bulunamadı!",
+    pdf_created_ok: "PDF'ler başarıyla oluşturuldu!",
+    pdf_error_prefix: "Hata: ",
+    push_not_supported: "Tarayıcınız bildirimleri desteklemiyor.",
+    push_ios_add_home: "iPhone'da bildirimler yalnızca uygulama Ana Ekrana eklendiğinde çalışır: Safari'de \"Paylaş\" ve ardından \"Ana Ekrana Ekle\"ye dokunun. Sonra uygulamayı oradan açıp bildirimleri tekrar etkinleştirin.",
+    push_permission_denied: "Lütfen bildirimlere izin verin.",
+    pick_date_first: "Lütfen tarih seçin!",
+    bv_nr_enter: "Şantiye numarasını girin!",
+    bv_nr_exists: "Bu şantiye zaten mevcut!",
+    bv_nr_taken: "Bu şantiye numarası zaten kullanılıyor!",
+    save_failed: "Kaydetme başarısız oldu.",
+    delete_failed: "Silme başarısız oldu.",
+    name_and_initials_required: "Ad ve kısaltmayı doldurun!",
+    name_required: "Ad girin!",
+    network_error_prefix: "Ağ hatası / bağlantı hatası:\n",
+    duplicate_entry_error: "Bu çalışan için bu tarihte ve bu şantiyede zaten bir kayıt var. Lütfen sayfayı yenileyip tekrar deneyin.",
+    db_error_prefix: "Kaydederken bir sorun oluştu (hata kodu {code}). Lütfen tekrar deneyin.",
+    edrow_employee: "Çalışan",
+    edrow_start: "Başlangıç",
+    edrow_end: "Bitiş",
+    edrow_pause: "Mola (Dk)",
+    edrow_time_invalid: "Geçersiz saat",
+    print_rapport_title: "Rapor yazdırılsın mı?",
+    print_rapport_msg: "Yazdırmak için bir kopya açmak ister misin?",
+    print_rapport_yes: "Evet, aç",
+    safety_warning_title: "Lütfen kontrol et",
+    safety_warning_continue: "Yine de kaydet",
+    safety_pause_warning: "{name}: bugün toplam {hours} saat, ama sadece {pause} dk mola girildi (en az {required} dk gerekli).",
+    safety_hours_warning: "{name}: bugün toplam {hours} saat – bu çok fazla. Lütfen doğru olduğundan emin ol.",
+    report_field_datum: "Tarih",
+    report_field_addr: "Adres",
+    report_field_bvnr: "BV numarası",
+    report_field_bauleiter: "Şantiye Şefi",
+    report_field_bauleiter_missing: "Şantiye şefi yok",
+    report_field_start: "Başlangıç",
+    report_field_end: "Bitiş",
+    report_field_pause: "Mola",
+    report_field_duration: "Çalışma süresi",
+    copy_btn: "Kopyala",
+    copied_toast: "Kopyalandı!",
+
+    saved_title: "Kaydedildi!",
+    more_bv_btn: "Başka şantiye",
+    home_btn: "Ana sayfaya dön",
+
+    week_title: "Haftalık özet",
+    prev_week: "◀ Önceki hafta",
+    next_week: "Sonraki ▶",
+
+    entries_title: "Kayıtlar",
+    delete_all_btn: "Hepsini sil",
+    delete_range_btn: "Aralığı sil",
+    no_entries: "Henüz kayıt yok.",
+    filter_search_ph: "Ara: Personel, şantiye, tarih…",
+    filter_all_bv: "Tüm şantiyeler",
+    filter_all_ma: "Tüm personel",
+    filter_from: "Başlangıç",
+    filter_to: "Bitiş",
+    filter_reset: "Filtreyi sıfırla",
+    no_search_results: "Bu arama için kayıt bulunamadı.",
+
+    ma_title: "Çalışanlar",
+    ma_sub: "Yönet ve ekle",
+    new_ma: "Yeni çalışan",
+    full_name: "Ad soyad",
+    ma_list: "Çalışan listesi",
+
+    bl_title: "Şantiye Şefi",
+    new_bl: "Yeni Şantiye Şefi",
+    bl_list: "Şantiye Şefi listesi",
+    edit_bl: "Şantiye Şefi düzenle",
+    delete_bl: "Şantiye Şefi sil",
+
+    bvm_title: "Şantiyeler",
+    bvm_sub: "Şantiye adreslerini düzenle",
+    all_bv: "Tüm şantiyeler",
+
+    export_title: "Excel dışa aktar",
+    export_sub: "Seith_Stunden + şantiye adresleri",
+    export_range: "Tarih aralığı (isteğe bağlı)",
+    export_btn: "Excel indir",
+
+    edit_entry: "Kaydı düzenle",
+    save_changes: "Kaydet",
+    delete_entry: "Kaydı sil",
+    cancel_btn: "İptal",
+
+    edit_bv: "Şantiyeyi düzenle",
+    edit_ma: "Çalışanı düzenle",
+    short_code: "Kısaltma (2 harf)",
+    color: "Renk",
+    delete_ma: "Çalışanı sil",
+
+    warn_days_missing: "{count} gün için saat girilmemiş!",
+    warn_fill_now: "Şimdi tamamla →",
+    warn_missing: "Adres veya Şantiye Şefi eksik. Yine de devam edilsin mi?",
+
+    confirm_title: "Emin misin?",
+    confirm_cancel: "İptal",
+    confirm_ok: "Devam",
+
+    sync_now: "Senkronize ediliyor…",
+    sync_ok: "Senkronize edildi",
+    sync_saved: "Kaydedildi",
+    sync_error: "Kaydetme hatası",
+
+    toast_sync: "Veriler güncellendi",
+    toast_push_on: "Hatırlatma aktif – her gün 18:00",
+    toast_push_off: "Hatırlatma kapatıldı",
+    toast_updated: "Güncellendi",
+    toast_deleted: "Silindi",
+    toast_deleted_all: "Hepsi silindi",
+
+    notify_title: "⏰ ASLAN Saat Takibi",
+    notify_body: "Bugün için henüz saat girilmedi!",
+    push_settings_title: "Bildirimler",
+    push_master_title: "Bildirimleri etkinleştir",
+    push_time_lbl: "Saat girilmediyse hatırlatma zamanı",
+    push_entry_title: "Her kayıttan sonra bildirim",
+    push_safety_title: "Olağandışı çalışma süresi / az mola uyarısı",
+    push_budget_title: "Şantiye hedef saatine yaklaşınca uyar",
+    push_wa_days_lbl: "\"Rapor Frau Peters'e gönderilmedi\" hatırlatması X gün sonra (virgülle birden fazla, örn. 2,7)",
+    push_ios_hint: "iPhone notu: Bildirimler yalnızca sayfa Safari'de \"Paylaş → Ana Ekrana Ekle\" ile kurulup oradan açıldığında çalışır (iOS 16.4+). Android/Samsung'da doğrudan tarayıcıda çalışır.",
+    notify_entry_title: "✅ Kayıt tamamlandı",
+    notify_entry_body: "BV {bv}: {names} · {hours}sa",
+    notify_safety_title: "⚠️ Lütfen kontrol edin",
+    notify_budget_title: "📊 Şantiye hedef saatleri",
+    notify_budget_near: "BV {bv} ({name}): {budget}sa hedefin {used}sa'ine ulaşıldı.",
+    notify_budget_over: "BV {bv} ({name}): Hedef saat aşıldı – {used}sa / {budget}sa.",
+    notify_wa_title: "📋 Rapor hâlâ açık",
+    notify_wa_body: "BV {bv}, {date} tarihli rapor {days} gündür Frau Peters'e gönderilmedi.",
+
+    excel_build: "⏳ Excel hazırlanıyor…",
+    excel_empty: "Kayıt yok.",
+    excel_done: "Dosya indirildi!",
+
+    dash_inv_open: "Açık faturalar",
+    dash_inv_over: "Vadesi geçmiş",
+    dash_inv_total: "Toplam ciro",
+    dash_inv_unbilled: "Henüz faturalanmadı",
+    dash_inv_next: "Sonraki vade",
+    dash_inv_deadlines_title: "Toplu fatura vadeleri",
+    dash_inv_none: "Açık fatura yok.",
+    dash_inv_sammel: "Toplu fatura",
+    dash_inv_today: "bugün",
+    dash_inv_today_due: "bugün vadesi doluyor",
+    dash_inv_in_days: "{days} gün sonra",
+    dash_inv_days_left: "{days} gün kaldı",
+    dash_inv_overdue_days: "{days} gün gecikti",
+
+    editor_dash_stats_title: "Panel istatistikleri",
+    editor_dash_invopen: "Açık faturaları göster",
+    editor_dash_invover: "Vadesi geçmiş faturaları göster",
+    editor_dash_invtotal: "Toplam ciroyu göster",
+    editor_dash_unbilled: "Henüz faturalanmamış ciroyu göster",
+    editor_dash_invnext: "Sonraki vadeyi göster",
+    editor_dash_deadlines: "Vade listesini göster (toplu faturalar)",
+
+    home_empty_title: "Boş rapor oluştur",
+    home_empty_sub: "Tarih, şantiye şefi, çalışan – saatler boş kalır",
+    empty_rep_title: "Boş rapor oluştur",
+    empty_rep_sub: "Tarih · Şantiye · Çalışan",
+    empty_rep_date: "Tarih",
+    empty_rep_bv: "Şantiye",
+    empty_rep_bl_prefix: "Şantiye şefi",
+    empty_rep_team: "Çalışanlar",
+    empty_rep_save: "Boş raporu yazdır",
+    empty_rep_missing: "Lütfen tarih ve şantiye seçin",
+    empty_rep_missing_team: "Lütfen en az bir çalışan seçin",
+    empty_rep_saved: "Boş rapor kaydedildi",
+    entry_hours_open: "açık",
+
+    push_invoice_title: "Vadesi geçen faturalarda bildirim",
+    notify_invoice_title: "Fatura vadesi geçti",
+    notify_invoice_body: "{firma}: {sum} · {days} gündür vadesi geçmiş",
+
+    rg_filter_all: "Tümü",
+    rg_filter_open: "Açık",
+    rg_filter_overdue: "Vadesi geçmiş",
+    rg_filter_paid: "Ödendi",
+    rg_overview: "Genel bakış",
+    rg_import_title: "Excel'den yapıştır",
+    rg_import_btn: "Yapıştır ve aktar",
+    rg_manual_title: "Elle ekle",
+    rg_manual_btn: "Ekle",
+    rg_filter_label: "Filtre",
+    rg_none: "Henüz fatura yok.",
+    rg_none_filter: "Bu filtre için kayıt yok.",
+    rg_status_paid: "Ödendi",
+    rg_status_overdue: "Vadesi geçmiş",
+    rg_status_open: "Açık",
+    rg_paid_on: "{date} tarihinde ödendi",
+    rg_pay_group_on: "Tüm toplu faturayı ödendi olarak işaretle",
+    rg_pay_group_off: "Tüm toplu faturayı açık olarak işaretle",
+    rg_btn_paid: "Ödendi",
+    rg_btn_undo: "Geri al",
+    rg_sammel: "Toplu fatura ({count})",
+
+    dash_open_hours: "Açık saatler",
+    rg_link: "Faturalar",
+    rg_link_sub: "Genel bakış ve vade",
+    rg_page_sub: "Genel bakış ve vade (14 gün)",
+    rg_single_employee: "Tek çalışan",
+    rg_show_bv_btn: "Şantiyeleri göster",
+    editor_rg_page_title: "Faturalar sayfası",
+    editor_rg_hide_manual: "\"Elle ekle\" bölümünü gizle",
+    rg_import_step1: "1. Fatura tablosu",
+    rg_import_step2: "2. Faturalama/saat tablosu",
+    rg_paste_rg_ph: "Fatura satırlarını buraya yapıştırın (Excel'den kopyalar gibi Tab ile ayrılmış)…",
+    rg_paste_abr_ph: "Faturalama satırlarını (çalışan başına saat) buraya yapıştırın…",
+    rg_import_hint: "Her iki tablo birlikte değerlendirilir ve otomatik olarak eşleştirilir.",
+    rg_amount_ph: "Tutar €",
+    rg_company_ph: "Firma",
+    rg_bv_optional: "Şantiye (isteğe bağlı, aksi halde otomatik algılanır)",
+    rg_invoice_nr_ph: "Fatura no",
+    rg_text_ph: "Metin (örn. Fatura BV 6558)",
+    rg_hourly_rate: "Saat ücreti (€/sa)",
+    rg_hourly_rate_ph: "örn. 35",
+    ma_long_absent: "İkinci bir emre kadar devamsız",
+    ma_long_absent_hint: "Saat girişinde en altta görünür, otomatik seçilmez",
+    rg_import_summary: "{added} yeni fatura, {updated} güncellendi, {abr} faturalama satırı aktarıldı",
+    rg_import_summary_skipped: ", {skipped} atlandı",
+    rg_manual_missing: "Lütfen tarih ve firma girin",
+    rg_invoice_single: "Fatura {first}",
+    rg_invoice_range: "Fatura {first} – {last}",
+    stat_avg_ma_day: "Ort. çalışan/gün",
+    select_ma_placeholder: "-- Çalışan --",
+    report_date_label: "Tarih:",
+    pdf_selected_btn: "Seçilenlerin PDF'lerini oluştur",
+    editor_bvm_menu_sub: "Ücretler, bütçe, arşivleme, uyarılar",
+    push_menu_sub: "Hatırlatmaları ve uyarıları ayarla",
+
+    abw_menu_title: "Devamsızlık ve İzin",
+    abw_menu_sub: "Devamsızlık, izin, resmi tatil kaydet",
+    abw_page_sub: "Devamsızlık, izin, resmi tatil",
+    abw_intro: "Varsayılan olarak her çalışan her gün mevcut kabul edilir. Burada yalnızca istisnaları girin (tek günlük devamsızlık, izin, resmi tatil, hastalık) – sadece kaydedilen bu istisnalar \"herkes burada\" durumundan sapar.",
+    abw_single_title: "Tekil devamsızlık (gün)",
+    abw_reason_ph: "Sebep (isteğe bağlı)",
+    abw_add_btn: "Devamsızlık ekle",
+    abw_list_title: "Kaydedilen devamsızlıklar",
+    abw_leave_title: "İzin / Resmi tatil (dönem)",
+    abw_whole_company: "Tüm firma",
+    abw_type_urlaub: "İzin",
+    abw_type_feiertag: "Resmi tatil",
+    abw_type_krankheit: "Hastalık",
+    abw_type_sonstiges: "Diğer",
+    abw_note_ph: "Not (isteğe bağlı)",
+    abw_leave_add_btn: "Dönem ekle",
+    abw_leave_list_title: "Kaydedilen izin / resmi tatiller",
+    abw_select_ma_datum: "Çalışan ve tarih seçin",
+    abw_fill_all: "Lütfen bilgileri tamamlayın",
+    abw_none: "Henüz devamsızlık kaydedilmedi.",
+    abw_leave_none: "Henüz izin/resmi tatil kaydedilmedi.",
+    abw_missing_title: "Eksik kayıtlar (son 2 gün)",
+    abw_mark_absent_btn: "devamsız olarak işaretle",
+    abw_marked_absent_toast: "Devamsız olarak işaretlendi",
+    abw_retro_reason: "sonradan girildi",
+    bvm_manage_settings: "Yönet ve ayarlar"
+  }
 };
 
 function tr(key, vars = {}) {
@@ -2102,14 +2102,13 @@ function setLang(lang) {
   LANG = lang;
   localStorage.setItem("app_lang", lang);
   applyTranslations();
-  rwarn(); rwarnMa();
+  rwarn();rwarnMa();
   ustats();
   if(document.getElementById("pg-verl")?.classList.contains("on")) rverl();
   if(document.getElementById("pg-bvm")?.classList.contains("on")) rbvm();
   if(document.getElementById("pg-ma")?.classList.contains("on")) rmam();
   if(document.getElementById("pg-bl")?.classList.contains("on")) rblm();
   if(document.getElementById("pg-woche")?.classList.contains("on")) rw();
-  if(document.getElementById("pg-abw")?.classList.contains("on")) rAbw();
 }
 
 function applyTranslations() {
@@ -2121,12 +2120,16 @@ function applyTranslations() {
   document.querySelectorAll("[data-i18n-ph]").forEach(el => {
     el.placeholder = tr(el.getAttribute("data-i18n-ph"));
   });
+  
+  // Re-Render den Bauleiter-Dropdown, falls Sprache wechselt (für "Bauleiter wählen...")
   rblSel();
 }
 
 // ═══ STATE ═══
 let BV=[], MA=[], EN=[], BL=[], AB=[], LV=[];
-let WA=new Set(), waFilterOpen=true;
+let SETTINGS=lsGet("settings",{});
+let GLOBAL_WARN_OFF = SETTINGS["global_warn_off"]==="1";
+let WA=new Set(), waFilterOpen=true; // Standardmäßig nur offene (noch nicht abgehakte) Rapporte anzeigen
 let statTab="ma", statScope="month", statPeriod="", calMonth="";
 let misscalMonth="";
 let sBV=null, cD="", eGroupKey="", eBV=null, eMA=-1, eBL=-1, selC=-1, woff=0;
@@ -2143,10 +2146,6 @@ let pendingPinTarget=null;
 let editorUnlocked=false;
 let bulkMode=false, bulkSel=new Set();
 let edRows=[], edDatum="", edBvId="";
-let repD="", repBV=null;
-let repFutureMode=false;
-let repFutureMaSel=new Set();
-let erTeamSel=new Set();
 
 // ═══ SUPABASE ═══
 const SBH={
@@ -2197,6 +2196,153 @@ async function sbDel(t,id){
   return sbFetch(`${t}?id=eq.${encodeURIComponent(id)}`,{method:"DELETE"});
 }
 
+// ═══ PDF-RAPPORT GENERIERUNG ═══
+function showBvList() {
+    const dateStr = document.getElementById("rep-d").value;
+    const listDiv = document.getElementById("bv-list");
+    listDiv.innerHTML = "";
+    
+    const entries = EN.filter(e => e.datum === dateStr && Number(e.stunden) > 0);
+    const uniqueBvIds = [...new Set(entries.map(e => e.bv_id))];
+
+    if (uniqueBvIds.length === 0) {
+        listDiv.innerHTML = tr("pdf_no_data_for_date");
+        document.getElementById("download-btn").style.display = "none";
+        return;
+    }
+
+    uniqueBvIds.forEach(id => {
+        const bv = BV.find(x => x.id == id);
+        listDiv.innerHTML += `<div><input type="checkbox" value="${id}" class="bv-check"> BV ${bv.nr} - ${bv.name}</div>`;
+    });
+    document.getElementById("download-btn").style.display = "block";
+}
+
+// 2. Ausgewählte PDFs generieren
+function fillRapportPdf(form, dateStr, bvId, futureMaIds){
+    const bv = BV.find(x => x.id == bvId);
+    const bl = BL.find(x => x.id == bv.bl_id) || { name: "" };
+    // futureMaIds: falls gesetzt (Array), wird ein leerer Rapport für die gewählten Mitarbeiter erzeugt
+    // (Anfang/Ende/Pause/Stunden bleiben leer) statt der gespeicherten Stundeneinträge.
+    const rows = (futureMaIds && futureMaIds.length)
+        ? futureMaIds.map(maId => ({ ma_id: maId, beginn: "", ende: "", pause_min: null, stunden: "" }))
+        : EN.filter(e => e.datum === dateStr && e.bv_id == bvId);
+
+    form.getTextField('text_3').setText(bv.nr || "");
+    form.getTextField('text_0').setText(formatDate(dateStr));
+    form.getTextField('text_111 (0)').setText(bv.name || "");
+    form.getTextField('text_9').setText(bl.name || "");
+
+    const empFields = [
+        { name: 'text_13', start: 'text_31', end: 'text_36', pause: 'text_41', hours: 'text_58' },
+        { name: 'text_15', start: 'text_32', end: 'text_37', pause: 'text_42', hours: 'text_59' },
+        { name: 'text_11', start: 'text_33', end: 'text_38', pause: 'text_43', hours: 'text_60' },
+        { name: 'text_18', start: 'text_34', end: 'text_39', pause: 'text_44', hours: 'text_61' },
+        { name: 'text_20', start: 'text_35', end: 'text_40', pause: 'text_45', hours: 'text_62' }
+    ];
+    rows.slice(0, 5).forEach((row, i) => {
+        const f = empFields[i];
+        if (!f) return;
+        const ma = MA.find(x => x.id == row.ma_id) || { name: "" };
+        form.getTextField(f.name).setText(ma.name);
+        form.getTextField(f.start).setText(formatTime(row.beginn));
+        form.getTextField(f.end).setText(formatTime(row.ende));
+        form.getTextField(f.pause).setText(formatVal(row.pause_min ? (row.pause_min / 60) : ""));
+        form.getTextField(f.hours).setText(formatVal(row.stunden));
+    });
+    return bv;
+}
+
+// Direkter Druck-Weg: nach dem Speichern der Stunden fragen, ob eine Kopie zum Ausdrucken gewünscht ist.
+function offerPrintRapport(dateStr, bvId){
+  conf(tr("print_rapport_title"), tr("print_rapport_msg"), ()=>{
+    clco();
+    openRapportPdf(dateStr, bvId);
+  }, tr("print_rapport_yes"));
+}
+let _rapportTemplateCache = null;
+async function getRapportTemplateBytes(){
+    if(_rapportTemplateCache) return _rapportTemplateCache.slice(0);
+    const response = await fetch('Rapport_Vorlage.pdf');
+    if (!response.ok) throw new Error(tr("pdf_template_missing"));
+    _rapportTemplateCache = await response.arrayBuffer();
+    return _rapportTemplateCache.slice(0);
+}
+function bytesToBase64(bytes){
+    let binary = "";
+    const chunk = 0x8000;
+    for(let i=0;i<bytes.length;i+=chunk){
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i+chunk));
+    }
+    return btoa(binary);
+}
+async function openRapportPdf(dateStr, bvId){
+    const win = window.open("", "_blank");
+    if(win){
+        win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;height:100vh;display:flex;align-items:center;justify-content:center;font-family:-apple-system,sans-serif;background:#111;color:#fff;font-size:16px;">${tr("pdf_preparing")}</body></html>`);
+        win.document.close();
+    }
+    try{
+        const arrayBuffer = await getRapportTemplateBytes();
+        const { PDFDocument } = PDFLib;
+        const pdfDoc = await PDFDocument.load(arrayBuffer);
+        const form = pdfDoc.getForm();
+        fillRapportPdf(form, dateStr, bvId, repFutureMode ? [...repFutureMaSel] : null);
+        const pdfBytes = await pdfDoc.save();
+        const blob = new Blob([pdfBytes], { type: "application/pdf" });
+        const blobUrl = URL.createObjectURL(blob);
+        if(win && !win.closed){
+            win.location.href = blobUrl;
+            setTimeout(()=>URL.revokeObjectURL(blobUrl), 60000);
+        } else {
+            const a=document.createElement("a"); a.href=blobUrl; a.target="_blank"; a.download=`Rapport_${dateStr}.pdf`; a.click();
+            setTimeout(()=>URL.revokeObjectURL(blobUrl), 60000);
+        }
+    }catch(e){
+        if(win && !win.closed) win.close();
+        alert(tr("pdf_error_prefix") + e.message);
+    }
+}
+
+async function generateSelectedPDFs() {
+    try {
+        const dateStr = document.getElementById("rep-d").value;
+        const checkedBoxes = document.querySelectorAll('.bv-check:checked');
+        
+        if (checkedBoxes.length === 0) { 
+            alert(tr("pdf_select_one_bv")); 
+            return; 
+        }
+
+        const response = await fetch('Rapport_Vorlage.pdf');
+        if (!response.ok) throw new Error(tr("pdf_template_missing"));
+        
+        const arrayBuffer = await response.arrayBuffer();
+        const { PDFDocument } = PDFLib;
+
+        for (const box of checkedBoxes) {
+            const bvId = box.value;
+            const pdfDoc = await PDFDocument.load(arrayBuffer);
+            const form = pdfDoc.getForm();
+            const bv = fillRapportPdf(form, dateStr, bvId);
+
+            const pdfBytes = await pdfDoc.save();
+            const blob = new Blob([pdfBytes], { type: "application/pdf" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            
+            const [year, month, day] = dateStr.split('-');
+            const shortYear = year.slice(2);
+            link.download = `Rapport_${shortYear}-${month}-${day}_BV-${bv.nr}.pdf`;
+            link.click();
+        }
+        alert(tr("pdf_created_ok"));
+    } catch (e) {
+        console.error("FEHLER:", e);
+        alert(tr("pdf_error_prefix") + e.message);
+    }
+}
+	
 // ═══ LOCAL CACHE ═══
 function lsGet(k,def){
   try{
@@ -2206,99 +2352,6 @@ function lsGet(k,def){
 }
 function lsSet(k,v){
   try{ localStorage.setItem(LS+k,JSON.stringify(v)); }catch(e){}
-}
-
-// ═══ HELPERS ═══
-function fd(d){
-  if(!d)return"";
-  const[y,m,day]=d.split("-");
-  return `${day}.${m}.${y}`;
-}
-function td(){ return new Date().toISOString().split("T")[0]; }
-function sd0(){ const e=document.getElementById("inp-d"); if(e)e.value=td(); }
-function sd1(){ const d=new Date(); d.setDate(d.getDate()-1); const e=document.getElementById("inp-d"); if(e)e.value=d.toISOString().split("T")[0]; }
-
-function gkw(ds){
-  const d=new Date(ds+"T00:00:00");
-  const day=d.getDay()||7;
-  d.setDate(d.getDate()+4-day);
-  const y=d.getFullYear();
-  return Math.ceil(((d-new Date(y,0,1))/864e5+1)/7);
-}
-
-function bvById(id){ return BV.find(b=>b.id===id); }
-function maById(id){ return MA.find(m=>m.id===id); }
-function blById(id){ return BL.find(b=>b.id===id); }
-
-function isLongAbsentForDate(ma, ds){
-  if(!ma || !ma.long_absent) return false;
-  if(!ma.long_absent_from) return true;
-  return ds >= ma.long_absent_from;
-}
-
-function validBVNr(nr){
-  const v=String(nr||"").trim().toUpperCase();
-  if(v==="LAGER") return true;
-  return /^6[456]\d{3}$/.test(v);
-}
-function bvNrBadge(nr){
-  return validBVNr(nr) ? "" : ` <span title="${tr("bv_nr_invalid_short")}" style="color:var(--danger-txt);font-weight:bold;display:inline-flex;vertical-align:middle">${ICON_WARN}</span>`;
-}
-function groupedEntries(){
-  const map={};
-  EN.forEach(e=>{
-    const key=`${e.datum}_${e.bv_id}`;
-    if(!map[key]) map[key]={ key, datum:e.datum, bv_id:e.bv_id, rows:[] };
-    map[key].rows.push(e);
-  });
-  return Object.values(map).sort((a,b)=>a.datum.localeCompare(b.datum));
-}
-function parseTime(v){
-  if(!v)return null;
-  const m=v.trim().match(/^(\d{1,2}):?(\d{2})$/);
-  if(!m)return null;
-  const h=parseInt(m[1],10), min=parseInt(m[2],10);
-  if(h<0||h>29||min<0||min>59)return null;
-  return h*60+min;
-}
-function normTime(v){
-  const t=parseTime(v);
-  if(t===null)return null;
-  const h=Math.floor(t/60)%24, m=t%60;
-  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
-}
-function calcHours(startV,endV,pauseMin){
-  const s=parseTime(startV), e=parseTime(endV);
-  if(s===null||e===null)return null;
-  let diff=e-s;
-  if(diff<0)diff+=24*60;
-  diff-=pauseMin;
-  if(diff<0)diff=0;
-  return Math.round((diff/60)*100)/100;
-}
-function fmtH(h){
-  return (h%1===0)?String(h):String(h).replace(".",",");
-}
-function fmtPauseH(min){
-  return fmtH(Math.round((min/60)*100)/100);
-}
-
-// ═══ TOAST ═══
-function toast(msg,dur=2000){
-  const el=document.getElementById("toast");
-  if(!el)return;
-  el.textContent=msg;
-  el.classList.add("show");
-  clearTimeout(toastT);
-  toastT=setTimeout(()=>el.classList.remove("show"),dur);
-}
-
-// ═══ SYNC STATUS ═══
-function syn(s,l){
-  const d=document.getElementById("sd"),lb=document.getElementById("sl");
-  if(!d)return;
-  d.className="sd"+(s==="w"?" w":s==="e"?" e":"");
-  if(lb)lb.textContent=l;
 }
 
 // ═══ RECHNUNGEN ═══
@@ -2329,16 +2382,21 @@ function rgParseBetrag(s){
 }
 function rgSplitLine(line){
   line=(line||"").trim();
+
   if(/^(\|\s*:?-+:?\s*)+\|?$/.test(line)) return [];
+
   if(line.includes("|")){
     return line.split("|").map(c=>c.trim()).filter(c=>c!=="");
   }
+
   let cols=line.split("\t");
   if(cols.length<6){
     cols=line.split(/\s{2,}/);
   }
   return cols.map(c=>c.trim()).filter(c=>c!=="");
 }
+// Erkennt die Baustelle zuverlässig über die BV-Nr. als eigenständige Zahl
+// (Wortgrenze), nicht als beliebiger Teilstring. Fällt auf Namensvergleich zurück.
 function rgDetectBvId(firma, text){
   const hay=((firma||"")+" "+(text||""));
   for(const b of BV){
@@ -2352,43 +2410,59 @@ function rgDetectBvId(firma, text){
   }
   return null;
 }
+
 function normalizeName(s){
-  return (s||"").toString().trim().toLowerCase().replace(/\s+/g," ");
+  return (s||"")
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g," ");
 }
+
 function abrHours(n){
   return Math.round((Number(n)||0)*100)/100;
 }
+
 function findMaIdByName(name){
   const n=normalizeName(name);
   const m=MA.find(x=>normalizeName(x.name)===n);
   return m ? m.id : null;
 }
+
 function abrMatchesEntry(entry, abr){
   if(!entry || !abr) return false;
   if(entry.datum !== abr.datum) return false;
+
   const bv = bvById(entry.bv_id);
   if(!bv) return false;
+
   const entryBvNr = String(bv.nr||"").trim();
   const abrBvNr = String(abr.bv_nr||"").trim();
   if(entryBvNr !== abrBvNr) return false;
+
   const ma = maById(entry.ma_id);
   if(!ma) return false;
+
   const entryName = normalizeName(ma.name);
   const abrName = normalizeName(abr.ma_name);
   if(entryName !== abrName) return false;
+
   return abrHours(entry.stunden) === abrHours(abr.stunden);
 }
-
+	
 async function rgImport(){
   const rawRg=document.getElementById("rg-paste-rg")?document.getElementById("rg-paste-rg").value:"";
   const rawAbr=document.getElementById("rg-paste-abr")?document.getElementById("rg-paste-abr").value:"";
   const raw=[rawRg,rawAbr].filter(v=>v && v.trim()!=="").join("\n");
-  const lines=raw.split(/\r?\n/).map(l=>l.trim()).filter(l=>l!=="" && !/^(\|\s*:?-+:?\s*)+\|?$/.test(l));
+  const lines=raw
+    .split(/\r?\n/)
+    .map(l=>l.trim())
+    .filter(l=>l!=="" && !/^(\|\s*:?-+:?\s*)+\|?$/.test(l));
 
   let addedRg=0, updatedRg=0, addedAbr=0, skipped=0;
-  const headers={};
-  const calcMap={};
-  const blockByRgnr={};
+  const headers={};      // rgnr -> {datum,firma,rgnr,text,betrag,faelligkeit,bv_id}
+  const calcMap={};      // fallback-Rechnungen aus Stunden berechnet (kein Kopf vorhanden)
+  const blockByRgnr={};  // rgnr -> Sammelrechnungs-Block aus den Abrechnungszeilen
   const abrRows=[];
 
   for(const line of lines){
@@ -2398,6 +2472,7 @@ async function rgImport(){
     const datum=rgParseDatum(cols[0]);
     if(!datum){ skipped++; continue; }
 
+    // Rechnungskopf-Zeile: Datum, Kundennr, Firma, Rgnr, Text, Betrag, [Zahlungsziel]
     const isHeader = cols.length>=6 && /rechnung/i.test(cols[4]||"") && rgParseBetrag(cols[5])>0;
 
     if(isHeader){
@@ -2411,6 +2486,7 @@ async function rgImport(){
       continue;
     }
 
+    // Abrechnungszeile: Datum, BV-Nr, Mitarbeiter, Stunden, Rgnr, Block
     if(cols.length<6){ skipped++; continue; }
     const bv_nr=String(cols[1]||"").trim();
     const ma_name=String(cols[2]||"").trim();
@@ -2435,8 +2511,13 @@ async function rgImport(){
       block
     });
     addedAbr++;
+
     if(block) blockByRgnr[rgnr]=block;
 
+    // Nur wenn für diese Rgnr KEIN echter Rechnungskopf vorliegt (weder in diesem
+    // Paste noch schon gespeichert), wird der Betrag hilfsweise aus den Stunden
+    // berechnet (alte Vorgehensweise). Sobald echte Kopfdaten da sind, gelten
+    // ausschließlich deren Betrag/Datum/Fälligkeit.
     const existingReal = RG.find(r=>String(r.rgnr||"").trim()===rgnr);
     if(!headers[rgnr] && !existingReal){
       const k = block ? rgNormBlock(block) : rgnr;
@@ -2454,6 +2535,7 @@ async function rgImport(){
     }
   }
 
+  // Sammelrechnungs-Block aus den Abrechnungszeilen auf die zugehörigen Kopfdaten übertragen
   Object.keys(blockByRgnr).forEach(rgnr=>{
     if(headers[rgnr]) headers[rgnr].block = rgNormBlock(blockByRgnr[rgnr]);
   });
@@ -2478,17 +2560,34 @@ async function rgImport(){
 
   syn("w",tr("sync_now"));
 
+  // Echtes Datenbank-Upsert über die Rechnungsnummer: funktioniert auch,
+  // wenn der lokale Datenstand nicht mehr aktuell ist (verhindert 23505-Fehler
+  // beim erneuten Einfügen einer bereits vorhandenen Rechnung).
   if(headerRows.length){
     const resHdr=await sbIns("rg",headerRows,"rgnr");
-    if(!resHdr){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
+    if(!resHdr){
+      syn("e",tr("sync_error"));
+      alert(tr("save_failed"));
+      return;
+    }
   }
+
   if(newRgRows.length){
     const resRg=await sbIns("rg",newRgRows);
-    if(!resRg){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
+    if(!resRg){
+      syn("e",tr("sync_error"));
+      alert(tr("save_failed"));
+      return;
+    }
   }
+
   if(abrRows.length){
     const resAbr=await sbIns("abr",abrRows);
-    if(!resAbr){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
+    if(!resAbr){
+      syn("e",tr("sync_error"));
+      alert(tr("save_failed"));
+      return;
+    }
   }
 
   await syncDown();
@@ -2522,6 +2621,7 @@ async function rgAddManual(){
   ["rg-m-datum","rg-m-firma","rg-m-rgnr","rg-m-text","rg-m-betrag"].forEach(id=>document.getElementById(id).value="");
   rRech();
 }
+
 async function rgDelete(id){
   syn("w",tr("sync_now"));
   const res=await sbDel("rg",id);
@@ -2530,12 +2630,13 @@ async function rgDelete(id){
   syn("",tr("sync_saved"));
   rRech();
 }
+
 async function rgToggleBezahlt(id){
   const r=RG.find(x=>x.id===id);
   if(!r) return;
   let bezahltAm;
   if(r.bezahltAm){
-    bezahltAm=null;
+    bezahltAm=null; // Rückgängig
   }else{
     const inp=document.getElementById("rg-pay-date-"+id);
     bezahltAm = (inp && inp.value) ? inp.value : new Date().toISOString().slice(0,10);
@@ -2547,6 +2648,7 @@ async function rgToggleBezahlt(id){
   syn("",tr("sync_saved"));
   rRech();
 }
+
 function rgFillBvSelect(){
   const sel=document.getElementById("rg-m-bv");
   if(!sel) return;
@@ -2555,18 +2657,25 @@ function rgFillBvSelect(){
     BV.filter(b=>!b.archived).map(b=>`<option value="${b.id}">${b.nr?b.nr+" · ":""}${b.name||""}</option>`).join("");
   sel.value=cur;
 }
+
 let rgOpenGroups=new Set();
 function rgToggleGroup(key){
   if(rgOpenGroups.has(key)) rgOpenGroups.delete(key); else rgOpenGroups.add(key);
   rRech();
 }
+
 function rgNormBlock(s){
-  return String(s||"").trim().toLowerCase().replace(/[_\-]+/g," ").replace(/\s+/g," ");
+  return String(s||"")
+    .trim()
+    .toLowerCase()
+    .replace(/[_\-]+/g," ")   // Unterstriche/Bindestriche wie Leerzeichen behandeln
+    .replace(/\s+/g," ");      // mehrfache Leerzeichen zusammenfassen
 }
 function rgGroupKey(r){
   if(r.block && r.block.trim()!=="") return "block|" + rgNormBlock(r.block);
   return r.datum + "|" + r.firma;
 }
+	
 async function rgGroupPayAll(key, pay){
   let stamp=null;
   if(pay){
@@ -2581,6 +2690,7 @@ async function rgGroupPayAll(key, pay){
   syn("",tr("sync_saved"));
   rRech();
 }
+
 function rgFaellig(r){
   if(r.faelligkeit){ const d=new Date(r.faelligkeit); d.setHours(0,0,0,0); return d; }
   const d=new Date(r.datum); d.setDate(d.getDate()+14); d.setHours(0,0,0,0); return d;
@@ -2591,11 +2701,12 @@ function rgStatus(r){
   const today=new Date(); today.setHours(0,0,0,0);
   return today>ziel ? "ueberfaellig" : "offen";
 }
+
 function rgFmtMoney(n){ return n.toLocaleString("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2})+" €"; }
 function rgFmtDatum(iso){ const [y,m,d]=iso.split("-"); return `${d}.${m}.${y.slice(2)}`; }
 function rgPrettyBlockLabel(s){
   if(!s) return "";
-  let t=String(s).replace(/([a-zA-ZäöüÄÖÜß])(\d)/g,"$1 $2");
+  let t=String(s).replace(/([a-zA-ZäöüÄÖÜß])(\d)/g,"$1 $2"); // z.B. "teil2" -> "teil 2"
   return t.split(" ").filter(Boolean).map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(" ");
 }
 function rgRgnrRange(rows){
@@ -2605,6 +2716,7 @@ function rgRgnrRange(rows){
   const first=nrs[0], last=nrs[nrs.length-1];
   return first===last ? tr("rg_invoice_single",{first}) : tr("rg_invoice_range",{first,last});
 }
+
 function rRech(){
   const cnt=document.getElementById("rg-list");
   if(!cnt) return;
@@ -2632,30 +2744,29 @@ function rRech(){
 
     const sum=rows.reduce((a,r)=>a+r.betrag,0);
     const isSammel=rows.length>1;
-    let datum="", firma="", blockLabel="", title="";
-    if(key.startsWith("block|")){
-      blockLabel = rgPrettyBlockLabel(key.slice(6));
-      firma = rows[0]?.firma || "";
-      datum = rows.map(r=>r.datum).sort().slice(-1)[0] || "";
-      title = rgRgnrRange(rows) || firma;
-    }else{
-      [datum,firma] = key.split("|");
-      title = firma;
-    }
-    const color = groupStatus==="bezahlt" ? "var(--g)" : groupStatus==="ueberfaellig" ? "var(--danger-txt)" : "var(--warn-txt)";
-    const label = groupStatus==="bezahlt" ? tr("rg_status_paid") : groupStatus==="ueberfaellig" ? tr("rg_status_overdue") : tr("rg_status_open");
+let datum="", firma="", blockLabel="", title="";
+if(key.startsWith("block|")){
+  blockLabel = rgPrettyBlockLabel(key.slice(6));
+  firma = rows[0]?.firma || "";
+  datum = rows.map(r=>r.datum).sort().slice(-1)[0] || "";
+  title = rgRgnrRange(rows) || firma;
+}else{
+  [datum,firma] = key.split("|");
+  title = firma;
+}
+const color = groupStatus==="bezahlt" ? "var(--g)" : groupStatus==="ueberfaellig" ? "var(--danger-txt)" : "var(--warn-txt)";
+const label = groupStatus==="bezahlt" ? tr("rg_status_paid") : groupStatus==="ueberfaellig" ? tr("rg_status_overdue") : tr("rg_status_open");
 
     const gid="rgg_"+key.replace(/[^a-zA-Z0-9]/g,"_");
     const opened=rgOpenGroups.has(key);
     const todayStr=new Date().toISOString().slice(0,10);
-
     html+=`<div class="crd" style="margin-bottom:12px">
       <div style="padding:12px 15px;${opened?"border-bottom:.5px solid var(--b);":""}display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;flex-wrap:wrap" onclick="rgToggleGroup('${key.replace(/'/g,"\\'")}')">
         <div>
           <div style="font-weight:700;font-size:15px">${title}</div>
-          <div style="font-size:12px;color:var(--s);margin-top:2px">
-            ${blockLabel ? `${firma}${firma?" · ":""}${blockLabel}${isSammel?` · ${tr("rg_sammel",{count:rows.length})}`:""}` : `${rgFmtDatum(datum)}${isSammel?` · ${tr("rg_sammel",{count:rows.length})}`:""}`}
-          </div>
+         <div style="font-size:12px;color:var(--s);margin-top:2px">
+  ${blockLabel ? `${firma}${firma?" · ":""}${blockLabel}${isSammel?` · ${tr("rg_sammel",{count:rows.length})}`:""}` : `${rgFmtDatum(datum)}${isSammel?` · ${tr("rg_sammel",{count:rows.length})}`:""}`}
+</div>
         </div>
         <div style="text-align:right;display:flex;align-items:center;gap:8px">
           ${(isSammel && anyOpen && !opened) ? `<div onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:6px">
@@ -2696,16 +2807,15 @@ function rRech(){
     }
     html+=`</div>`;
   }
-
   cnt.innerHTML=html || `<div class="crd" style="padding:16px;text-align:center;color:var(--s);font-size:14px">${tr("rg_none_filter")}</div>`;
 }
 
-// ═══ MITARBEITER-STUNDENSÄTZE ═══
+// ═══ MITARBEITER-STUNDENSÄTZE (lokal, nicht Supabase-synchronisiert) ═══
 let MA_RATES={};
 function maRatesLoad(){ MA_RATES=lsGet("ma_rates",{}); }
 function maRatesSave(){ lsSet("ma_rates",MA_RATES); }
 function maDefaultRate(m){ return (m && m.name==="Sayim Aslan") ? 37 : 35; }
-const RATE_CUTOFF_DATE = "2026-06-30";
+const RATE_CUTOFF_DATE = "2026-06-30"; // bis einschließlich 30.06.2026 galt pauschal 35€/h für alle
 function maRateForDate(id, datum){
   if(datum && datum<=RATE_CUTOFF_DATE) return 35;
   return maRate(id);
@@ -2721,173 +2831,74 @@ function maRateSet(id, val){
   maRatesSave();
 }
 
-// ═══ PDF-RAPPORT ═══
-let _rapportTemplateCache = null;
-async function getRapportTemplateBytes(){
-  if(_rapportTemplateCache) return _rapportTemplateCache.slice(0);
-  const response = await fetch('Rapport_Vorlage.pdf');
-  if (!response.ok) throw new Error(tr("pdf_template_missing"));
-  _rapportTemplateCache = await response.arrayBuffer();
-  return _rapportTemplateCache.slice(0);
+// ═══ TOAST ═══
+function toast(msg,dur=2000){
+  const el=document.getElementById("toast");
+  if(!el)return;
+  el.textContent=msg;
+  el.classList.add("show");
+  clearTimeout(toastT);
+  toastT=setTimeout(()=>el.classList.remove("show"),dur);
 }
 
-function fillRapportPdf(form, dateStr, bvId, futureMaIds, blankBvFields=false){
-  const bv = BV.find(x => x.id == bvId) || {};
-  const bl = BL.find(x => x.id == bv.bl_id) || { name: "" };
-
-  const rows = (futureMaIds && futureMaIds.length)
-    ? futureMaIds.map(maId => ({ ma_id: maId, beginn: "", ende: "", pause_min: null, stunden: "" }))
-    : EN.filter(e => e.datum === dateStr && e.bv_id == bvId);
-
-  form.getTextField('text_3').setText(blankBvFields ? "" : (bv.nr || ""));
-  form.getTextField('text_0').setText(formatDate(dateStr));
-  form.getTextField('text_111 (0)').setText(blankBvFields ? "" : (bv.name || ""));
-  form.getTextField('text_9').setText(blankBvFields ? "" : (bl.name || ""));
-
-  const empFields = [
-    { name: 'text_13', start: 'text_31', end: 'text_36', pause: 'text_41', hours: 'text_58' },
-    { name: 'text_15', start: 'text_32', end: 'text_37', pause: 'text_42', hours: 'text_59' },
-    { name: 'text_11', start: 'text_33', end: 'text_38', pause: 'text_43', hours: 'text_60' },
-    { name: 'text_18', start: 'text_34', end: 'text_39', pause: 'text_44', hours: 'text_61' },
-    { name: 'text_20', start: 'text_35', end: 'text_40', pause: 'text_45', hours: 'text_62' }
-  ];
-
-  rows.slice(0, 5).forEach((row, i) => {
-    const f = empFields[i];
-    if (!f) return;
-    const ma = MA.find(x => x.id == row.ma_id) || { name: "" };
-    form.getTextField(f.name).setText(ma.name || "");
-    form.getTextField(f.start).setText(row.beginn ? formatTime(row.beginn) : "");
-    form.getTextField(f.end).setText(row.ende ? formatTime(row.ende) : "");
-    form.getTextField(f.pause).setText(
-      row.pause_min != null && row.pause_min !== "" ? formatVal(row.pause_min / 60) : ""
-    );
-    form.getTextField(f.hours).setText(
-      row.stunden != null && row.stunden !== "" ? formatVal(row.stunden) : ""
-    );
-  });
-
-  return bv;
+// ═══ SYNC STATUS ═══
+function syn(s,l){
+  const d=document.getElementById("sd"),lb=document.getElementById("sl");
+  if(!d)return;
+  d.className="sd"+(s==="w"?" w":s==="e"?" e":"");
+  if(lb)lb.textContent=l;
 }
 
-function showBvList() {
-  const dateStr = document.getElementById("rep-d").value;
-  const listDiv = document.getElementById("bv-list");
-  listDiv.innerHTML = "";
 
-  const entries = EN.filter(e => e.datum === dateStr && Number(e.stunden) > 0);
-  const uniqueBvIds = [...new Set(entries.map(e => e.bv_id))];
 
-  if (uniqueBvIds.length === 0) {
-    listDiv.innerHTML = tr("pdf_no_data_for_date");
-    document.getElementById("download-btn").style.display = "none";
-    return;
-  }
-
-  uniqueBvIds.forEach(id => {
-    const bv = BV.find(x => x.id == id);
-    listDiv.innerHTML += `<div><input type="checkbox" value="${id}" class="bv-check"> BV ${bv.nr} - ${bv.name}</div>`;
-  });
-  document.getElementById("download-btn").style.display = "block";
+// ═══ BOOT ═══
+async function boot(){
+  BV=lsGet("bv",[]);
+  MA=lsGet("ma",[]);
+  EN=lsGet("en",[]);
+  BL=lsGet("bl",[]);
+  WA=new Set(lsGet("wa",[]));
+  RG=lsGet("rg",[]);
+  ABR=lsGet("abr",[]);
+  AB=lsGet("ab",[]);
+  LV=lsGet("lv",[]);
+  maRatesLoad();
+  applyRgManualVisibility();
+  
+  go("pg-home");
+  applyTranslations();
+  sd0();
+  ustats();
+  rwarn();rwarnMa();
+  rmissing();
+  await syncDown(true);
+  initPush();
 }
+boot();
 
-async function openRapportPdf(dateStr, bvId, blankBvFields=false){
-  const win = window.open("", "_blank");
-  if(win){
-    win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;height:100vh;display:flex;align-items:center;justify-content:center;font-family:-apple-system,sans-serif;background:#111;color:#fff;font-size:16px;">${tr("pdf_preparing")}</body></html>`);
-    win.document.close();
-  }
-  try{
-    const arrayBuffer = await getRapportTemplateBytes();
-    const { PDFDocument } = PDFLib;
-    const pdfDoc = await PDFDocument.load(arrayBuffer);
-    const form = pdfDoc.getForm();
-    fillRapportPdf(form, dateStr, bvId, repFutureMode ? [...repFutureMaSel] : null, blankBvFields);
-    const pdfBytes = await pdfDoc.save();
-    const blob = new Blob([pdfBytes], { type: "application/pdf" });
-    const blobUrl = URL.createObjectURL(blob);
-    if(win && !win.closed){
-      win.location.href = blobUrl;
-      setTimeout(()=>URL.revokeObjectURL(blobUrl), 60000);
-    } else {
-      const a=document.createElement("a");
-      a.href=blobUrl;
-      a.target="_blank";
-      a.download=`Rapport_${dateStr}.pdf`;
-      a.click();
-      setTimeout(()=>URL.revokeObjectURL(blobUrl), 60000);
-    }
-  }catch(e){
-    if(win && !win.closed) win.close();
-    alert(tr("pdf_error_prefix") + e.message);
-  }
-}
-
-async function generateSelectedPDFs() {
-  try {
-    const dateStr = document.getElementById("rep-d").value;
-    const checkedBoxes = document.querySelectorAll('.bv-check:checked');
-
-    if (checkedBoxes.length === 0) {
-      alert(tr("pdf_select_one_bv"));
-      return;
-    }
-
-    const arrayBuffer = await getRapportTemplateBytes();
-    const { PDFDocument } = PDFLib;
-
-    for (const box of checkedBoxes) {
-      const bvId = box.value;
-      const pdfDoc = await PDFDocument.load(arrayBuffer);
-      const form = pdfDoc.getForm();
-      const bv = fillRapportPdf(form, dateStr, bvId, null, false);
-
-      const pdfBytes = await pdfDoc.save();
-      const blob = new Blob([pdfBytes], { type: "application/pdf" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-
-      const [year, month, day] = dateStr.split('-');
-      const shortYear = year.slice(2);
-      link.download = `Rapport_${shortYear}-${month}-${day}_BV-${bv.nr}.pdf`;
-      link.click();
-    }
-    alert(tr("pdf_created_ok"));
-  } catch (e) {
-    console.error("FEHLER:", e);
-    alert(tr("pdf_error_prefix") + e.message);
-  }
-}
-
-function offerPrintRapport(dateStr, bvId){
-  conf(tr("print_rapport_title"), tr("print_rapport_msg"), ()=>{
-    clco();
-    openRapportPdf(dateStr, bvId, false);
-  }, tr("print_rapport_yes"));
-}
-
-// ═══ BOOT / SYNC ═══
 async function seedIfEmpty(){
   const rbv=await sbSel("bv","&order=nr.asc");
   if(rbv && rbv.length===0) await sbIns("bv",DBV);
   const rma=await sbSel("ma","&order=sort_order.asc");
   if(rma && rma.length===0) await sbIns("ma",DMA);
 }
+
 async function syncDown(first=false){
   syn("w",tr("sync_now"));
   await seedIfEmpty();
 
-  const [rbv,rma,ren,rbl,rws,rrg,rabr,rab,rlv]=await Promise.all([
-    sbSel("bv","&order=nr.asc"),
-    sbSel("ma","&order=sort_order.asc"),
-    sbSel("en","&order=datum.asc"),
-    sbSel("bl","&order=name.asc"),
-    sbSel("wa_sent","&order=key.asc"),
-    sbSel("rg","&order=datum.desc"),
-    sbSel("abr","&order=datum.desc"),
-    sbSel("absences","&order=datum.desc"),
-    sbSel("leave_periods","&order=start_date.desc")
-  ]);
+const [rbv,rma,ren,rbl,rws,rrg,rabr,rab,rlv,rst]=await Promise.all([
+  sbSel("bv","&order=nr.asc"),
+  sbSel("ma","&order=sort_order.asc"),
+  sbSel("en","&order=datum.asc"),
+  sbSel("bl","&order=name.asc"),
+  sbSel("wa_sent","&order=key.asc"),
+  sbSel("rg","&order=datum.desc"),
+  sbSel("abr","&order=datum.desc"),
+  sbSel("absences","&order=datum.desc"),
+  sbSel("leave_periods","&order=start_date.desc"),
+  sbSel("settings","")
+]);
 
   if(rbv) BV=rbv;
   if(rma) MA=rma;
@@ -2898,6 +2909,11 @@ async function syncDown(first=false){
   if(rabr) ABR=rabr;
   if(rab) AB=rab;
   if(rlv) LV=rlv;
+  if(rst){
+    SETTINGS={};
+    rst.forEach(r=>{ SETTINGS[r.key]=r.value; });
+    GLOBAL_WARN_OFF = SETTINGS["global_warn_off"]==="1";
+  }
 
   lsSet("bv",BV);
   lsSet("ma",MA);
@@ -2908,11 +2924,13 @@ async function syncDown(first=false){
   lsSet("abr",ABR);
   lsSet("ab",AB);
   lsSet("lv",LV);
+  lsSet("settings",SETTINGS);
 
   ustats();
-  rwarn(); rwarnMa();
+  rwarn();rwarnMa();
   rmissing();
   rblSel();
+  initEditorSettingsUI();
   if(document.getElementById("pg-abw")?.classList.contains("on")) rAbw();
   if(document.getElementById("pg-bv-editor")?.classList.contains("on")) rEditorBv();
 
@@ -2929,30 +2947,6 @@ async function syncDown(first=false){
   syn("",tr("sync_ok"));
   if(!first) toast(tr("toast_sync"));
 }
-
-async function boot(){
-  BV=lsGet("bv",[]);
-  MA=lsGet("ma",[]);
-  EN=lsGet("en",[]);
-  BL=lsGet("bl",[]);
-  WA=new Set(lsGet("wa",[]));
-  RG=lsGet("rg",[]);
-  ABR=lsGet("abr",[]);
-  AB=lsGet("ab",[]);
-  LV=lsGet("lv",[]);
-  maRatesLoad();
-  applyRgManualVisibility();
-
-  go("pg-home");
-  applyTranslations();
-  sd0();
-  ustats();
-  rwarn(); rwarnMa();
-  rmissing();
-  await syncDown(true);
-  initPush();
-}
-boot();
 
 // ═══ ROUTING ═══
 function go(id){
@@ -3002,7 +2996,57 @@ function bk(to){
   if(to==="pg-editor")rEditor();
 }
 
-// ═══ WhatsApp / Statistik / Warnungen / Kalender ═══
+// ═══ HELPERS ═══
+function fd(d){
+  if(!d)return"";
+  const[y,m,day]=d.split("-");
+  return `${day}.${m}.${y}`;
+}
+function td(){ return new Date().toISOString().split("T")[0]; }
+function sd0(){ const e=document.getElementById("inp-d"); if(e)e.value=td(); }
+function sd1(){ const d=new Date(); d.setDate(d.getDate()-1); const e=document.getElementById("inp-d"); if(e)e.value=d.toISOString().split("T")[0]; }
+
+function gkw(ds){
+  const d=new Date(ds+"T00:00:00");
+  const day=d.getDay()||7;
+  d.setDate(d.getDate()+4-day);
+  const y=d.getFullYear();
+  return Math.ceil(((d-new Date(y,0,1))/864e5+1)/7);
+}
+
+function bvById(id){ return BV.find(b=>String(b.id)===String(id)); }
+function maById(id){ return MA.find(m=>String(m.id)===String(id)); }
+function blById(id){ return BL.find(b=>String(b.id)===String(id)); }
+function validBVNr(nr){
+  const v=String(nr||"").trim().toUpperCase();
+  if(v==="LAGER") return true;
+  return /^6[456]\d{3}$/.test(v);
+}
+
+async function pkLager(){
+  let lg=BV.find(b=>String(b.nr||"").trim().toUpperCase()==="LAGER");
+  if(!lg){
+    syn("w", tr("sync_now"));
+    await sbIns("bv",[{nr:"LAGER", name:"Lager", bl_id:null}]);
+    await syncDown();
+    syn("", tr("sync_ok"));
+    lg=BV.find(b=>String(b.nr||"").trim().toUpperCase()==="LAGER");
+  }
+  if(lg) pkBV(lg.id);
+}
+function bvNrBadge(nr){ return validBVNr(nr) ? "" : ` <span title="${tr("bv_nr_invalid_short")}" style="color:var(--danger-txt);font-weight:bold;display:inline-flex;vertical-align:middle">${ICON_WARN}</span>`; }
+
+function groupedEntries(){
+  const map={};
+  EN.forEach(e=>{
+    const key=`${e.datum}_${e.bv_id}`;
+    if(!map[key]) map[key]={ key, datum:e.datum, bv_id:e.bv_id, rows:[] };
+    map[key].rows.push(e);
+  });
+  return Object.values(map).sort((a,b)=>a.datum.localeCompare(b.datum));
+}
+
+// ═══ WHATSAPP-VERSAND CHECKLISTE ═══
 function toggleWaFilter(){
   waFilterOpen=!waFilterOpen;
   rwaList();
@@ -3048,6 +3092,7 @@ function rwaList(){
       </div>
     </div>`;
   }
+
   function waSectionHtml(title, list, colorBg, colorTxt){
     if(!list.length) return "";
     return `<div class="bvrubric" style="color:${colorTxt}">${title} (${list.length})</div>
@@ -3064,14 +3109,18 @@ function rwaList(){
 function waWeekBounds(offsetWeeks){
   const d=new Date();
   const dow=d.getDay()||7;
-  d.setDate(d.getDate()-dow+1+offsetWeeks*7);
+  d.setDate(d.getDate()-dow+1+offsetWeeks*7); // Montag dieser/letzter Woche
   const mon=d.toISOString().slice(0,10);
   const sun=new Date(d); sun.setDate(sun.getDate()+6);
   return [mon, sun.toISOString().slice(0,10)];
 }
 async function toggleWaSent(key){
   const wasSent=WA.has(key);
-  if(wasSent) WA.delete(key); else WA.add(key);
+  if(wasSent){
+    WA.delete(key);
+  }else{
+    WA.add(key);
+  }
   lsSet("wa",Array.from(WA));
   rwaList();
   if(wasSent){
@@ -3081,93 +3130,125 @@ async function toggleWaSent(key){
   }
 }
 
+// ═══ AUSWERTUNG ═══
+function fmtH(h){ return (Math.round(h*100)/100).toString().replace(".",",")+" h"; }
 function fmtCHF(v){ return "CHF "+(Math.round(v*100)/100).toLocaleString("de-CH",{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function statInit(){
   if(!statPeriod) statPeriod=td().slice(0,7);
   if(!calMonth) calMonth=td().slice(0,7);
-  const sp=document.getElementById("stat-period");
-  if(sp) sp.value=statPeriod;
+  document.getElementById("stat-period").value=statPeriod;
 }
 function statSetTab(tab){
   statTab=tab;
-  ["ma","bv","cal"].forEach(t=>document.getElementById("stt-"+t)?.classList.toggle("on",t===tab));
-  const mabv=document.getElementById("stat-ctrl-mabv");
-  const cal=document.getElementById("stat-ctrl-cal");
-  if(mabv) mabv.style.display = tab==="cal" ? "none" : "flex";
-  if(cal) cal.style.display = tab==="cal" ? "flex" : "none";
+  ["ma","bv","cal"].forEach(t=>document.getElementById("stt-"+t).classList.toggle("on",t===tab));
+  document.getElementById("stat-ctrl-mabv").style.display = tab==="cal" ? "none" : "flex";
+  document.getElementById("stat-ctrl-cal").style.display = tab==="cal" ? "flex" : "none";
   rStat();
 }
-function statSetScope(scope){ statScope=scope; rStat(); }
-function statPeriodChange(){ statPeriod=document.getElementById("stat-period").value || statPeriod; rStat(); }
+function statSetScope(scope){
+  statScope=scope;
+  rStat();
+}
+function statPeriodChange(){
+  statPeriod=document.getElementById("stat-period").value || statPeriod;
+  rStat();
+}
 function calNav(dir){
   const [y,m]=calMonth.split("-").map(Number);
   const d=new Date(y,m-1+dir,1);
   calMonth=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
   rStat();
 }
-function statEntriesInPeriod(){
-  const prefix = statScope==="month" ? statPeriod : statPeriod.slice(0,4);
-  return EN.filter(e=>e.datum && e.datum.startsWith(prefix));
-}
 function rStat(){
   statInit();
-  document.getElementById("stat-scope-m")?.classList.toggle("on",statScope==="month");
-  document.getElementById("stat-scope-y")?.classList.toggle("on",statScope==="year");
+  document.getElementById("stat-scope-m").classList.toggle("on",statScope==="month");
+  document.getElementById("stat-scope-y").classList.toggle("on",statScope==="year");
   const hs=document.getElementById("stat-hs");
   if(statTab==="cal"){
     const [y,m]=calMonth.split("-").map(Number);
     const mn=tr("month_"+String(m).padStart(2,"0"));
-    if(hs) hs.textContent=`${mn} ${y}`;
+    hs.textContent=`${mn} ${y}`;
   } else {
     const [y,m]=statPeriod.split("-").map(Number);
     const mn=tr("month_"+String(m).padStart(2,"0"));
-    if(hs) hs.textContent = statScope==="month" ? `${mn} ${y}` : tr("stat_year_label",{y});
+    hs.textContent = statScope==="month" ? `${mn} ${y}` : tr("stat_year_label",{y});
   }
   const sumEl=document.getElementById("stat-summary");
   if(sumEl){
     if(statTab==="cal"){ sumEl.innerHTML=""; }
     else{
       const rows = statEntriesInPeriod();
-      const byDay = {};
-      rows.forEach(e => {
-        if (!byDay[e.datum]) byDay[e.datum] = { ma: new Set(), verdienst: 0 };
-        byDay[e.datum].ma.add(e.ma_id);
-        byDay[e.datum].verdienst += (Number(e.stunden) || 0) * maRateForDate(e.ma_id, e.datum);
-      });
-      const days = Object.keys(byDay);
-      const avgMa = days.length ? (days.reduce((a, d) => a + byDay[d].ma.size, 0) / days.length) : 0;
-      sumEl.innerHTML = `<div class="sts" style="padding:0 16px 4px">
-        <div class="stc"><div class="stn">${avgMa.toFixed(1)}</div><div class="stl">${tr("stat_avg_ma_day")}</div></div>
-      </div>`;
+
+const byDay = {};
+rows.forEach(e => {
+  if (!byDay[e.datum]) byDay[e.datum] = { ma: new Set(), verdienst: 0 };
+  byDay[e.datum].ma.add(e.ma_id);
+  byDay[e.datum].verdienst += (Number(e.stunden) || 0) * maRateForDate(e.ma_id, e.datum);
+});
+
+const days = Object.keys(byDay);
+const avgMa = days.length
+  ? (days.reduce((a, d) => a + byDay[d].ma.size, 0) / days.length)
+  : 0;
+
+const totalVerdienst = days.reduce((a, d) => a + byDay[d].verdienst, 0);
+const avgVerdienstTag = days.length ? (totalVerdienst / days.length) : 0;
+
+const weeks = new Set(
+  days.map(d => {
+    const dt = new Date(d + "T00:00:00");
+    return dt.getFullYear() + "-" + gkw(d);
+  })
+);
+const avgVerdienstWoche = weeks.size ? (totalVerdienst / weeks.size) : 0;
+
+sumEl.innerHTML = `<div class="sts" style="padding:0 16px 4px">
+  <div class="stc"><div class="stn">${avgMa.toFixed(1)}</div><div class="stl">${tr("stat_avg_ma_day")}</div></div>
+</div>`;
     }
   }
   if(statTab==="ma") rStatMa();
   else if(statTab==="bv") rStatBv();
   else rStatCal();
 }
+function statEntriesInPeriod(){
+  const prefix = statScope==="month" ? statPeriod : statPeriod.slice(0,4);
+  return EN.filter(e=>e.datum && e.datum.startsWith(prefix));
+}
 function rStatMa(){
   const body=document.getElementById("statbody");
   const rows=statEntriesInPeriod();
-  if(!rows.length){ body.innerHTML=`<div class="emp"><div class="eic">${ICON_EMPTY}</div>${tr("stat_no_hours")}</div>`; return; }
+  if(!rows.length){
+    body.innerHTML=`<div class="emp"><div class="eic">${ICON_EMPTY}</div>${tr("stat_no_hours")}</div>`;
+    return;
+  }
 
   const byMa={};
   rows.forEach(e=>{
-    if(!byMa[e.ma_id]) byMa[e.ma_id]={ h:0, days:new Set(), bv:{} };
-    const s=byMa[e.ma_id];
-    s.h+=Number(e.stunden)||0;
+    const mid=String(e.ma_id);
+    if(!byMa[mid]) byMa[mid]={ h:0, days:new Set(), bv:{} };
+    const s=byMa[mid];
+    s.h += Number(e.stunden)||0;
     s.days.add(e.datum);
-    s.bv[e.bv_id]=(s.bv[e.bv_id]||0)+(Number(e.stunden)||0);
+    const bid=String(e.bv_id);
+    s.bv[bid]=(s.bv[bid]||0)+(Number(e.stunden)||0);
   });
 
-  const list=MA.filter(m=>byMa[m.id]).sort((a,b)=>byMa[b.id].h-byMa[a.id].h);
-  if(!list.length){ body.innerHTML=`<div class="emp"><div class="eic">${ICON_EMPTY}</div>${tr("stat_no_hours")}</div>`; return; }
+  const list=MA.filter(m=>byMa[String(m.id)]).sort((a,b)=>byMa[String(b.id)].h-byMa[String(a.id)].h);
+  if(!list.length){
+    body.innerHTML=`<div class="emp"><div class="eic">${ICON_EMPTY}</div>${tr("stat_no_hours")}</div>`;
+    return;
+  }
 
-  const maxH=byMa[list[0].id].h||1;
-  const rankBadge=(i)=> i===0?`<div class="statrank r1">🥇</div>`: i===1?`<div class="statrank r2">🥈</div>`: i===2?`<div class="statrank r3">🥉</div>`: `<div class="statrank">#${i+1}</div>`;
+  const maxH=byMa[String(list[0].id)].h||1;
+  const rankBadge=(i)=> i===0?`<div class="statrank r1">🥇</div>`
+  : i===1?`<div class="statrank r2">🥈</div>`
+  : i===2?`<div class="statrank r3">🥉</div>`
+  : `<div class="statrank">#${i+1}</div>`;
 
   body.innerHTML=`<div class="statlist">${
     list.map((m,i)=>{
-      const s=byMa[m.id];
+      const s=byMa[String(m.id)];
       const bvChips=Object.entries(s.bv).sort((a,b)=>b[1]-a[1]).map(([bid,h])=>{
         const bv=bvById(bid);
         return `<div class="bvchip">BV ${bv?.nr||"?"} · ${fmtH(h)}</div>`;
@@ -3190,18 +3271,30 @@ function rStatMa(){
 function rStatBv(){
   const body=document.getElementById("statbody");
   const rows=statEntriesInPeriod();
-  if(!rows.length){ body.innerHTML=`<div class="emp"><div class="eic">${ICON_EMPTY}</div>${tr("stat_no_hours")}</div>`; return; }
+  if(!rows.length){
+    body.innerHTML=`<div class="emp"><div class="eic">${ICON_EMPTY}</div>${tr("stat_no_hours")}</div>`;
+    return;
+  }
 
   const byBv={};
   rows.forEach(e=>{
-    if(!byBv[e.bv_id]) byBv[e.bv_id]={ h:0, days:new Set() };
+    const bid=String(e.bv_id);
+    if(!byBv[bid]) byBv[bid]={ h:0, days:new Set() };
     const h=Number(e.stunden)||0;
-    byBv[e.bv_id].h+=h;
-    byBv[e.bv_id].days.add(e.datum);
+    byBv[bid].h+=h;
+    byBv[bid].days.add(e.datum);
   });
 
-  const list=Object.keys(byBv).map(id=>({bv:bvById(id),id,...byBv[id]})).sort((a,b)=>b.h-a.h);
-  const rankBadge=(i)=> i===0?`<div class="statrank r1">🥇</div>`: i===1?`<div class="statrank r2">🥈</div>`: i===2?`<div class="statrank r3">🥉</div>`: `<div class="statrank">#${i+1}</div>`;
+  const list=Object.keys(byBv)
+    .map(id=>({bv:bvById(id),id,...byBv[id]}))
+    .filter(x=>x.bv)
+    .sort((a,b)=>b.h-a.h);
+
+  const rankBadge=(i)=> i===0?`<div class="statrank r1">🥇</div>`
+  : i===1?`<div class="statrank r2">🥈</div>`
+  : i===2?`<div class="statrank r3">🥉</div>`
+  : `<div class="statrank">#${i+1}</div>`;
+
   const BV_ICON=`<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 21v-6h6v6"/><path d="M9 9h.01M15 9h.01M9 13h.01M15 13h.01"/></svg>`;
 
   body.innerHTML=`<div class="statlist">${
@@ -3236,7 +3329,7 @@ function rStatCal(){
   });
 
   const first=new Date(y,m-1,1);
-  const startDow=(first.getDay()||7)-1;
+  const startDow=(first.getDay()||7)-1; // Mo=0
   const daysInMonth=new Date(y,m,0).getDate();
   const dow=["Mo","Di","Mi","Do","Fr","Sa","So"];
 
@@ -3291,18 +3384,37 @@ function misscalNav(dir){
   rMissCal();
 }
 function missActiveMaForDay(ds){
-  return MA.filter(m=>!m.archived && !isLongAbsentForDate(m,ds) && !isMaAbsentOn(m.id,ds));
+  return MA.filter(m=>!m.archived && !m.long_absent && !isMaAbsentOn(m.id,ds));
 }
 function missGroupsUnconfirmed(ds){
   const bvIds=new Set(EN.filter(e=>e.datum===ds).map(e=>e.bv_id));
   for(const bvId of bvIds){ if(!WA.has(`${ds}_${bvId}`)) return true; }
   return false;
 }
+function missOpenBvNumbersForMa(maId, ds){
+  const rows = EN.filter(e => e.datum===ds && String(e.ma_id)===String(maId));
+  const openBvIds = [...new Set(
+    rows
+      .filter(e => !WA.has(`${ds}_${e.bv_id}`))
+      .map(e => e.bv_id)
+  )];
+  return openBvIds
+    .map(id => bvById(id)?.nr)
+    .filter(Boolean)
+    .sort((a,b)=>String(a).localeCompare(String(b), undefined, {numeric:true}));
+}
 function missEmployeeStatus(m,ds){
-  const rows=EN.filter(e=>e.datum===ds && e.ma_id===m.id);
+  const rows=EN.filter(e=>e.datum===ds && String(e.ma_id)===String(m.id));
   if(!rows.length) return {label:tr("misscal_status_missing"),color:"#c62828"};
-  const unconfirmed=rows.some(e=>!WA.has(`${ds}_${e.bv_id}`));
-  if(unconfirmed) return {label:tr("misscal_status_rapport_missing"),color:"#c9932a"};
+
+  const openBvs = missOpenBvNumbersForMa(m.id, ds);
+  if(openBvs.length){
+    return {
+      label:`${tr("misscal_status_rapport_missing")} (${openBvs.join(", ")})`,
+      color:"#c9932a"
+    };
+  }
+
   return {label:tr("misscal_status_ok"),color:"#2d9d5c"};
 }
 function missColor(missing,total,rapportOpen){
@@ -3332,7 +3444,7 @@ function rMissCal(){
   document.getElementById("misscal-l").textContent=`${tr("month_short_"+String(m).padStart(2,"0"))} ${y}`;
 
   const first=new Date(y,m-1,1);
-  const startDow=(first.getDay()||7)-1;
+  const startDow=(first.getDay()||7)-1; // Mo=0
   const daysInMonth=new Date(y,m,0).getDate();
   const dow=["Mo","Di","Mi","Do","Fr","Sa","So"];
   const today=td();
@@ -3341,7 +3453,7 @@ function rMissCal(){
   for(let i=0;i<startDow;i++) cells+=`<div class="calcell empty"></div>`;
   for(let d=1;d<=daysInMonth;d++){
     const ds=`${misscalMonth}-${String(d).padStart(2,"0")}`;
-    const dow2=new Date(ds+"T00:00:00").getDay();
+    const dow2=new Date(ds+"T00:00:00").getDay(); // 0=So,6=Sa
     if(ds>today){
       cells+=`<div class="calcell" style="background:var(--c);border-color:var(--b);color:var(--s);opacity:.35" onclick="openMissDay('${ds}')">${d}</div>`;
       continue;
@@ -3413,7 +3525,8 @@ function rMissRapportListHtml(y,m){
       <div class="ar" style="align-self:center">›</div>
     </div>`;
   }).join("");
-  return `<div class="lbl" style="margin-top:20px">${tr("misscal_leg_rapport")}</div><div class="crd" style="margin:0 16px">${items}</div>`;
+  return `<div class="lbl" style="margin-top:20px">${tr("misscal_leg_rapport")}</div>
+    <div class="crd" style="margin:0 16px">${items}</div>`;
 }
 function openMissDay(ds){
   const today=td();
@@ -3436,13 +3549,14 @@ function openMissDay(ds){
   }else{
     c.innerHTML=active.map(m=>{
       const st=missEmployeeStatus(m,ds);
-      return `<div class="li"><div class="lii"><div class="lib">${m.name}</div></div><div class="statrv" style="color:${st.color};font-weight:700">${st.label}</div></div>`;
+      return `<div class="li"><div class="lii">
+        <div class="lib">${m.name}</div>
+      </div><div class="statrv" style="color:${st.color};font-weight:700">${st.label}</div></div>`;
     }).join("");
   }
   opov("ov-missdetail");
 }
 
-// ═══ BAULEITER SELECT ═══
 function rblSel() {
   const placeholder = LANG === "tr" ? "-- Şantiye Şefi --" : "-- Bauleiter --";
   const h = `<option value="">${placeholder}</option>` + BL.map(b => `<option value="${b.id}">${b.name}</option>`).join("");
@@ -3457,8 +3571,8 @@ function rmissing() {
   const list = document.getElementById("miss-info-list");
   if(!container || !list) return;
 
-  const missing = BV.filter(b => !b.warn_disabled && (!b.name || b.name === "—" || b.name.trim() === "" || !b.bl_id || !validBVNr(b.nr)));
-
+  const missing = BV.filter(b => !b.warn_disabled && (!b.name || b.name === "—" || b.name.trim() === "" || (!GLOBAL_WARN_OFF && !b.bl_id) || !validBVNr(b.nr)));
+  
   if (missing.length === 0) {
     container.style.display = "none";
   } else {
@@ -3486,7 +3600,7 @@ function rmissing() {
   }
 }
 
-// ═══ WARNUNGEN ═══
+// ═══ WARN ═══
 function getMiss(){
   const r=[];
   const dow=["So","Mo","Di","Mi","Do","Fr","Sa"];
@@ -3534,7 +3648,7 @@ function rwarn(){
 function gofill(dt){
   document.getElementById("inp-d").value=dt;
   cD=dt;
-  presentToday=new Set(MA.filter(m=>!m.archived && !isLongAbsentForDate(m,dt)).map(m=>m.id));
+  presentToday=new Set(MA.filter(m=>!m.archived && !m.long_absent).map(m=>m.id));
   sBV=null;
   document.getElementById("bvnx").disabled=true;
   document.getElementById("nb-nr").value="";
@@ -3546,7 +3660,7 @@ function gofill(dt){
   go("pg-bv");
 }
 
-// ═══ ABWESENHEITEN / URLAUB ═══
+// ═══ ABWESENHEITEN / URLAUB / FEIERTAGE ═══
 function isMaAbsentOn(maId, ds){
   if(AB.some(a=>a.ma_id===maId && a.datum===ds)) return true;
   if(LV.some(l=>l.start_date<=ds && l.end_date>=ds && (l.company_wide || l.ma_id===maId))) return true;
@@ -3556,7 +3670,7 @@ async function addAbsence(){
   const ma_id=document.getElementById("abw-ma").value;
   const datum=document.getElementById("abw-datum").value;
   const grund=document.getElementById("abw-grund").value.trim();
-  if(!ma_id||!datum){ toast(tr("abw_select_ma_datum")); return; }
+  if(!ma_id||!datum){ toast("Mitarbeiter & Datum wählen"); return; }
   syn("w",tr("sync_now"));
   const res=await sbIns("absences",[{ma_id,datum,grund}],"ma_id,datum");
   if(!res){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
@@ -3577,7 +3691,7 @@ async function addLeave(){
   const end_date=document.getElementById("lv-end").value||start_date;
   const leave_type=document.getElementById("lv-type").value;
   const note=document.getElementById("lv-note").value.trim();
-  if(!start_date || (!company_wide && !ma_id)){ toast(tr("abw_fill_all")); return; }
+  if(!start_date || (!company_wide && !ma_id)){ toast("Bitte Angaben vervollständigen"); return; }
   syn("w",tr("sync_now"));
   const res=await sbIns("leave_periods",[{ma_id,start_date,end_date,leave_type,company_wide,note}]);
   if(!res){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
@@ -3600,27 +3714,22 @@ function rAbw(){
   const abList=document.getElementById("abw-list");
   if(abList){
     const rows=[...AB].sort((a,b)=>b.datum.localeCompare(a.datum)).slice(0,60);
-    abList.innerHTML = rows.length
-      ? rows.map(a=>`<div class="mr"><div class="mn">${maById(a.ma_id)?.name||"?"} · ${fd(a.datum)}${a.grund?" · "+a.grund:""}</div><button class="btd" style="width:auto;margin:0;padding:7px 10px;font-size:12px" onclick="deleteAbsence('${a.id}')">✕</button></div>`).join("")
-      : `<div class="mr"><div class="mn" style="color:var(--s)">${tr("abw_none")}</div></div>`;
+    abList.innerHTML = rows.length ? rows.map(a=>`<div class="mr"><div class="mn">${maById(a.ma_id)?.name||"?"} · ${fd(a.datum)}${a.grund?" · "+a.grund:""}</div><button class="btd" style="width:auto;margin:0;padding:7px 10px;font-size:12px" onclick="deleteAbsence('${a.id}')">✕</button></div>`).join("")
+      : `<div class="mr"><div class="mn" style="color:var(--s)">Keine Abwesenheiten erfasst.</div></div>`;
   }
-
   const lvList=document.getElementById("lv-list");
   if(lvList){
     const rows=[...LV].sort((a,b)=>b.start_date.localeCompare(a.start_date));
     lvList.innerHTML = rows.length ? rows.map(l=>{
-      const who = l.company_wide ? tr("abw_whole_company") : (maById(l.ma_id)?.name||"?");
+      const who = l.company_wide ? "Ganze Firma" : (maById(l.ma_id)?.name||"?");
       const range = l.start_date===l.end_date ? fd(l.start_date) : `${fd(l.start_date)} – ${fd(l.end_date)}`;
-      const typeLbl={
-        urlaub:tr("abw_type_urlaub"),
-        feiertag:tr("abw_type_feiertag"),
-        krankheit:tr("abw_type_krankheit"),
-        sonstiges:tr("abw_type_sonstiges")
-      }[l.leave_type]||l.leave_type;
+      const typeLbl={urlaub:"Urlaub",feiertag:"Feiertag",krankheit:"Krankheit",sonstiges:"Sonstiges"}[l.leave_type]||l.leave_type;
       return `<div class="mr"><div class="mn">${who} · ${typeLbl}<div style="font-size:12px;color:var(--s)">${range}${l.note?" · "+l.note:""}</div></div><button class="btd" style="width:auto;margin:0;padding:7px 10px;font-size:12px" onclick="deleteLeave('${l.id}')">✕</button></div>`;
-    }).join("") : `<div class="mr"><div class="mn" style="color:var(--s)">${tr("abw_leave_none")}</div></div>`;
+    }).join("") : `<div class="mr"><div class="mn" style="color:var(--s)">Kein Urlaub/Feiertag erfasst.</div></div>`;
   }
 }
+
+// Pro Mitarbeiter: fehlt Eintrag für gestern/vorgestern (Wochenende & Abwesenheit/Urlaub ausgenommen), heute nie
 function getMissPerMa(){
   const out=[];
   const today=new Date(); today.setHours(0,0,0,0);
@@ -3629,7 +3738,7 @@ function getMissPerMa(){
     const dw=d.getDay();
     if(dw===0||dw===6) continue;
     const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-    MA.filter(m=>!m.archived && !isLongAbsentForDate(m,ds)).forEach(m=>{
+    MA.filter(m=>!m.archived && !m.long_absent).forEach(m=>{
       if(isMaAbsentOn(m.id,ds)) return;
       if(EN.some(e=>e.ma_id===m.id && e.datum===ds && Number(e.stunden)>0)) return;
       out.push({ma:m,ds,isToday:back===0});
@@ -3648,12 +3757,12 @@ function rwarnMa(){
 
   let html="";
   if(past.length){
-    html+=`<div class="wb"><div class="wh"><span style="display:inline-flex">${ICON_WARN}</span><div class="wht">${tr("abw_missing_title")}</div></div>
-      <div class="wbd">${past.map(x=>`<div class="wdi" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><div class="wdd"></div>${x.ma.name} – ${fd(x.ds)}</span><button class="wfb" style="margin:0;padding:5px 9px;font-size:11px" onclick="quickMarkAbsent('${x.ma.id}','${x.ds}')">${tr("abw_mark_absent_btn")}</button></div>`).join("")}</div></div>`;
+    html+=`<div class="wb"><div class="wh"><span style="display:inline-flex">${ICON_WARN}</span><div class="wht">Fehlende Einträge (letzte 2 Tage)</div></div>
+    <div class="wbd">${past.map(x=>`<div class="wdi" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><div class="wdd"></div>${x.ma.name} – ${fd(x.ds)}</span><button class="wfb" style="margin:0;padding:5px 9px;font-size:11px" onclick="quickMarkAbsent('${x.ma.id}','${x.ds}')">als abwesend markieren</button></div>`).join("")}</div></div>`;
   }
   if(hasAnyEntryToday && todayMissing.length){
-    html+=`<div class="wb" style="border-color:var(--g);margin-top:${past.length?"9px":"0"}"><div class="wh" style="background:var(--g)"><span style="display:inline-flex">${ICON_WARN}</span><div class="wht">${LANG==="tr"?"Bugün hâlâ eksik":"Heute noch fehlend"}</div></div>
-      <div class="wbd">${todayMissing.map(x=>`<div class="wdi" style="justify-content:space-between;border-bottom-color:rgba(31,110,82,.2)"><span style="display:flex;align-items:center;gap:8px"><div class="wdd" style="background:var(--g)"></div>${x.ma.name} – ${fd(x.ds)}</span><button class="wfb" style="margin:0;padding:5px 9px;font-size:11px;background:var(--g)" onclick="quickMarkAbsent('${x.ma.id}','${x.ds}')">${tr("abw_mark_absent_btn")}</button></div>`).join("")}</div></div>`;
+    html+=`<div class="wb" style="border-color:var(--g);margin-top:${past.length?"9px":"0"}"><div class="wh" style="background:var(--g)"><span style="display:inline-flex">${ICON_WARN}</span><div class="wht">Heute noch fehlend</div></div>
+    <div class="wbd">${todayMissing.map(x=>`<div class="wdi" style="justify-content:space-between;border-bottom-color:rgba(31,110,82,.2)"><span style="display:flex;align-items:center;gap:8px"><div class="wdd" style="background:var(--g)"></div>${x.ma.name} – ${fd(x.ds)}</span><button class="wfb" style="margin:0;padding:5px 9px;font-size:11px;background:var(--g)" onclick="quickMarkAbsent('${x.ma.id}','${x.ds}')">als abwesend markieren</button></div>`).join("")}</div></div>`;
   }
 
   if(!html){ s.style.display="none"; s.innerHTML=""; return; }
@@ -3662,13 +3771,13 @@ function rwarnMa(){
 }
 async function quickMarkAbsent(maId,ds){
   syn("w",tr("sync_now"));
-  const res=await sbIns("absences",[{ma_id:maId,datum:ds,grund:tr("abw_retro_reason")}],"ma_id,datum");
+  const res=await sbIns("absences",[{ma_id:maId,datum:ds,grund:"nachträglich erfasst"}],"ma_id,datum");
   if(!res){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
   await syncDown(); syn("",tr("sync_saved"));
-  toast(tr("abw_marked_absent_toast"));
+  toast("Als abwesend markiert");
 }
 
-// ═══ Rechnungs-Tracking ═══
+// Rechnungs-Tracking: letztes Rechnungsdatum je Baustelle merken → steuert v_unbilled_hours
 async function updateBvLastInvoiced(bv_id, datum, rg_id){
   if(!bv_id||!datum) return;
   const cur=await sbFetch(`bv_last_invoiced?bv_id=eq.${bv_id}&select=last_invoice_date`);
@@ -3677,7 +3786,7 @@ async function updateBvLastInvoiced(bv_id, datum, rg_id){
   await sbIns("bv_last_invoiced",[{bv_id,last_invoice_date:datum,last_rg_id:rg_id||null}],"bv_id");
 }
 
-// ═══ BENACHRICHTIGUNGEN ═══
+// ═══ BENACHRICHTIGUNGEN (Editor-Modus) ═══
 function initPush(){
   const on=localStorage.getItem("apush")==="1";
   const t=document.getElementById("ptgl");
@@ -3724,6 +3833,8 @@ async function togglePush(){
   const isOn=t.classList.contains("on");
   if(!isOn){
     if(!("Notification" in window)){
+      // iOS Safari unterstützt Benachrichtigungen im normalen Browser-Tab grundsätzlich nicht.
+      // Erst wenn die Seite über "Zum Home-Bildschirm" als App installiert ist (iOS 16.4+), steht die API zur Verfügung.
       if(isIOS() && !isStandalonePWA()){ alert(tr("push_ios_add_home")); return; }
       alert(tr("push_not_supported")); return;
     }
@@ -3752,6 +3863,8 @@ function sendNotify(title,body,tag){
   if(!pushEnabled())return;
   try{ new Notification(title,{body,tag}); }catch(e){}
 }
+
+// tägliche Erinnerung, wenn noch keine Stunden für heute erfasst wurden (Zeit einstellbar)
 function schPush(){
   if(ptimer)clearTimeout(ptimer);
   const [hh,mm]=(localStorage.getItem("apush_time")||"18:00").split(":").map(Number);
@@ -3766,16 +3879,22 @@ function doNotify(){
   const has=EN.some(e=>e.datum===td()&&Number(e.stunden)>0);
   if(!has)sendNotify(tr("notify_title"),tr("notify_body"),"aslan-reminder");
 }
+
+// Bestätigung, sobald ein Eintrag gespeichert wurde
 function notifyEntrySaved(bv,rows){
   if(!pushEnabled() || !pushOptOn("apush_entry",true))return;
   const names=rows.map(r=>maById(r.ma_id)?.name?.split(" ")[0]||"?").join(", ");
   const tot=rows.reduce((a,b)=>a+b.stunden,0);
   sendNotify(tr("notify_entry_title"), tr("notify_entry_body",{bv:bv.nr,names,hours:fmtH(tot)}), "aslan-entry-"+Date.now());
 }
+
+// Warnungen (Arbeitszeit/Pause) zusätzlich als Benachrichtigung, nicht nur als Dialog
 function notifySafetyWarnings(warnings){
   if(!pushEnabled() || !pushOptOn("apush_safety",true) || !warnings.length)return;
   warnings.forEach((w,i)=>sendNotify(tr("notify_safety_title"), w, "aslan-safety-"+Date.now()+"-"+i));
 }
+
+// Soll-Stunden (Budget) einer Baustelle fast/ganz erreicht
 function checkBudgetWarnings(){
   if(!pushEnabled() || !pushOptOn("apush_budget",true))return;
   const notified=lsGet("budgetNotified",{});
@@ -3792,11 +3911,13 @@ function checkBudgetWarnings(){
     }
   });
 }
+
+// Mehrstufige Erinnerung: Rapport (WhatsApp) nach X Tagen immer noch nicht abgehakt
 let waCheckTimer=null;
 function schWaCheck(){
   if(waCheckTimer)clearInterval(waCheckTimer);
   checkWaEscalation();
-  waCheckTimer=setInterval(checkWaEscalation,3*3600000);
+  waCheckTimer=setInterval(checkWaEscalation,3*3600000); // alle 3h prüfen reicht
 }
 function checkWaEscalation(){
   if(!pushEnabled())return;
@@ -3805,7 +3926,7 @@ function checkWaEscalation(){
   const notified=lsGet("waNotified",{});
   const now=new Date();
   groupedEntries().forEach(g=>{
-    if(WA.has(g.key))return;
+    if(WA.has(g.key))return; // bereits abgehakt
     const entryDate=new Date(g.datum+"T00:00:00");
     const diffDays=Math.floor((now-entryDate)/86400000);
     daysList.forEach(d=>{
@@ -3821,6 +3942,8 @@ function checkWaEscalation(){
   checkBudgetWarnings();
   checkInvoiceOverdue();
 }
+
+// Benachrichtigung bei überfälligen Rechnungen (Zahlungsziel 14 Tage überschritten)
 function checkInvoiceOverdue(){
   if(!pushEnabled() || !pushOptOn("apush_invoice",true))return;
   if(typeof RG==="undefined" || !RG.length)return;
@@ -3838,31 +3961,19 @@ function checkInvoiceOverdue(){
     const firma=openRows[0]?.firma || key.split("|")[1] || "";
     const ziel=openRows.map(rgFaellig).sort((a,b)=>a-b)[0];
     const days=Math.round((new Date(today)-ziel)/86400000);
-    sendNotify(tr("notify_invoice_title"), tr("notify_invoice_body",{firma,sum:rgFmtMoney(sum),days}), "aslan-invoice-"+key);
+    sendNotify("Rechnung überfällig", `${firma}: ${rgFmtMoney(sum)} · seit ${days} Tag(en) überfällig`, "aslan-invoice-"+key);
     notified[key2]=true;
   });
   lsSet("invoiceNotified",notified);
 }
 
 // ═══ BAUSTELLEN ═══
-async function pkLager(){
-  let lg=BV.find(b=>String(b.nr||"").trim().toUpperCase()==="LAGER");
-  if(!lg){
-    syn("w", tr("sync_now"));
-    await sbIns("bv",[{nr:"LAGER", name:"Lager", bl_id:null}]);
-    await syncDown();
-    syn("", tr("sync_ok"));
-    lg=BV.find(b=>String(b.nr||"").trim().toUpperCase()==="LAGER");
-  }
-  if(lg) pkBV(lg.id);
-}
 async function n2bv(){
   const d=document.getElementById("inp-d").value;
   if(!d){alert(tr("pick_date_first"));return;}
   cD=d;
-  presentToday=new Set(
-    MA.filter(m=>!m.archived && !isLongAbsentForDate(m,d) && !isMaAbsentOn(m.id,d)).map(m=>m.id)
-  );
+  // Anwesenheit: standardmäßig ist jeder da, außer im Editor (Abwesenheiten & Urlaub) ist für diesen Tag etwas anderes hinterlegt
+  presentToday=new Set(MA.filter(m=>!m.archived && !m.long_absent && !isMaAbsentOn(m.id,d)).map(m=>m.id));
   document.getElementById("bvsub").textContent=fd(d);
   sBV=null;
   document.getElementById("bvnx").disabled=true;
@@ -3873,6 +3984,7 @@ async function n2bv(){
   rbvg();
   go("pg-bv");
 }
+
 function getFavBvIds(){ return lsGet("bv_favs", []); }
 function isFavBv(id){ return getFavBvIds().includes(id); }
 function toggleFavBv(id){
@@ -3914,6 +4026,7 @@ function rbvg(){
     html+=`<div class="bvrubric"><span style="display:inline-flex;vertical-align:-2px;margin-right:4px">${ICON_CLOCK}</span>${tr("yesterday_bv_label")}</div><div class="bvg" style="margin-bottom:18px">${yesterday.map(bvTile).join("")}</div>`;
   }
   html+=`<div class="lbl" data-i18n="tap_bv">${tr("tap_bv")}</div><div class="bvg">${all.map(bvTile).join("")}</div>`;
+
   document.getElementById("bvg-wrap").innerHTML=html;
 }
 function pkBV(id){
@@ -3921,6 +4034,7 @@ function pkBV(id){
   document.getElementById("bvnx").disabled=false;
   rbvg();
 }
+
 async function handleAddBV(nrId, nmId, blIdId, autoSelect) {
   const nr = document.getElementById(nrId).value.trim();
   const nm = document.getElementById(nmId).value.trim();
@@ -3975,9 +4089,7 @@ async function handleAddBV(nrId, nmId, blIdId, autoSelect) {
 function n2st(){
   if(!sBV)return;
   document.getElementById("stsub").textContent=`${fd(cD)} · BV ${sBV.nr}`;
-  teamSel = presentToday.size
-    ? new Set(MA.filter(m=>presentToday.has(m.id)).map(m=>m.id))
-    : new Set(MA.filter(m=>!isLongAbsentForDate(m,cD)).map(m=>m.id));
+  teamSel = presentToday.size ? new Set(MA.filter(m=>presentToday.has(m.id)).map(m=>m.id)) : new Set(MA.filter(m=>!m.long_absent).map(m=>m.id));
   sameTime=true;
   curPause=30;
   indivPause={};
@@ -3995,9 +4107,10 @@ function n2st(){
   rTimeMode();
   go("pg-st");
 }
+
 function rTeam(){
-  const active=MA.filter(m=>!isLongAbsentForDate(m,cD));
-  const longAbsent=MA.filter(m=>isLongAbsentForDate(m,cD));
+  const active=MA.filter(m=>!m.long_absent);
+  const longAbsent=MA.filter(m=>m.long_absent);
   const rowHtml=m=>`
     <div class="tmr">
       <div class="tmcb ${teamSel.has(m.id)?"on":""}" onclick="toggleTeam('${m.id}')">${teamSel.has(m.id)?"✓":""}</div>
@@ -4006,7 +4119,7 @@ function rTeam(){
     </div>`;
   let html=active.map(rowHtml).join("");
   if(longAbsent.length){
-    html+=`<div class="lbl" style="margin-top:14px">${tr("ma_long_absent")}</div>${longAbsent.map(rowHtml).join("")}`;
+    html+=`<div class="lbl" style="margin-top:14px">Bis auf weiteres abwesend</div>${longAbsent.map(rowHtml).join("")}`;
   }
   document.getElementById("tml").innerHTML=html;
 }
@@ -4016,15 +4129,14 @@ function toggleTeam(id){
   rTimeMode();
   checkStValid();
 }
+
 function toggleSameTime(){
   sameTime=!sameTime;
   document.getElementById("tgl-same").classList.toggle("on",sameTime);
   rTimeMode();
   checkStValid();
 }
-let indivPause={};
-let indivStart={};
-let indivEnd={};
+
 function rTimeMode(){
   const common=document.getElementById("time-common");
   const indiv=document.getElementById("time-indiv");
@@ -4039,32 +4151,38 @@ function rTimeMode(){
     indiv.innerHTML=sel.map(m=>{
       const sv=indivStart[m.id]||"", ev=indivEnd[m.id]||"";
       return `
-        <div class="lbl" style="display:flex;align-items:center;gap:8px">
-          <div class="av" style="background:${m.bg};color:${m.tc};width:24px;height:24px;font-size:10px">${m.k||"?"}</div>${m.name}
-        </div>
-        <div class="timegrid" style="margin-bottom:8px">
-          <div class="timefld"><div class="lbl" style="margin:0 0 6px">${tr("start_time")}</div><input type="text" id="ti-start-${m.id}" placeholder="07:00" inputmode="numeric" maxlength="5" value="${sv}" oninput="autoTimeFmt(this);indivStart['${m.id}']=this.value;calcIndiv('${m.id}');checkStValid()" onblur="finalizeTimeFmt(this)"></div>
-          <div class="timefld"><div class="lbl" style="margin:0 0 6px">${tr("end_time")}</div><input type="text" id="ti-end-${m.id}" placeholder="16:00" inputmode="numeric" maxlength="5" value="${ev}" oninput="autoTimeFmt(this);indivEnd['${m.id}']=this.value;calcIndiv('${m.id}');checkStValid()" onblur="finalizeTimeFmt(this)"></div>
-        </div>
-        <div class="pauseg" style="margin-bottom:10px">
-          <button class="pausebtn ${indivPause[m.id]===0?"sl":""}" id="ti-p0-${m.id}" onclick="pickPauseIndiv('${m.id}',0)">${tr("pause_none")}</button>
-          <button class="pausebtn ${indivPause[m.id]===30?"sl":""}" id="ti-p30-${m.id}" onclick="pickPauseIndiv('${m.id}',30)">${tr("pause_30")}</button>
-          <button class="pausebtn ${indivPause[m.id]===45?"sl":""}" id="ti-p45-${m.id}" onclick="pickPauseIndiv('${m.id}',45)">${tr("pause_45")}</button>
-        </div>
-        <div class="calcbox" id="ti-calc-${m.id}" style="display:none;margin:0 0 18px">
-          <div class="calctot" id="ti-tot-${m.id}">0</div>
-          <div class="calclbl">${tr("hours_confirm_lbl")}</div>
-        </div>`;
+      <div class="lbl" style="display:flex;align-items:center;gap:8px">
+        <div class="av" style="background:${m.bg};color:${m.tc};width:24px;height:24px;font-size:10px">${m.k||"?"}</div>${m.name}
+      </div>
+      <div class="timegrid" style="margin-bottom:8px">
+        <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="start_time">Anfang</div><input type="text" id="ti-start-${m.id}" placeholder="07:00" inputmode="numeric" maxlength="5" value="${sv}" oninput="autoTimeFmt(this);indivStart['${m.id}']=this.value;calcIndiv('${m.id}');checkStValid()" onblur="finalizeTimeFmt(this)"></div>
+        <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="end_time">Ende</div><input type="text" id="ti-end-${m.id}" placeholder="16:00" inputmode="numeric" maxlength="5" value="${ev}" oninput="autoTimeFmt(this);indivEnd['${m.id}']=this.value;calcIndiv('${m.id}');checkStValid()" onblur="finalizeTimeFmt(this)"></div>
+      </div>
+      <div class="pauseg" style="margin-bottom:10px">
+        <button class="pausebtn ${indivPause[m.id]===0?"sl":""}" id="ti-p0-${m.id}" onclick="pickPauseIndiv('${m.id}',0)">${tr("pause_none")}</button>
+        <button class="pausebtn ${indivPause[m.id]===30?"sl":""}" id="ti-p30-${m.id}" onclick="pickPauseIndiv('${m.id}',30)">${tr("pause_30")}</button>
+        <button class="pausebtn ${indivPause[m.id]===45?"sl":""}" id="ti-p45-${m.id}" onclick="pickPauseIndiv('${m.id}',45)">${tr("pause_45")}</button>
+      </div>
+      <div class="calcbox" id="ti-calc-${m.id}" style="display:none;margin:0 0 18px">
+        <div class="calctot" id="ti-tot-${m.id}">0</div>
+        <div class="calclbl">${tr("hours_confirm_lbl")}</div>
+      </div>`;
     }).join("");
     sel.forEach(m=>calcIndiv(m.id));
   }
 }
+
+let indivPause={};
+let indivStart={};
+let indivEnd={};
 function pickPauseIndiv(id,min){
   indivPause[id]=min;
   ["0","30","45"].forEach(v=>document.getElementById(`ti-p${v}-${id}`).classList.toggle("sl",Number(v)===min));
   calcIndiv(id);
   checkStValid();
 }
+
+// Formatiert Zifferneingabe automatisch zu HH:MM (z.B. "1630" -> "16:30")
 function autoTimeFmt(el){
   let digits=el.value.replace(/\D/g,"").slice(0,4);
   let formatted=digits;
@@ -4073,6 +4191,9 @@ function autoTimeFmt(el){
   }
   el.value=formatted;
 }
+
+// Wenn beim Verlassen des Feldes nur 1-2 Ziffern stehen (z.B. "6" oder "16"),
+// wird automatisch ":00" ergänzt -> "06:00" bzw. "16:00"
 function finalizeTimeFmt(el){
   const v=el.value.trim();
   if(/^\d{1,2}$/.test(v)){
@@ -4083,6 +4204,26 @@ function finalizeTimeFmt(el){
     }
   }
 }
+
+function parseTime(v){
+  if(!v)return null;
+  const m=v.trim().match(/^(\d{1,2}):?(\d{2})$/);
+  if(!m)return null;
+  const h=parseInt(m[1],10), min=parseInt(m[2],10);
+  if(h<0||h>29||min<0||min>59)return null;
+  return h*60+min;
+}
+function calcHours(startV,endV,pauseMin){
+  const s=parseTime(startV), e=parseTime(endV);
+  if(s===null||e===null)return null;
+  let diff=e-s;
+  if(diff<0)diff+=24*60;
+  diff-=pauseMin;
+  if(diff<0)diff=0;
+  // exakte Stunden (keine Rundung) - z.B. 30 Min = 0,5h, 45 Min = 0,75h
+  return Math.round((diff/60)*100)/100;
+}
+
 function pickPause(min){
   curPause=min;
   ["0","30","45"].forEach(v=>document.getElementById(`p-${v}`).classList.toggle("sl",Number(v)===min));
@@ -4104,6 +4245,10 @@ function calcIndiv(id){
   box.style.display="block";
   document.getElementById(`ti-tot-${id}`).textContent=fmtH(h)+" h";
 }
+function fmtH(h){
+  return (h%1===0)?String(h):String(h).replace(".",",");
+}
+
 function checkStValid(){
   let valid=false;
   if(teamSel.size>0){
@@ -4119,6 +4264,7 @@ function checkStValid(){
 document.addEventListener("input",e=>{
   if(e.target&&(e.target.id==="t-start"||e.target.id==="t-end")) checkStValid();
 });
+
 function buildRows(){
   const rows=[];
   if(sameTime){
@@ -4136,6 +4282,13 @@ function buildRows(){
   }
   return rows;
 }
+function normTime(v){
+  const t=parseTime(v);
+  if(t===null)return null;
+  const h=Math.floor(t/60)%24, m=t%60;
+  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+}
+
 function checkDailySafety(rows){
   const warnings=[];
   const byMa={};
@@ -4164,12 +4317,15 @@ function checkDailySafety(rows){
   });
   return warnings;
 }
+
 function confirmAndSave(){
   const rows=buildRows();
   if(!rows||!rows.length){ alert(tr("warn_no_team_or_time")); return; }
   const tot=rows.reduce((a,b)=>a+b.stunden,0);
   const namesTxt=rows.map(r=>{const m=maById(r.ma_id);return m?m.name.split(" ")[0]:"?";}).join(", ");
-  const msg = sameTime ? tr("confirm_hours_msg",{hours:fmtH(tot/rows.length),names:namesTxt}) : tr("confirm_hours_msg_multi",{names:namesTxt});
+  const msg = sameTime
+    ? tr("confirm_hours_msg",{hours:fmtH(tot/rows.length),names:namesTxt})
+    : tr("confirm_hours_msg_multi",{names:namesTxt});
 
   const proceedToConfirm = ()=>{
     conf(tr("confirm_hours_title"), msg, async()=>{
@@ -4186,6 +4342,7 @@ function confirmAndSave(){
     proceedToConfirm();
   }
 }
+
 async function save(rows){
   if(!rows||!rows.length)return;
 
@@ -4211,7 +4368,8 @@ async function save(rows){
 }
 function rsi(){ sBV=null; document.getElementById("bvnx").disabled=true; }
 
-// ═══ LEER-RAPPORT ═══
+// ═══ LEER-RAPPORT (Datum/Bauleiter/Mitarbeiter ohne Stunden) ═══
+let erTeamSel=new Set();
 function openEmptyRep(){
   document.getElementById("er-datum").value=td();
   erTeamSel=new Set();
@@ -4219,18 +4377,16 @@ function openEmptyRep(){
   const active=[...BV].filter(b=>!b.archived).sort((a,b)=>a.nr.localeCompare(b.nr));
   sel.innerHTML=active.map(b=>`<option value="${b.id}">BV ${b.nr} – ${b.name||"—"}</option>`).join("");
   erBvChanged();
-  rErTeam(td());
+  rErTeam();
   go("pg-empty");
 }
 function erBvChanged(){
   const b=BV.find(x=>x.id===document.getElementById("er-bv").value);
   const bl=b?blById(b.bl_id):null;
-  document.getElementById("er-bl-info").textContent=(tr("empty_rep_bl_prefix")||"Bauleiter")+": "+(bl?bl.name:"—");
+  document.getElementById("er-bl-info").textContent="Bauleiter: "+(bl?bl.name:"—");
 }
-function rErTeam(ds){
-  const dateStr=ds || document.getElementById("er-datum")?.value || td();
-  const list=MA.filter(m=>!isLongAbsentForDate(m,dateStr));
-  document.getElementById("er-tml").innerHTML=list.map(m=>`
+function rErTeam(){
+  document.getElementById("er-tml").innerHTML=MA.map(m=>`
     <div class="tmr">
       <div class="tmcb ${erTeamSel.has(m.id)?"on":""}" onclick="toggleErTeam('${m.id}')">${erTeamSel.has(m.id)?"✓":""}</div>
       <div class="av" style="background:${m.bg};color:${m.tc};width:36px;height:36px;font-size:12px">${m.k||"?"}</div>
@@ -4241,45 +4397,53 @@ function toggleErTeam(id){
   if(erTeamSel.has(id)) erTeamSel.delete(id); else erTeamSel.add(id);
   rErTeam();
 }
-async function printEmptyRep(){
+function printEmptyRep(){
   const datum=document.getElementById("er-datum").value;
   const bvId=document.getElementById("er-bv").value;
+  if(!datum||!bvId){ toast("Bitte Datum und Baustelle wählen"); return; }
+  if(erTeamSel.size===0){ toast("Bitte mind. einen Mitarbeiter wählen"); return; }
 
-  if(!datum||!bvId){
-    toast(tr("empty_rep_missing"));
-    return;
-  }
-  if(erTeamSel.size===0){
-    toast(tr("empty_rep_missing_team"));
-    return;
-  }
-
-  try{
-    const arrayBuffer = await getRapportTemplateBytes();
-    const { PDFDocument } = PDFLib;
-    const pdfDoc = await PDFDocument.load(arrayBuffer);
-    const form = pdfDoc.getForm();
-
-    fillRapportPdf(form, datum, bvId, [...erTeamSel], true);
-
-    const pdfBytes = await pdfDoc.save();
-    const blob = new Blob([pdfBytes], { type: "application/pdf" });
-    const blobUrl = URL.createObjectURL(blob);
-
-    const a=document.createElement("a");
-    a.href=blobUrl;
-    a.target="_blank";
-    a.download=`Leer_Rapport_${datum}.pdf`;
-    a.click();
-
-    setTimeout(()=>URL.revokeObjectURL(blobUrl), 60000);
-    toast(tr("empty_rep_saved"));
-  }catch(e){
-    alert(tr("pdf_error_prefix") + e.message);
-  }
+  // Kein Speichern in der Datenbank nötig - der Leer-Rapport wird direkt
+  // als PDF geöffnet, damit er ausgedruckt werden kann (wie beim normalen Rapport).
+  repD=datum;
+  repBV=BV.find(b=>b.id===bvId);
+  if(!repBV) return;
+  repFutureMode=true;
+  repFutureMaSel=new Set(erTeamSel);
+  openRapportPdf(repD, repBV.id);
 }
 
-// ═══ DASHBOARD STATS ═══
+// ═══ STATS ═══
+function fmtEUR(v){
+  const n=Math.round((Number(v)||0)*100)/100;
+  return n.toLocaleString("de-DE",{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2})+" €";
+}
+function ustats(){
+  const t=td();
+  const dw=new Date();
+  const day=dw.getDay()||7;
+  dw.setDate(dw.getDate()-day+1);
+  const ws=dw.toISOString().split("T")[0];
+  const weDate=new Date(dw);
+  weDate.setDate(dw.getDate()+4);
+  const we=weDate.toISOString().split("T")[0];
+
+	let hH=0,hW=0;  
+	EN.forEach(e=>{
+    const h=Number(e.stunden)||0;
+    if(e.datum===t)hH+=h;
+    if(e.datum>=ws&&e.datum<=we){
+      hW+=h;
+    }
+  });
+
+  document.getElementById("s-h").textContent=hH;
+  document.getElementById("s-w").textContent=hW;
+  document.getElementById("s-e").textContent=EN.length;
+  rgDashStats();
+}
+
+// ═══ DASHBOARD-STATISTIKEN RECHNUNGEN ═══
 function dashToggles(){
   return Object.assign({
     invopen:true, invover:true, invtotal:true, invnext:true, deadlines:false, unbilled:true
@@ -4314,8 +4478,14 @@ function rgDashStats(){
   const ruEl=document.getElementById("s-ru"); if(ruEl){ ruEl.textContent=rgFmtMoney(overSum); ruEl.style.color="var(--danger-txt)"; }
   const rtEl=document.getElementById("s-rt"); if(rtEl){ rtEl.textContent=rgFmtMoney(totalSum); rtEl.style.color="var(--g)"; }
 
-  let unbilledSum=0;
-  let unbilledHours=0;
+  // Noch nicht abgerechneter Umsatz: pro Baustelle wird das jüngste Rechnungsdatum
+  // gesucht (Abgleich über BV-Nr./Name in Rechnungstext). Alle Stunden bis
+  // einschließlich diesem Datum gelten als abgerechnet, alles danach (bzw. alles,
+  // falls noch nie abgerechnet wurde) zählt als noch nicht abgerechnet.
+  // Der Stundensatz kommt pro Mitarbeiter (nicht pro Baustelle).
+let unbilledSum=0;
+let unbilledHours=0;
+
   EN.forEach(e=>{
     const alreadyBilled = ABR.some(a=>abrMatchesEntry(e,a));
     if(!alreadyBilled){
@@ -4326,17 +4496,21 @@ function rgDashStats(){
   const ubEl=document.getElementById("s-ub"); if(ubEl){ ubEl.textContent=rgFmtMoney(unbilledSum); }
   const ubh2El=document.getElementById("s-ubh2"); if(ubh2El){ ubh2El.textContent=`${unbilledHours.toFixed(1).replace(/\.0$/,"")} h`; }
 
+  // Überfällig-Kachel nur zeigen, wenn wirklich etwas überfällig ist
   const dcOver=document.getElementById("dc-invover");
   if(dcOver){
     const toggledOn = dashToggles().invover!==false;
     dcOver.style.display = (toggledOn && overSum>0) ? "" : "none";
   }
+
+  // Offene-Rechnungen-Kachel nur zeigen, wenn wirklich etwas offen ist
   const dcOpen=document.getElementById("dc-invopen");
   if(dcOpen){
     const toggledOn = dashToggles().invopen!==false;
     dcOpen.style.display = (toggledOn && openSum>0) ? "" : "none";
   }
 
+  // Sammelrechnungen / Fristen je Gruppe (Datum+Firma), nur offene
   const deadlineRows=[];
   Object.keys(groups).forEach(key=>{
     const rows=groups[key];
@@ -4344,13 +4518,13 @@ function rgDashStats(){
     if(!openRows.length) return;
     const sum=openRows.reduce((a,r)=>a+r.betrag,0);
     let datum="", firma="";
-    if(key.startsWith("block|")){
-      firma = rows[0]?.firma || "";
-      datum = rows.map(r=>r.datum).sort().slice(-1)[0] || "";
-    }else{
-      [datum,firma]=key.split("|");
-    }
-    const ziel=openRows.map(rgFaellig).sort((a,b)=>a-b)[0];
+if(key.startsWith("block|")){
+  firma = rows[0]?.firma || "";
+  datum = rows.map(r=>r.datum).sort().slice(-1)[0] || "";
+}else{
+  [datum,firma]=key.split("|");
+}
+const ziel=openRows.map(rgFaellig).sort((a,b)=>a-b)[0];
     const days=Math.round((ziel-today)/86400000);
     deadlineRows.push({firma,datum,sum,days,isSammel:rows.length>1});
   });
@@ -4396,28 +4570,6 @@ function rgDashStats(){
     }
   }
 }
-function ustats(){
-  const t=td();
-  const dw=new Date();
-  const day=dw.getDay()||7;
-  dw.setDate(dw.getDate()-day+1);
-  const ws=dw.toISOString().split("T")[0];
-  const weDate=new Date(dw);
-  weDate.setDate(dw.getDate()+4);
-  const we=weDate.toISOString().split("T")[0];
-
-  let hH=0,hW=0;
-  EN.forEach(e=>{
-    const h=Number(e.stunden)||0;
-    if(e.datum===t)hH+=h;
-    if(e.datum>=ws&&e.datum<=we){ hW+=h; }
-  });
-
-  document.getElementById("s-h").textContent=hH;
-  document.getElementById("s-w").textContent=hW;
-  document.getElementById("s-e").textContent=EN.length;
-  rgDashStats();
-}
 
 // ═══ WOCHE ═══
 function rw(){
@@ -4455,15 +4607,15 @@ function rw(){
 
   let h=`<div style="padding:12px 16px 0">`;
   h+=`<div class="lbl" style="margin:6px 0 8px">${LANG==="tr"?"Çalışan toplamı":"Mitarbeiter gesamt"}</div>
-    <div class="crd" style="overflow:visible"><table class="wt">
-      <tr><th>${LANG==="tr"?"Çalışan":"Mitarbeiter"}</th><th>${LANG==="tr"?"Saat":"Stunden"}</th></tr>
-      ${MA.map(m=>{
-        const v=mt[m.id]||0;
-        const cls=v===0?"z":v<30?"l":"k";
-        return `<tr><td><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${m.tc};display:inline-block"></span>${m.name}</span></td><td><span class="hb ${cls}">${v}h</span></td></tr>`;
-      }).join("")}
-      <tr><td><strong>${LANG==="tr"?"Toplam":"Gesamt"}</strong></td><td><span class="hb k">${tot}h</span></td></tr>
-    </table></div>`;
+  <div class="crd" style="overflow:visible"><table class="wt">
+    <tr><th>${LANG==="tr"?"Çalışan":"Mitarbeiter"}</th><th>${LANG==="tr"?"Saat":"Stunden"}</th></tr>
+    ${MA.map(m=>{
+      const v=mt[m.id]||0;
+      const cls=v===0?"z":v<30?"l":"k";
+      return `<tr><td><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${m.tc};display:inline-block"></span>${m.name}</span></td><td><span class="hb ${cls}">${v}h</span></td></tr>`;
+    }).join("")}
+    <tr><td><strong>${LANG==="tr"?"Toplam":"Gesamt"}</strong></td><td><span class="hb k">${tot}h</span></td></tr>
+  </table></div>`;
 
   if(Object.keys(bmap).length){
     h+=`<div class="lbl" style="margin-top:18px;margin-bottom:8px">${LANG==="tr"?"Şantiyeye göre":"Nach Baustelle"}</div>`;
@@ -4510,8 +4662,10 @@ function populateVerlFilters(){
   const maSel=document.getElementById("vfilter-ma");
   if(!bvSel||!maSel)return;
   const curBv=bvSel.value, curMa=maSel.value;
-  bvSel.innerHTML=`<option value="">${tr("filter_all_bv")}</option>`+[...BV].sort((a,b)=>a.nr.localeCompare(b.nr)).map(b=>`<option value="${b.id}">BV ${b.nr} · ${b.name}</option>`).join("");
-  maSel.innerHTML=`<option value="">${tr("filter_all_ma")}</option>`+[...MA].sort((a,b)=>a.name.localeCompare(b.name)).map(m=>`<option value="${m.id}">${m.name}</option>`).join("");
+  bvSel.innerHTML=`<option value="">${tr("filter_all_bv")}</option>`+
+    [...BV].sort((a,b)=>a.nr.localeCompare(b.nr)).map(b=>`<option value="${b.id}">BV ${b.nr} · ${b.name}</option>`).join("");
+  maSel.innerHTML=`<option value="">${tr("filter_all_ma")}</option>`+
+    [...MA].sort((a,b)=>a.name.localeCompare(b.name)).map(m=>`<option value="${m.id}">${m.name}</option>`).join("");
   if([...bvSel.options].some(o=>o.value===curBv)) bvSel.value=curBv;
   if([...maSel.options].some(o=>o.value===curMa)) maSel.value=curMa;
 }
@@ -4555,7 +4709,9 @@ function getFilteredGroups(){
 function rverl(){
   const c=document.getElementById("vbody");
   const toggleBtn=document.getElementById("bulk-toggle-btn");
-  if(toggleBtn) toggleBtn.textContent = bulkMode ? tr("cancel_btn") : tr("bulk_select_btn");
+  if(toggleBtn){
+    toggleBtn.textContent = bulkMode ? tr("cancel_btn") : tr("bulk_select_btn");
+  }
 
   populateVerlFilters();
 
@@ -4573,39 +4729,43 @@ function rverl(){
   const groups=getFilteredGroups();
 
   const bar = bulkMode ? `<div class="crd" style="margin:12px 16px;padding:12px 14px;display:flex;align-items:center;gap:10px;background:var(--gl);border-color:var(--gm)">
-    <div style="flex:1;font-size:13px;font-weight:700;color:var(--gd)">${bulkSel.size} ${tr("bulk_selected_count")}</div>
-    <button class="eb" onclick="openBulkMove()" style="background:var(--g);color:#fff;border-color:var(--g)" data-i18n="bulk_move_btn">➡️ ${tr("bulk_move_btn")}</button>
-  </div>` : "";
+      <div style="flex:1;font-size:13px;font-weight:700;color:var(--gd)">${bulkSel.size} ${tr("bulk_selected_count")}</div>
+      <button class="eb" onclick="openBulkMove()" style="background:var(--g);color:#fff;border-color:var(--g)" data-i18n="bulk_move_btn">➡️ ${tr("bulk_move_btn")}</button>
+    </div>` : "";
 
   if(!groups.length){
     c.innerHTML=bar+`<div class="emp"><div class="eic">${ICON_SEARCH}</div>${tr("no_search_results")}<div style="margin-top:12px"><button class="bto" onclick="resetVerlFilter()">${tr("filter_reset")}</button></div></div>`;
     return;
   }
 
-  c.innerHTML=bar+`<div class="crd" style="margin:12px 16px">${
+  c.innerHTML=bar+`<div class="statlist">${
     groups.map(g=>{
       const bv=bvById(g.bv_id);
+      const tot=g.rows.reduce((a,r)=>a+(Number(r.stunden)||0),0);
       const pills=g.rows.map(r=>{
         const ma=maById(r.ma_id);
-        const hLbl = (r.stunden===null||r.stunden===undefined||r.stunden==="") ? tr("entry_hours_open") : `${r.stunden}h`;
-        return `<span class="pill">${ma?.name?.split(" ")[0]||"?"}: ${hLbl}</span>`;
+        const hLbl = (r.stunden===null||r.stunden===undefined||r.stunden==="") ? "offen" : `${r.stunden}h`;
+        return `<span class="pill2"><span class="pilld" style="background:${ma?.bg||"#ccc"}"></span>${ma?.name?.split(" ")[0]||"?"} · ${hLbl}</span>`;
       }).join("");
       const checked=bulkSel.has(g.key);
 
-      return `<div class="li">
+      return `<div class="entrycard">
         ${bulkMode?`<div class="tmcb ${checked?"on":""}" onclick="toggleBulkSel('${g.key}')" style="margin-top:2px">${checked?"✓":""}</div>`:""}
-        <div class="lii" ${bulkMode?`onclick="toggleBulkSel('${g.key}')" style="cursor:pointer"`:""}>
-          <div class="lid">${fd(g.datum)}</div>
-          <div class="lib">BV ${bv?.nr||"?"} · ${bv?.name||"—"}</div>
-          <div class="pills">${pills||`<span class="pill" style="opacity:.5">${LANG==="tr"?"Saat yok":"Keine Stunden"}</span>`}</div>
+        <div class="lii" style="flex:1;min-width:0" ${bulkMode?`onclick="toggleBulkSel('${g.key}')" style="cursor:pointer;flex:1;min-width:0"`:""}>
+          <div class="entrytop">
+            <div class="entrydate">${fd(g.datum)}</div>
+            <div class="entrytot">${fmtH(tot)}</div>
+          </div>
+          <div class="entrybv">BV ${bv?.nr||"?"} · ${bv?.name||"—"}</div>
+          <div class="pills">${pills||`<span class="pill2" style="opacity:.6">${LANG==="tr"?"Saat yok":"Keine Stunden"}</span>`}</div>
         </div>
-        ${bulkMode?"":`<button class="eb" onclick="oped('${g.key}')">${ICON_EDIT}</button>`}
+        ${bulkMode?"":`<button class="eb2" onclick="oped('${g.key}')">${ICON_EDIT}</button>`}
       </div>`;
     }).join("")
   }</div><div style="height:24px"></div>`;
 }
 
-// ═══ Bulk ═══
+// ═══ MEHRFACHAUSWAHL / BULK-VERSCHIEBEN ═══
 function toggleBulkMode(){
   bulkMode=!bulkMode;
   bulkSel=new Set();
@@ -4640,7 +4800,7 @@ async function confirmBulkMove(){
   toast(tr("toast_updated"));
 }
 
-// ═══ EDIT ENTRY GROUP ═══
+// ═══ EDIT ENTRY GROUP (inkl. Verschieben von Datum/Baustelle/Mitarbeiter) ═══
 function oped(groupKey){
   eGroupKey=groupKey;
   const g=groupedEntries().find(x=>x.key===groupKey);
@@ -4658,6 +4818,7 @@ function oped(groupKey){
 
   opov("ov-e");
 }
+
 function rEdMove(){
   document.getElementById("ed-datum").value=edDatum;
   const opts=[...BV].filter(b=>!b.archived || b.id===edBvId).sort((a,b)=>a.nr.localeCompare(b.nr))
@@ -4668,28 +4829,37 @@ function edMoveChanged(){
   edDatum=document.getElementById("ed-datum").value;
   edBvId=document.getElementById("ed-bv").value;
 }
+
 function rEdRows(){
+  const tot=edRows.reduce((a,r)=>a+(Number(r.stunden)||0),0);
+  const totBadge=`<div class="edtotal">Σ ${fmtH(tot)}</div>`;
+
   const rowsHtml=edRows.map((r,i)=>{
+    const ma=maById(r.ma_id);
     const opts=MA.map(m=>`<option value="${m.id}" ${m.id===r.ma_id?"selected":""}>${m.name}</option>`).join("");
-    return `<div class="mr" style="flex-direction:column;align-items:stretch;padding:12px 0;border-bottom:.5px solid var(--b);gap:8px">
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="flex-shrink:0"><div class="lbl" style="margin:0 0 4px">${tr("edrow_employee")}</div>
-        <select id="ed-ma-${i}" onchange="edRowMaChange(${i})" style="width:100%;min-width:0;padding:9px 8px;font-size:15px;font-weight:700;border-radius:8px;border:.5px solid var(--bs);background:var(--c);color:var(--t)">${opts}</select></div>
-        <button class="eb" onclick="edRemoveRow(${i})" title="${tr("delete_entry")}" style="margin-top:20px">${ICON_TRASH}</button>
+    return `<div class="edrow">
+      <div class="edrowhead">
+        <div class="edravatar" style="background:${ma?.bg||"#eee"};color:${ma?.tc||"#333"}">${ma?.k||"?"}</div>
+        <select id="ed-ma-${i}" onchange="edRowMaChange(${i})">${opts}</select>
+        <button class="edrowdel" onclick="edRemoveRow(${i})" title="${tr("delete_entry")}">${ICON_TRASH}</button>
       </div>
-      <div style="display:flex;align-items:flex-end;gap:8px">
-        <div style="flex:1;min-width:0"><div class="lbl" style="margin:0 0 4px">${tr("edrow_start")}</div><input type="text" id="ed-start-${i}" value="${r.beginn||""}" placeholder="07:00" inputmode="numeric" oninput="edRowTimeChange(${i})" style="width:100%;padding:9px 8px;font-size:15px;border-radius:8px;border:.5px solid var(--bs);background:var(--c);color:var(--t)"></div>
-        <div style="flex:1;min-width:0"><div class="lbl" style="margin:0 0 4px">${tr("edrow_end")}</div><input type="text" id="ed-end-${i}" value="${r.ende||""}" placeholder="16:00" inputmode="numeric" oninput="edRowTimeChange(${i})" style="width:100%;padding:9px 8px;font-size:15px;border-radius:8px;border:.5px solid var(--bs);background:var(--c);color:var(--t)"></div>
-        <div style="flex:1;min-width:0"><div class="lbl" style="margin:0 0 4px">${tr("edrow_pause")}</div><input type="number" id="ed-pause-${i}" value="${r.pause_min||0}" min="0" max="180" step="5" inputmode="numeric" oninput="edRowTimeChange(${i})" style="width:100%;padding:9px 8px;font-size:15px;border-radius:8px;border:.5px solid var(--bs);background:var(--c);color:var(--t)"></div>
+      <div class="edrowtimes">
+        <div class="edtf"><label>${tr("edrow_start")}</label>
+        <input type="text" id="ed-start-${i}" value="${r.beginn||""}" placeholder="07:00" inputmode="numeric" oninput="edRowTimeChange(${i})"></div>
+        <div class="edtf"><label>${tr("edrow_end")}</label>
+        <input type="text" id="ed-end-${i}" value="${r.ende||""}" placeholder="16:00" inputmode="numeric" oninput="edRowTimeChange(${i})"></div>
+        <div class="edtf"><label>${tr("edrow_pause")}</label>
+        <input type="number" id="ed-pause-${i}" value="${r.pause_min||0}" min="0" max="180" step="5" inputmode="numeric" oninput="edRowTimeChange(${i})"></div>
       </div>
-      <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px">
+      <div class="edrowfoot">
         <div style="font-size:12px;color:var(--s)" id="ed-calc-note-${i}"></div>
         <input type="number" class="hi" id="ed-h-${i}" value="${r.stunden===null||r.stunden===undefined?"":r.stunden}" min="0" max="24" step="0.25" inputmode="decimal" oninput="edRowHoursTouched(${i})">
         <div class="hu">h</div>
       </div>
     </div>`;
   }).join("");
-  document.getElementById("ema").innerHTML = rowsHtml + `<button class="bto" onclick="edAddRow()" style="margin-top:10px">${tr("editor_add_row")}</button>`;
+  document.getElementById("ema").innerHTML = totBadge + rowsHtml +
+    `<button class="bto" onclick="edAddRow()" style="margin-top:2px" data-i18n="editor_add_row">Mitarbeiter hinzufügen</button>`;
 }
 function edRowTimeChange(i){
   const sEl=document.getElementById("ed-start-"+i), eEl=document.getElementById("ed-end-"+i), pEl=document.getElementById("ed-pause-"+i);
@@ -4699,17 +4869,15 @@ function edRowTimeChange(i){
   if(h!==null){
     const hEl=document.getElementById("ed-h-"+i);
     if(hEl) hEl.value=h;
-    if(edRows[i]){
-      edRows[i].beginn=normTime(sEl.value);
-      edRows[i].ende=normTime(eEl.value);
-      edRows[i].pause_min=parseInt(pEl?.value)||0;
-    }
+    if(edRows[i]){ edRows[i].beginn=normTime(sEl.value); edRows[i].ende=normTime(eEl.value); edRows[i].pause_min=parseInt(pEl?.value)||0; }
     if(note) note.textContent="";
   }else if(note && (sEl.value||eEl.value)){
     note.textContent=tr("edrow_time_invalid");
   }
 }
-function edRowHoursTouched(i){ if(edRows[i]) edRows[i].manualHours=true; }
+function edRowHoursTouched(i){
+  if(edRows[i]) edRows[i].manualHours=true;
+}
 function edRowMaChange(i){
   const el=document.getElementById("ed-ma-"+i);
   if(el && edRows[i]) edRows[i].ma_id=el.value;
@@ -4725,6 +4893,7 @@ function edRemoveRow(i){
   edRows.splice(i,1);
   rEdRows();
 }
+
 async function svedit(){
   const g=groupedEntries().find(x=>x.key===eGroupKey);
   if(!g)return;
@@ -4769,13 +4938,16 @@ async function svedit(){
 function rbvm(){
   document.getElementById("bvml").innerHTML=[...BV].sort((a,b)=>a.nr.localeCompare(b.nr)).map(b=>{
     const bl = blById(b.bl_id);
-    return `<div class="bmr"><div style="flex:1">
+    return `
+    <div class="bmr"><div style="flex:1">
       <div style="font-size:12px;color:var(--s);font-weight:600">BV ${b.nr}${bvNrBadge(b.nr)}</div>
       <div style="font-size:15px">${b.name}</div>
       <div style="font-size:11px;color:var(--g);margin-top:2px;">BL: ${bl?.name||"—"}</div>
-    </div><button class="eb" onclick="opbv('${b.id}')">${ICON_EDIT}</button></div>`;
+    </div>
+    <button class="eb" onclick="opbv('${b.id}')">${ICON_EDIT}</button></div>`;
   }).join("");
 }
+
 function opbv(id){
   eBV=id;
   const bv=BV.find(b=>b.id===id);
@@ -4785,6 +4957,7 @@ function opbv(id){
   document.getElementById("bvebl").value=bv?.bl_id||"";
   opov("ov-bv");
 }
+
 async function svbv(){
   if(!eBV)return;
   const name=document.getElementById("bvea").value.trim();
@@ -4812,15 +4985,10 @@ async function svbv(){
 function rmam(){
   document.getElementById("maml").innerHTML=MA.map((m,i)=>`
     <div class="mmr"><div class="av" style="background:${m.bg};color:${m.tc};width:42px;height:42px">${m.k||"?"}</div>
-    <div style="flex:1">
-      <div style="font-size:16px;font-weight:600">${m.name}</div>
-      <div style="font-size:12px;color:var(--s)">
-        Kürzel: ${m.k||"—"}
-        ${m.long_absent?` · <span style="color:var(--warn-txt)">bis auf weiteres abwesend${m.long_absent_from?` ab ${fd(m.long_absent_from)}`:""}</span>`:""}
-      </div>
-    </div>
+    <div style="flex:1"><div style="font-size:16px;font-weight:600">${m.name}</div><div style="font-size:12px;color:var(--s)">Kürzel: ${m.k||"—"}${m.long_absent?` · <span style="color:var(--warn-txt)">bis auf weiteres abwesend</span>`:""}</div></div>
     <button class="eb" onclick="opma(${i})">${ICON_EDIT}</button></div>`).join("");
 }
+
 function opma(i){
   eMA=i;
   const m=MA[i];
@@ -4829,12 +4997,10 @@ function opma(i){
   document.getElementById("mak").value=m.k||"";
   document.getElementById("mar").value=maRate(m.id);
   document.getElementById("maea-longabs-tgl").classList.toggle("on",!!m.long_absent);
-  const fromEl=document.getElementById("maea-longabs-from");
-  if(fromEl) fromEl.value=m.long_absent_from||"";
   selC=-1;
   document.getElementById("cpick").innerHTML=CLRS.map((c,ci)=>`
     <div class="cpc ${m.bg===c.bg?"sel":""}" id="cp${ci}" onclick="pkc(${ci})" style="background:${c.bg}">
-    <div style="width:10px;height:10px;border-radius:50%;background:${c.tc}"></div></div>`).join("");
+      <div style="width:10px;height:10px;border-radius:50%;background:${c.tc}"></div></div>`).join("");
   opov("ov-ma");
 }
 function pkc(ci){
@@ -4844,6 +5010,7 @@ function pkc(ci){
 function toggleMaLongAbsent(){
   document.getElementById("maea-longabs-tgl").classList.toggle("on");
 }
+
 async function svma(){
   if(eMA<0)return;
   const m=MA[eMA];
@@ -4852,37 +5019,35 @@ async function svma(){
   if(!name||!k){alert(tr("name_and_initials_required"));return;}
   const c=selC>=0?CLRS[selC]:{bg:m.bg,tc:m.tc};
   const long_absent=document.getElementById("maea-longabs-tgl").classList.contains("on");
-  const fromEl=document.getElementById("maea-longabs-from");
-  const long_absent_from=fromEl ? (fromEl.value || null) : null;
 
-  await sbUpd("ma",m.id,{name,k,bg:c.bg,tc:c.tc,sort_order:eMA,long_absent,long_absent_from});
+  await sbUpd("ma",m.id,{name,k,bg:c.bg,tc:c.tc,sort_order:eMA,long_absent});
   maRateSet(m.id, document.getElementById("mar").value.trim());
   await syncDown();
   cls("ov-ma");
   rmam();
   selC=-1;
 }
+
 async function addMA(){
   const name=document.getElementById("nm-n").value.trim();
   if(!name){alert(tr("name_required"));return;}
   const k=name.split(" ").map(w=>w[0]||"").join("").toUpperCase().slice(0,2)||"XX";
   const c=CLRS[MA.length%CLRS.length];
-  await sbIns("ma",[{
-    name,k,bg:c.bg,tc:c.tc,sort_order:MA.length,long_absent:false,long_absent_from:null
-  }]);
+  await sbIns("ma",[{name,k,bg:c.bg,tc:c.tc,sort_order:MA.length}]);
   await syncDown();
   document.getElementById("nm-n").value="";
   rmam();
   toast(`${name}`);
 }
 
-// ═══ BL MANAGE ═══
+// ═══ BAULEITER MANAGE ═══
 function rblm(){
   document.getElementById("blml").innerHTML=BL.map((b,i)=>`
     <div class="mmr"><div class="av" style="background:var(--gl);color:var(--g);width:42px;height:42px">BL</div>
     <div style="flex:1"><div style="font-size:16px;font-weight:600">${b.name}</div></div>
     <button class="eb" onclick="opbl(${i})">${ICON_EDIT}</button></div>`).join("");
 }
+
 function opbl(i){
   eBL=i;
   const b=BL[i];
@@ -4890,16 +5055,19 @@ function opbl(i){
   document.getElementById("bln").value=b.name||"";
   opov("ov-bl");
 }
+
 async function svbl(){
   if(eBL<0)return;
   const b=BL[eBL];
   const name=document.getElementById("bln").value.trim();
   if(!name){alert(tr("name_required"));return;}
+
   await sbUpd("bl",b.id,{name});
   await syncDown();
   cls("ov-bl");
   rblm();
 }
+
 async function addBL(){
   const name=document.getElementById("nb-bl-n").value.trim();
   if(!name){alert(tr("name_required"));return;}
@@ -4920,6 +5088,7 @@ function cDE(){
     clco(); cls("ov-e"); rverl(); ustats(); rwarn();rwarnMa(); toast(tr("toast_deleted"));
   });
 }
+
 function cDA(){
   const active=verlFiltersActive();
   const groups=active?getFilteredGroups():groupedEntries();
@@ -4936,9 +5105,10 @@ function cDA(){
     for(const e of rows) if(e.id) await sbDel("en",e.id);
     await syncDown();
     clco(); rverl(); ustats(); rwarn();rwarnMa();
-    toast(tr("toast_deleted_all"));
+    toast(active?tr("toast_deleted_all"):tr("toast_deleted_all"));
   });
 }
+
 function cDM(){
   const m=MA[eMA];
   conf(`${m?.name} löschen?`,"",async()=>{
@@ -4947,6 +5117,7 @@ function cDM(){
     clco(); cls("ov-ma"); rmam();
   });
 }
+
 function cDBL(){
   const b=BL[eBL];
   conf(`${b?.name} löschen?`,"",async()=>{
@@ -4963,7 +5134,7 @@ function cls(id){ document.getElementById(id).classList.remove("on"); eGroupKey=
 function conf(t,m,cb,okLabel){
   document.getElementById("cft").textContent=t;
   document.getElementById("cfm").textContent=m;
-  document.getElementById("cfok").innerHTML=okLabel||tr("confirm_ok");
+  document.getElementById("cfok").innerHTML=okLabel||tr("confirm_ok"); // reset to standard text
   document.getElementById("cfok").onclick=cb;
   document.getElementById("cof").classList.add("on");
 }
@@ -5003,28 +5174,17 @@ function pinPress(d){
     }
   }
 }
-function pinBack(){ pinInput=pinInput.slice(0,-1); rPinDots(); }
+function pinBack(){
+  pinInput=pinInput.slice(0,-1);
+  rPinDots();
+}
 function rPinDots(){
   for(let i=0;i<4;i++){
     const el=document.getElementById("pd"+i);
     if(el) el.classList.toggle("f",i<pinInput.length);
   }
 }
-function changeEditorPin(){
-  const cur=document.getElementById("pin-cur").value.trim();
-  const n1=document.getElementById("pin-new").value.trim();
-  const n2=document.getElementById("pin-new2").value.trim();
-  if(cur!==getEditorPin()){ alert(tr("editor_pin_wrong")); return; }
-  if(!/^\d{4}$/.test(n1)){ alert(tr("editor_pin_invalid")); return; }
-  if(n1!==n2){ alert(tr("editor_pin_mismatch")); return; }
-  setEditorPin(n1);
-  document.getElementById("pin-cur").value="";
-  document.getElementById("pin-new").value="";
-  document.getElementById("pin-new2").value="";
-  toast(tr("editor_pin_changed"));
-}
 
-// ═══ DASHBOARD / RG UI ═══
 function toggleDashStat(key,btnId){
   const t=dashToggles();
   t[key] = !(t[key]!==false);
@@ -5033,7 +5193,7 @@ function toggleDashStat(key,btnId){
 }
 function initDashTogglesUI(){
   const t=dashToggles();
-  [["invopen","dtgl-invopen"],["invover","dtgl-invover"],["invtotal","dtgl-invtotal"],["invnext","dtgl-invnext"],["deadlines","dtgl-deadlines"],["unbilled","dtgl-unbilled"]].forEach(([k,id])=>{
+  [["invopen","dtgl-invopen"],["invover","dtgl-invover"],["invtotal","dtgl-invtotal"],["invnext","dtgl-invnext"],["deadlines","dtgl-deadlines"]].forEach(([k,id])=>{
     document.getElementById(id)?.classList.toggle("on", t[k]!==false);
   });
   applyRgManualVisibility();
@@ -5051,9 +5211,30 @@ function applyRgManualVisibility(){
 }
 function rEditor(){
   initDashTogglesUI();
+  initEditorSettingsUI();
 }
-
-// ═══ BV EDITOR ═══
+function initEditorSettingsUI(){
+  document.getElementById("gtgl-warnoff")?.classList.toggle("on", !!GLOBAL_WARN_OFF);
+}
+async function toggleGlobalWarnOff(){
+  GLOBAL_WARN_OFF = !GLOBAL_WARN_OFF;
+  document.getElementById("gtgl-warnoff")?.classList.toggle("on", GLOBAL_WARN_OFF);
+  syn("w",tr("sync_now"));
+  const res = await sbIns("settings", [{ key:"global_warn_off", value: GLOBAL_WARN_OFF?"1":"0" }], "key");
+  if(!res){
+    // Rückgängig machen, wenn Speichern fehlschlägt
+    GLOBAL_WARN_OFF = !GLOBAL_WARN_OFF;
+    document.getElementById("gtgl-warnoff")?.classList.toggle("on", GLOBAL_WARN_OFF);
+    syn("e",tr("sync_error"));
+    alert(tr("save_failed"));
+    return;
+  }
+  SETTINGS["global_warn_off"]=GLOBAL_WARN_OFF?"1":"0";
+  lsSet("settings",SETTINGS);
+  rmissing();
+  await syncDown();
+  syn("",tr("sync_saved"));
+}
 function rEditorBv(){
   const active=[...BV].filter(b=>!b.archived).sort((a,b)=>a.nr.localeCompare(b.nr));
   const archived=[...BV].filter(b=>b.archived).sort((a,b)=>a.nr.localeCompare(b.nr));
@@ -5061,11 +5242,13 @@ function rEditorBv(){
   const rowHtml=(b)=>{
     const bl=blById(b.bl_id);
     const warnOff=b.warn_disabled;
-    return `<div class="bmr"><div style="flex:1">
+    return `
+    <div class="bmr"><div style="flex:1">
       <div style="font-size:12px;color:var(--s);font-weight:600">BV ${b.nr}${bvNrBadge(b.nr)}</div>
       <div style="font-size:15px">${b.name}</div>
       <div style="font-size:11px;color:var(--g);margin-top:2px;">BL: ${bl?.name||"—"}${warnOff?` · <span style="color:var(--warn-txt)">${tr("editor_warn_is_off")}</span>`:""}${b.archived?` · <span style="color:var(--warn-txt)">${tr("editor_archived_badge")}</span>`:""}</div>
-    </div><button class="eb" onclick="opEdBv('${b.id}')">${ICON_EDIT}</button></div>`;
+    </div>
+    <button class="eb" onclick="opEdBv('${b.id}')">${ICON_EDIT}</button></div>`;
   };
 
   document.getElementById("edbvl").innerHTML=active.map(rowHtml).join("");
@@ -5081,6 +5264,7 @@ function rEditorBv(){
     archWrap.style.display="none";
   }
 }
+
 function opEdBv(id){
   edBVid=id;
   const bv=BV.find(b=>b.id===id);
@@ -5095,8 +5279,13 @@ function opEdBv(id){
   delBtn.style.display = inUse ? "none" : "";
   opov("ov-edbv");
 }
-function toggleEdWarn(){ document.getElementById("edbv-warn-tgl").classList.toggle("on"); }
-function toggleEdArchive(){ document.getElementById("edbv-arch-tgl").classList.toggle("on"); }
+function toggleEdWarn(){
+  document.getElementById("edbv-warn-tgl").classList.toggle("on");
+}
+function toggleEdArchive(){
+  document.getElementById("edbv-arch-tgl").classList.toggle("on");
+}
+
 async function delEdBv(){
   if(!edBVid)return;
   const bv=BV.find(b=>b.id===edBVid);
@@ -5107,45 +5296,28 @@ async function delEdBv(){
   conf(tr("editor_bv_delete_title"), tr("editor_bv_delete_msg",{nr:bv?.nr||"?"}), async()=>{
     clco();
     const res=await sbDel("bv", edBVid);
-    if(!res){ alert(tr("delete_failed")); return; }
+    if(!res){
+      alert(tr("delete_failed"));
+      return;
+    }
     await syncDown();
     cls("ov-edbv");
     rEditorBv();
     toast(tr("toast_deleted"));
   });
 }
-async function svEdBv(){
-  if(!edBVid)return;
-  const nr=document.getElementById("edbv-nr").value.trim();
-  const name=document.getElementById("edbv-name").value.trim();
-  const budgetRaw=document.getElementById("edbv-budget").value;
-  const budget_h=budgetRaw===""?null:Number(budgetRaw);
-  const warnOff=document.getElementById("edbv-warn-tgl").classList.contains("on");
-  const archived=document.getElementById("edbv-arch-tgl").classList.contains("on");
-  if(!nr){ alert(tr("bv_nr_enter")); return; }
-  if(BV.find(b=>b.nr===nr && b.id!==edBVid)){ alert(tr("bv_nr_taken")); return; }
-
-  const execSave = async () => {
-    await sbUpd("bv", edBVid, { nr, name: name || "—", warn_disabled: warnOff, archived: archived, budget_h });
-    await syncDown();
-    cls("ov-edbv");
-    rEditorBv();
-    toast(tr("toast_updated"));
-  };
-
-  if(!validBVNr(nr)){
-    conf(tr("missing_info"), tr("bv_nr_invalid_confirm"), async () => { await execSave(); clco(); });
-  } else {
-    await execSave();
-  }
-}
 
 // ═══ TAGESBERICHT / RAPPORT ═══
+let repD="", repBV=null;
+let repFutureMode=false;      // true = Rapport für Baustelle ohne Einträge (z.B. Zukunft) wird manuell zusammengestellt
+let repFutureMaSel=new Set(); // ausgewählte Mitarbeiter im Zukunfts-Modus
+
 function repD0(){ document.getElementById("rep-d").value=td(); }
 function repD1(){
   const d=new Date(); d.setDate(d.getDate()-1);
   document.getElementById("rep-d").value=d.toISOString().slice(0,10);
 }
+
 function n2RepBv(){
   const d=document.getElementById("rep-d").value;
   if(!d){ alert(tr("pick_date_first")); return; }
@@ -5154,7 +5326,12 @@ function n2RepBv(){
   rRepBvg();
   go("pg-rep-bv");
 }
+
 function rRepBvg(){
+  // Baustellen anzeigen, für die es an diesem Tag Einträge gibt.
+  // Gibt es an diesem Tag noch gar keine Einträge (z.B. Datum in der Zukunft),
+  // werden stattdessen alle aktiven Baustellen angezeigt, damit man einen
+  // Rapport im Voraus zusammenstellen kann.
   const bvIdsToday=new Set(EN.filter(e=>e.datum===repD).map(e=>e.bv_id));
   let list=[...BV].filter(b=>bvIdsToday.has(b.id));
   if(!list.length) list=[...BV].filter(b=>!b.archived);
@@ -5165,14 +5342,15 @@ function rRepBvg(){
   }
   document.getElementById("repbvg").innerHTML=list.map(b=>`
     <button class="bvb" onclick="opRepView('${b.id}')">
-      <div class="bvnr">BV ${b.nr}${bvNrBadge(b.nr)}</div><div class="bvnm">${b.name}</div>
-    </button>`).join("");
+      <div class="bvnr">BV ${b.nr}${bvNrBadge(b.nr)}</div><div class="bvnm">${b.name}</div></button>`).join("");
 }
+
 function opRepView(bvId){
   repBV=BV.find(b=>b.id===bvId);
   if(!repBV)return;
   const entries=EN.filter(e=>e.datum===repD && e.bv_id===bvId);
   if(!entries.length){
+    // Keine gespeicherten Stunden für diesen Tag/diese Baustelle -> Mitarbeiter manuell wählen (z.B. für die Zukunft)
     repFutureMode=true;
     repFutureMaSel=new Set();
     rRepFutureSelect();
@@ -5181,6 +5359,7 @@ function opRepView(bvId){
   repFutureMode=false;
   rRepViewFromEntries(entries);
 }
+
 function rRepHeaderHtml(){
   return `<div class="repsec">
     <div class="repsec-h">${tr("report_title")}</div>
@@ -5192,11 +5371,13 @@ function rRepHeaderHtml(){
     </div>
   </div>`;
 }
+
 function rRepSetTitle(){
-  const dParts=repD.split("-");
+  const dParts=repD.split("-"); // YYYY-MM-DD
   const fnameDate=`${dParts[0].slice(2)}-${dParts[1]}-${dParts[2]}`;
   document.getElementById("repviewt").textContent=`Rapport_${fnameDate}_BV-${repBV.nr}`;
 }
+
 function rRepViewFromEntries(entries){
   rRepSetTitle();
   let html=rRepHeaderHtml();
@@ -5216,6 +5397,8 @@ function rRepViewFromEntries(entries){
   document.getElementById("repviewnav").style.display="";
   go("pg-rep-view");
 }
+
+// Mitarbeiter-Auswahl für einen Rapport ohne bestehende Stundeneinträge (z.B. Zukunft)
 function rRepFutureSelect(){
   rRepSetTitle();
   const html=rRepHeaderHtml()+`
@@ -5223,11 +5406,11 @@ function rRepFutureSelect(){
       <div class="repsec-h">${tr("report_future_pick_ma")}</div>
       <div class="crd" id="repfuturemal">
         ${MA.map(m=>`
-          <div class="tmr">
-            <div class="tmcb ${repFutureMaSel.has(m.id)?"on":""}" onclick="toggleRepFutureMa('${m.id}')">${repFutureMaSel.has(m.id)?"✓":""}</div>
-            <div class="av" style="background:${m.bg};color:${m.tc};width:36px;height:36px;font-size:12px">${m.k||"?"}</div>
-            <div class="mn" style="font-size:14px">${m.name}</div>
-          </div>`).join("")}
+        <div class="tmr">
+          <div class="tmcb ${repFutureMaSel.has(m.id)?"on":""}" onclick="toggleRepFutureMa('${m.id}')">${repFutureMaSel.has(m.id)?"✓":""}</div>
+          <div class="av" style="background:${m.bg};color:${m.tc};width:36px;height:36px;font-size:12px">${m.k||"?"}</div>
+          <div class="mn" style="font-size:14px">${m.name}</div>
+        </div>`).join("")}
       </div>
     </div>
     <div style="padding:0 16px"><button class="btn" onclick="showRepFuture()">${tr("report_future_show_btn")}</button></div>`;
@@ -5258,11 +5441,18 @@ function showRepFuture(){
   document.getElementById("repviewnav").style.display="";
   go("pg-rep-view");
 }
+
+// Vom "Rapport drucken"-Button auf der Tagesbericht-Ansicht aufgerufen
 function printCurrentRapport(){
   if(!repBV)return;
   if(repFutureMode && !repFutureMaSel.size){ alert(tr("report_future_pick_one")); return; }
-  openRapportPdf(repD, repBV.id, false);
+  openRapportPdf(repD, repBV.id);
 }
+
+function fmtPauseH(min){
+  return fmtH(Math.round((min/60)*100)/100);
+}
+
 let repCpyCounter=0;
 function repFieldRow(label,display,copyVal){
   const cid="repcpy-"+(repCpyCounter++);
@@ -5272,6 +5462,7 @@ function repFieldRow(label,display,copyVal){
     <button class="repcpy" id="${cid}" onclick="repCopy('${cid}','${esc}')">${tr("copy_btn")}</button>
   </div>`;
 }
+
 function repCopy(btnId,val){
   const btn=document.getElementById(btnId);
   const doneTxt=tr("copied_toast");
@@ -5299,10 +5490,47 @@ function repCopyFallback(val){
   document.body.removeChild(ta);
 }
 
-// ═══ RG MANUAL VISIBILITY / EDITOR ═══
-function rEditor(){ initDashTogglesUI(); }
+async function svEdBv(){
+  if(!edBVid)return;
+  const nr=document.getElementById("edbv-nr").value.trim();
+  const name=document.getElementById("edbv-name").value.trim();
+  const budgetRaw=document.getElementById("edbv-budget").value;
+  const budget_h=budgetRaw===""?null:Number(budgetRaw);
+  const warnOff=document.getElementById("edbv-warn-tgl").classList.contains("on");
+  const archived=document.getElementById("edbv-arch-tgl").classList.contains("on");
+  if(!nr){ alert(tr("bv_nr_enter")); return; }
+  if(BV.find(b=>b.nr===nr && b.id!==edBVid)){ alert(tr("bv_nr_taken")); return; }
 
-// ═══ EXPORT ═══
+  const execSave = async () => {
+	await sbUpd("bv", edBVid, { nr, name: name || "—", warn_disabled: warnOff, archived: archived, budget_h });    await syncDown();
+    cls("ov-edbv");
+    rEditorBv();
+    toast(tr("toast_updated"));
+  };
+
+  if(!validBVNr(nr)){
+    conf(tr("missing_info"), tr("bv_nr_invalid_confirm"), async () => { await execSave(); clco(); });
+  } else {
+    await execSave();
+  }
+}
+
+// ═══ PIN ÄNDERN ═══
+function changeEditorPin(){
+  const cur=document.getElementById("pin-cur").value.trim();
+  const n1=document.getElementById("pin-new").value.trim();
+  const n2=document.getElementById("pin-new2").value.trim();
+  if(cur!==getEditorPin()){ alert(tr("editor_pin_wrong")); return; }
+  if(!/^\d{4}$/.test(n1)){ alert(tr("editor_pin_invalid")); return; }
+  if(n1!==n2){ alert(tr("editor_pin_mismatch")); return; }
+  setEditorPin(n1);
+  document.getElementById("pin-cur").value="";
+  document.getElementById("pin-new").value="";
+  document.getElementById("pin-new2").value="";
+  toast(tr("editor_pin_changed"));
+}
+
+
 function xls(){
   const von=document.getElementById("ev").value,bis=document.getElementById("eb").value;
   let data=EN.filter(e=>{
@@ -5322,6 +5550,7 @@ function xls(){
     document.head.appendChild(s);
   }else bxls(data,von,bis);
 }
+
 function bxls(data,von,bis){
   try{
     const wb=XLSX.utils.book_new();
@@ -5337,6 +5566,7 @@ function bxls(data,von,bis){
     const ws1=XLSX.utils.aoa_to_sheet(r1,{cellDates:true});
     ws1["!cols"]=[{wch:12},{wch:12},{wch:22},{wch:10},{wch:2},{wch:2},{wch:10},{wch:12},{wch:10}];
     for(let r=1;r<r1.length;r++){
+      const rowIdx=r+1; // Zeile 2 = erste Datenzeile
       const aA=XLSX.utils.encode_cell({r:r,c:0}); if(ws1[aA])ws1[aA].z="dd\\.mm\\.yyyy";
       const aB=XLSX.utils.encode_cell({r:r,c:1}); if(ws1[aB])ws1[aB].z="0";
       const aD=XLSX.utils.encode_cell({r:r,c:3}); if(ws1[aD])ws1[aD].z="0.00";
