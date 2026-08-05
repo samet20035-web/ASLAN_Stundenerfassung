@@ -360,6 +360,12 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       <div class="ar">›</div>
     </button>
 
+    <button class="ba" onclick="openBlankRep()">
+      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z"/><path d="M14 3v5h5"/><path d="M8 14h8M8 17h5"/></svg></div>
+      <div><div class="at" data-i18n="home_blank_title">Leerer Rapport ohne BV</div><div class="as" data-i18n="home_blank_sub">Nur Mitarbeiter, Zeit & Pause – BV-Nr./Adresse bleiben leer, wird nicht gespeichert</div></div>
+      <div class="ar">›</div>
+    </button>
+
     <div class="grp" data-i18n="grp_uebersicht">Übersicht & Auswertung</div>
     <button class="ba" onclick="go('pg-uebersicht')">
       <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-9"/><path d="M15 6h6v6"/></svg></div>
@@ -419,6 +425,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       <span style="font-size:20px;line-height:1">📦</span>
       <span style="font-size:15px;font-weight:800;color:var(--gd)" data-i18n="lager_btn">Lager (kein Bauvorhaben)</span>
     </button>
+
     <div class="nbv">
       <div style="font-size:13px;font-weight:700;color:var(--gd);text-transform:uppercase;letter-spacing:.06em" data-i18n="new_bv">Neue Baustelle</div>
       <div class="nbv-grid">
@@ -495,6 +502,20 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     <div class="crd" id="er-tml" style="margin-bottom:20px"></div>
 
     <button class="btn" onclick="printEmptyRep()" data-i18n="empty_rep_save">Leer-Rapport drucken</button>
+    <div style="height:24px"></div>
+  </div></div>
+</div>
+
+<div class="pg" id="pg-blank">
+  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="blank_rep_title">Leerer Rapport ohne BV</div><div class="hs" data-i18n="blank_rep_sub">Mitarbeiter, Zeit & Pause – wird nur als PDF erzeugt, nicht gespeichert</div></div></div>
+  <div class="sc"><div style="padding:16px">
+    <div class="lbl" style="margin:0 0 6px" data-i18n="empty_rep_date">Datum</div>
+    <input type="date" id="br-datum" style="margin-bottom:16px">
+
+    <div class="lbl" style="margin:0 0 8px" data-i18n="empty_rep_team">Mitarbeiter</div>
+    <div class="crd" id="br-tml" style="margin-bottom:20px"></div>
+
+    <button class="btn" onclick="printBlankRep()" data-i18n="blank_rep_pdf">PDF erstellen</button>
     <div style="height:24px"></div>
   </div></div>
 </div>
@@ -1100,6 +1121,10 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       </div>
       <button class="tgl" id="maea-longabs-tgl" onclick="toggleMaLongAbsent()"></button>
     </div>
+    <div id="maea-longabs-since-wrap" style="display:none;margin-bottom:14px">
+      <div class="lbl" style="margin:0 0 6px" data-i18n="ma_long_absent_since">Freigestellt ab wann</div>
+      <input type="date" id="maea-longabs-since">
+    </div>
     <button class="btn" onclick="svma()" data-i18n="save_changes">Speichern</button>
     <button class="btd" onclick="cDM()" data-i18n="delete_ma">Mitarbeiter löschen</button>
     <button class="bto" onclick="cls('ov-ma')" data-i18n="cancel_btn">Abbrechen</button>
@@ -1271,6 +1296,11 @@ const I18N = {
 
     step2_title: "Schritt 2 – Baustelle",
     lager_btn: "Lager (kein Bauvorhaben)",
+    home_blank_title: "Leerer Rapport ohne BV",
+    home_blank_sub: "Nur Mitarbeiter, Zeit & Pause – BV-Nr./Adresse bleiben leer, wird nicht gespeichert",
+    blank_rep_title: "Leerer Rapport ohne BV",
+    blank_rep_sub: "Mitarbeiter, Zeit & Pause – wird nur als PDF erzeugt, nicht gespeichert",
+    blank_rep_pdf: "PDF erstellen",
     new_bv: "Neue Baustelle",
     bv_nr: "BV-Nr.",
     bv_nr_invalid: "Hinweis: Diese BV-Nummer entspricht nicht dem Schema (5-stellig, beginnt mit 64, 65 oder 66).",
@@ -1613,6 +1643,7 @@ const I18N = {
     rg_hourly_rate_ph: "z.B. 35",
     ma_long_absent: "Bis auf weiteres abwesend",
     ma_long_absent_hint: "Erscheint beim Stundeneintragen ganz unten, wird nicht automatisch ausgewählt",
+    ma_long_absent_since: "Freigestellt ab wann",
     rg_import_summary: "{added} Rechnung(en) neu, {updated} aktualisiert, {abr} Abrechnungszeile(n) übernommen",
     rg_import_summary_skipped: ", {skipped} übersprungen",
     rg_manual_missing: "Bitte Datum und Firma angeben",
@@ -2051,6 +2082,7 @@ const I18N = {
     rg_hourly_rate_ph: "örn. 35",
     ma_long_absent: "İkinci bir emre kadar devamsız",
     ma_long_absent_hint: "Saat girişinde en altta görünür, otomatik seçilmez",
+    ma_long_absent_since: "Ne zamandan itibaren",
     rg_import_summary: "{added} yeni fatura, {updated} güncellendi, {abr} faturalama satırı aktarıldı",
     rg_import_summary_skipped: ", {skipped} atlandı",
     rg_manual_missing: "Lütfen tarih ve firma girin",
@@ -3034,6 +3066,8 @@ async function pkLager(){
   }
   if(lg) pkBV(lg.id);
 }
+
+
 function bvNrBadge(nr){ return validBVNr(nr) ? "" : ` <span title="${tr("bv_nr_invalid_short")}" style="color:var(--danger-txt);font-weight:bold;display:inline-flex;vertical-align:middle">${ICON_WARN}</span>`; }
 
 function groupedEntries(){
@@ -3384,7 +3418,7 @@ function misscalNav(dir){
   rMissCal();
 }
 function missActiveMaForDay(ds){
-  return MA.filter(m=>!m.archived && !m.long_absent && !isMaAbsentOn(m.id,ds));
+  return MA.filter(m=>!m.archived && !isMaLongAbsentOn(m,ds) && !isMaAbsentOn(m.id,ds));
 }
 function missGroupsUnconfirmed(ds){
   const bvIds=new Set(EN.filter(e=>e.datum===ds).map(e=>e.bv_id));
@@ -3648,7 +3682,7 @@ function rwarn(){
 function gofill(dt){
   document.getElementById("inp-d").value=dt;
   cD=dt;
-  presentToday=new Set(MA.filter(m=>!m.archived && !m.long_absent).map(m=>m.id));
+  presentToday=new Set(MA.filter(m=>!m.archived && !isMaLongAbsentOn(m,dt)).map(m=>m.id));
   sBV=null;
   document.getElementById("bvnx").disabled=true;
   document.getElementById("nb-nr").value="";
@@ -3661,6 +3695,13 @@ function gofill(dt){
 }
 
 // ═══ ABWESENHEITEN / URLAUB / FEIERTAGE ═══
+// Prüft, ob ein Mitarbeiter an einem bestimmten Tag als "bis auf weiteres freigestellt" gilt.
+// Ist kein Startdatum gesetzt (Altbestand), gilt der Status wie bisher ab sofort für jeden Tag.
+function isMaLongAbsentOn(m, ds){
+  if(!m || !m.long_absent) return false;
+  if(!m.long_absent_since) return true;
+  return String(ds) >= String(m.long_absent_since);
+}
 function isMaAbsentOn(maId, ds){
   if(AB.some(a=>a.ma_id===maId && a.datum===ds)) return true;
   if(LV.some(l=>l.start_date<=ds && l.end_date>=ds && (l.company_wide || l.ma_id===maId))) return true;
@@ -3738,7 +3779,7 @@ function getMissPerMa(){
     const dw=d.getDay();
     if(dw===0||dw===6) continue;
     const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-    MA.filter(m=>!m.archived && !m.long_absent).forEach(m=>{
+    MA.filter(m=>!m.archived && !isMaLongAbsentOn(m,ds)).forEach(m=>{
       if(isMaAbsentOn(m.id,ds)) return;
       if(EN.some(e=>e.ma_id===m.id && e.datum===ds && Number(e.stunden)>0)) return;
       out.push({ma:m,ds,isToday:back===0});
@@ -3973,7 +4014,7 @@ async function n2bv(){
   if(!d){alert(tr("pick_date_first"));return;}
   cD=d;
   // Anwesenheit: standardmäßig ist jeder da, außer im Editor (Abwesenheiten & Urlaub) ist für diesen Tag etwas anderes hinterlegt
-  presentToday=new Set(MA.filter(m=>!m.archived && !m.long_absent && !isMaAbsentOn(m.id,d)).map(m=>m.id));
+  presentToday=new Set(MA.filter(m=>!m.archived && !isMaLongAbsentOn(m,d) && !isMaAbsentOn(m.id,d)).map(m=>m.id));
   document.getElementById("bvsub").textContent=fd(d);
   sBV=null;
   document.getElementById("bvnx").disabled=true;
@@ -4009,7 +4050,6 @@ function bvTile(b){
 function rbvg(){
   const lagerBtn=document.querySelector(".lager-btn");
   if(lagerBtn) lagerBtn.classList.toggle("sl", !!(sBV && String(sBV.nr||"").trim().toUpperCase()==="LAGER"));
-
   const all=[...BV].filter(b=>!b.archived && String(b.nr||"").trim().toUpperCase()!=="LAGER").sort((a,b)=>a.nr.localeCompare(b.nr));
   const favIds=new Set(getFavBvIds());
   const favs=all.filter(b=>favIds.has(b.id));
@@ -4089,7 +4129,7 @@ async function handleAddBV(nrId, nmId, blIdId, autoSelect) {
 function n2st(){
   if(!sBV)return;
   document.getElementById("stsub").textContent=`${fd(cD)} · BV ${sBV.nr}`;
-  teamSel = presentToday.size ? new Set(MA.filter(m=>presentToday.has(m.id)).map(m=>m.id)) : new Set(MA.filter(m=>!m.long_absent).map(m=>m.id));
+  teamSel = presentToday.size ? new Set(MA.filter(m=>presentToday.has(m.id)).map(m=>m.id)) : new Set(MA.filter(m=>!isMaLongAbsentOn(m,cD)).map(m=>m.id));
   sameTime=true;
   curPause=30;
   indivPause={};
@@ -4109,8 +4149,8 @@ function n2st(){
 }
 
 function rTeam(){
-  const active=MA.filter(m=>!m.long_absent);
-  const longAbsent=MA.filter(m=>m.long_absent);
+  const active=MA.filter(m=>!isMaLongAbsentOn(m,cD));
+  const longAbsent=MA.filter(m=>isMaLongAbsentOn(m,cD));
   const rowHtml=m=>`
     <div class="tmr">
       <div class="tmcb ${teamSel.has(m.id)?"on":""}" onclick="toggleTeam('${m.id}')">${teamSel.has(m.id)?"✓":""}</div>
@@ -4411,6 +4451,111 @@ function printEmptyRep(){
   repFutureMode=true;
   repFutureMaSel=new Set(erTeamSel);
   openRapportPdf(repD, repBV.id);
+}
+
+// ═══ Leerer Rapport ohne BV (nur Mitarbeiter/Zeit/Pause, nichts wird gespeichert) ═══
+let brTeamSel=new Set();     // ausgewählte Mitarbeiter
+let brTimes={};              // { maId: {beginn, ende, pause} }
+function openBlankRep(){
+  document.getElementById("br-datum").value=td();
+  brTeamSel=new Set();
+  brTimes={};
+  rBrTeam();
+  go("pg-blank");
+}
+function rBrTeam(){
+  document.getElementById("br-tml").innerHTML=MA.map(m=>{
+    const on=brTeamSel.has(m.id);
+    const t=brTimes[m.id]||{beginn:"07:00",ende:"16:00",pause:"30"};
+    return `
+    <div class="tmr" style="flex-wrap:wrap">
+      <div class="tmcb ${on?"on":""}" onclick="toggleBrTeam('${m.id}')">${on?"✓":""}</div>
+      <div class="av" style="background:${m.bg};color:${m.tc};width:36px;height:36px;font-size:12px">${m.k||"?"}</div>
+      <div class="mn" style="font-size:14px;flex:1">${m.name}</div>
+      ${on?`
+      <div style="width:100%;display:flex;gap:8px;margin:8px 0 4px 44px">
+        <input type="time" value="${t.beginn}" onchange="brTimeChange('${m.id}','beginn',this.value)" style="flex:1;min-width:0">
+        <input type="time" value="${t.ende}" onchange="brTimeChange('${m.id}','ende',this.value)" style="flex:1;min-width:0">
+        <input type="number" min="0" step="5" value="${t.pause}" onchange="brTimeChange('${m.id}','pause',this.value)" style="width:70px" placeholder="Pause">
+      </div>`:""}
+    </div>`;
+  }).join("");
+}
+function toggleBrTeam(id){
+  if(brTeamSel.has(id)){ brTeamSel.delete(id); }
+  else{ brTeamSel.add(id); if(!brTimes[id]) brTimes[id]={beginn:"07:00",ende:"16:00",pause:"30"}; }
+  rBrTeam();
+}
+function brTimeChange(id,field,val){
+  if(!brTimes[id]) brTimes[id]={beginn:"07:00",ende:"16:00",pause:"30"};
+  brTimes[id][field]=val;
+}
+async function printBlankRep(){
+  const datum=document.getElementById("br-datum").value;
+  if(!datum){ toast("Bitte Datum wählen"); return; }
+  if(brTeamSel.size===0){ toast("Bitte mind. einen Mitarbeiter wählen"); return; }
+
+  const rows=[...brTeamSel].map(id=>{
+    const t=brTimes[id]||{beginn:"",ende:"",pause:"0"};
+    const beginn=t.beginn||"", ende=t.ende||"";
+    const pauseMin=parseInt(t.pause,10)||0;
+    let stunden="";
+    if(beginn && ende){
+      const [bh,bm]=beginn.split(":").map(Number);
+      const [eh,em]=ende.split(":").map(Number);
+      let mins=(eh*60+em)-(bh*60+bm)-pauseMin;
+      if(mins<0) mins=0;
+      stunden=(mins/60).toFixed(2);
+    }
+    return { ma_id:id, beginn, ende, pause_min:pauseMin, stunden };
+  });
+
+  const win=window.open("","_blank");
+  if(win){
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;height:100vh;display:flex;align-items:center;justify-content:center;font-family:-apple-system,sans-serif;background:#111;color:#fff;font-size:16px;">${tr("pdf_preparing")}</body></html>`);
+    win.document.close();
+  }
+  try{
+    const arrayBuffer=await getRapportTemplateBytes();
+    const { PDFDocument }=PDFLib;
+    const pdfDoc=await PDFDocument.load(arrayBuffer);
+    const form=pdfDoc.getForm();
+    // BV-Nummer und Adresse bleiben bewusst leer, da kein Bauvorhaben zugeordnet ist.
+    form.getTextField('text_3').setText("");
+    form.getTextField('text_0').setText(formatDate(datum));
+    form.getTextField('text_111 (0)').setText("");
+    form.getTextField('text_9').setText("");
+    const empFields=[
+      { name:'text_13', start:'text_31', end:'text_36', pause:'text_41', hours:'text_58' },
+      { name:'text_15', start:'text_32', end:'text_37', pause:'text_42', hours:'text_59' },
+      { name:'text_11', start:'text_33', end:'text_38', pause:'text_43', hours:'text_60' },
+      { name:'text_18', start:'text_34', end:'text_39', pause:'text_44', hours:'text_61' },
+      { name:'text_20', start:'text_35', end:'text_40', pause:'text_45', hours:'text_62' }
+    ];
+    rows.slice(0,5).forEach((row,i)=>{
+      const f=empFields[i];
+      if(!f) return;
+      const ma=MA.find(x=>x.id==row.ma_id)||{name:""};
+      form.getTextField(f.name).setText(ma.name);
+      form.getTextField(f.start).setText(formatTime(row.beginn));
+      form.getTextField(f.end).setText(formatTime(row.ende));
+      form.getTextField(f.pause).setText(formatVal(row.pause_min?(row.pause_min/60):""));
+      form.getTextField(f.hours).setText(formatVal(row.stunden));
+    });
+    const pdfBytes=await pdfDoc.save();
+    const blob=new Blob([pdfBytes],{ type:"application/pdf" });
+    const blobUrl=URL.createObjectURL(blob);
+    if(win && !win.closed){
+      win.location.href=blobUrl;
+      setTimeout(()=>URL.revokeObjectURL(blobUrl),60000);
+    }else{
+      const a=document.createElement("a"); a.href=blobUrl; a.target="_blank"; a.download=`Rapport_leer_${datum}.pdf`; a.click();
+      setTimeout(()=>URL.revokeObjectURL(blobUrl),60000);
+    }
+  }catch(e){
+    if(win && !win.closed) win.close();
+    alert(tr("pdf_error_prefix")+e.message);
+  }
 }
 
 // ═══ STATS ═══
@@ -4985,7 +5130,7 @@ async function svbv(){
 function rmam(){
   document.getElementById("maml").innerHTML=MA.map((m,i)=>`
     <div class="mmr"><div class="av" style="background:${m.bg};color:${m.tc};width:42px;height:42px">${m.k||"?"}</div>
-    <div style="flex:1"><div style="font-size:16px;font-weight:600">${m.name}</div><div style="font-size:12px;color:var(--s)">Kürzel: ${m.k||"—"}${m.long_absent?` · <span style="color:var(--warn-txt)">bis auf weiteres abwesend</span>`:""}</div></div>
+    <div style="flex:1"><div style="font-size:16px;font-weight:600">${m.name}</div><div style="font-size:12px;color:var(--s)">Kürzel: ${m.k||"—"}${m.long_absent?` · <span style="color:var(--warn-txt)">bis auf weiteres abwesend${m.long_absent_since?` (ab ${fd(m.long_absent_since)})`:""}</span>`:""}</div></div>
     <button class="eb" onclick="opma(${i})">${ICON_EDIT}</button></div>`).join("");
 }
 
@@ -4997,6 +5142,8 @@ function opma(i){
   document.getElementById("mak").value=m.k||"";
   document.getElementById("mar").value=maRate(m.id);
   document.getElementById("maea-longabs-tgl").classList.toggle("on",!!m.long_absent);
+  document.getElementById("maea-longabs-since").value=m.long_absent_since||"";
+  document.getElementById("maea-longabs-since-wrap").style.display=m.long_absent?"block":"none";
   selC=-1;
   document.getElementById("cpick").innerHTML=CLRS.map((c,ci)=>`
     <div class="cpc ${m.bg===c.bg?"sel":""}" id="cp${ci}" onclick="pkc(${ci})" style="background:${c.bg}">
@@ -5008,7 +5155,11 @@ function pkc(ci){
   document.querySelectorAll(".cpc").forEach((el,i)=>el.classList.toggle("sel",i===ci));
 }
 function toggleMaLongAbsent(){
-  document.getElementById("maea-longabs-tgl").classList.toggle("on");
+  const on=document.getElementById("maea-longabs-tgl").classList.toggle("on");
+  document.getElementById("maea-longabs-since-wrap").style.display=on?"block":"none";
+  if(on && !document.getElementById("maea-longabs-since").value){
+    document.getElementById("maea-longabs-since").value=td();
+  }
 }
 
 async function svma(){
@@ -5019,8 +5170,9 @@ async function svma(){
   if(!name||!k){alert(tr("name_and_initials_required"));return;}
   const c=selC>=0?CLRS[selC]:{bg:m.bg,tc:m.tc};
   const long_absent=document.getElementById("maea-longabs-tgl").classList.contains("on");
+  const long_absent_since=long_absent ? (document.getElementById("maea-longabs-since").value||td()) : null;
 
-  await sbUpd("ma",m.id,{name,k,bg:c.bg,tc:c.tc,sort_order:eMA,long_absent});
+  await sbUpd("ma",m.id,{name,k,bg:c.bg,tc:c.tc,sort_order:eMA,long_absent,long_absent_since});
   maRateSet(m.id, document.getElementById("mar").value.trim());
   await syncDown();
   cls("ov-ma");
