@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -354,15 +353,9 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       <div class="ar">›</div>
     </button>
 
-    <button class="ba" onclick="openEmptyRep()">
-      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z"/><path d="M14 3v5h5"/><circle cx="12" cy="15" r="2.5" stroke-dasharray="2 2"/></svg></div>
-      <div><div class="at" data-i18n="home_empty_title">Leer-Rapport erstellen</div><div class="as" data-i18n="home_empty_sub">Datum, Bauleiter, Mitarbeiter – Stunden bleiben leer</div></div>
-      <div class="ar">›</div>
-    </button>
-
-    <button class="ba" onclick="openBlankRep()">
-      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z"/><path d="M14 3v5h5"/><path d="M8 14h8M8 17h5"/></svg></div>
-      <div><div class="at" data-i18n="home_blank_title">Leerer Rapport ohne BV</div><div class="as" data-i18n="home_blank_sub">Nur Mitarbeiter, Zeit & Pause – BV-Nr./Adresse bleiben leer, wird nicht gespeichert</div></div>
+    <button class="ba" onclick="go('pg-rapporte')">
+      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></div>
+      <div><div class="at" data-i18n="home_rapporte_title">Rapporte</div><div class="as" data-i18n="home_rapporte_sub">Tagesbericht, Leer-Rapport & Rapport ohne BV</div></div>
       <div class="ar">›</div>
     </button>
 
@@ -488,8 +481,37 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
   </div>
 </div>
 
+<div class="pg" id="pg-rapporte">
+  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="rapporte_title">Rapporte</div><div class="hs" data-i18n="rapporte_sub">Alle Rapport-Funktionen an einem Ort</div></div></div>
+  <div class="sc">
+    <button class="ba" style="margin-top:10px" onclick="go('pg-rep-date')">
+      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></div>
+      <div><div class="at" data-i18n="rapporte_existing_title">Rapport zu bestehenden Einträgen</div><div class="as" data-i18n="rapporte_existing_sub">Für einen Tag & eine Baustelle mit erfassten Stunden</div></div>
+      <div class="ar">›</div>
+    </button>
+
+    <button class="ba" onclick="openEmptyRep()">
+      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z"/><path d="M14 3v5h5"/><circle cx="12" cy="15" r="2.5" stroke-dasharray="2 2"/></svg></div>
+      <div><div class="at" data-i18n="home_empty_title">Leer-Rapport erstellen</div><div class="as" data-i18n="home_empty_sub">Datum, Bauleiter, Mitarbeiter – Stunden bleiben leer</div></div>
+      <div class="ar">›</div>
+    </button>
+
+    <button class="ba" onclick="openBlankRep(true)">
+      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z"/><path d="M14 3v5h5"/><path d="M8 14h8M8 17h5"/></svg></div>
+      <div><div class="at" data-i18n="home_blank_title">Leerer Rapport ohne BV</div><div class="as" data-i18n="home_blank_sub">Nur Mitarbeiter, Zeit & Pause – BV-Nr./Adresse bleiben leer, wird nicht gespeichert</div></div>
+      <div class="ar">›</div>
+    </button>
+
+    <button class="ba" style="margin-bottom:16px" onclick="openBlankRep(false)">
+      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z"/><path d="M14 3v5h5"/><circle cx="9" cy="14" r="1"/><circle cx="9" cy="17.5" r="1" stroke-dasharray="1 1"/></svg></div>
+      <div><div class="at" data-i18n="home_blank2_title">Leerer Rapport ohne BV, ohne Zeiten</div><div class="as" data-i18n="home_blank2_sub">Nur Mitarbeiter – BV-Nr./Adresse & Zeiten/Pause bleiben leer</div></div>
+      <div class="ar">›</div>
+    </button>
+  </div>
+</div>
+
 <div class="pg" id="pg-empty">
-  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="empty_rep_title">Leer-Rapport erstellen</div><div class="hs" data-i18n="empty_rep_sub">Datum · Baustelle · Mitarbeiter</div></div></div>
+  <div class="hdr"><button class="bck" onclick="bk('pg-rapporte')">‹</button><div><div class="ht" data-i18n="empty_rep_title">Leer-Rapport erstellen</div><div class="hs" data-i18n="empty_rep_sub">Datum · Baustelle · Mitarbeiter</div></div></div>
   <div class="sc"><div style="padding:16px">
     <div class="lbl" style="margin:0 0 6px" data-i18n="empty_rep_date">Datum</div>
     <input type="date" id="er-datum" style="margin-bottom:16px">
@@ -507,10 +529,16 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 </div>
 
 <div class="pg" id="pg-blank">
-  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="blank_rep_title">Leerer Rapport ohne BV</div><div class="hs" data-i18n="blank_rep_sub">Mitarbeiter, Zeit & Pause – wird nur als PDF erzeugt, nicht gespeichert</div></div></div>
+  <div class="hdr"><button class="bck" onclick="bk('pg-rapporte')">‹</button><div><div class="ht" id="brt" data-i18n="blank_rep_title">Leerer Rapport ohne BV</div><div class="hs" id="brs" data-i18n="blank_rep_sub">Mitarbeiter, Zeit & Pause – wird nur als PDF erzeugt, nicht gespeichert</div></div></div>
   <div class="sc"><div style="padding:16px">
     <div class="lbl" style="margin:0 0 6px" data-i18n="empty_rep_date">Datum</div>
     <input type="date" id="br-datum" style="margin-bottom:16px">
+
+    <div class="toggle-row" style="margin-bottom:6px">
+      <div class="lbl2" data-i18n="blank_rep_times_toggle">Zeiten & Pause eintragen</div>
+      <button class="tgl" id="br-times-tgl" onclick="toggleBrTimesMode()"></button>
+    </div>
+    <div style="font-size:12px;color:var(--s);margin-bottom:16px" data-i18n="blank_rep_times_hint">Wenn ausgeschaltet, bleiben Zeiten, Pause & Stundenzahl im PDF leer.</div>
 
     <div class="lbl" style="margin:0 0 8px" data-i18n="empty_rep_team">Mitarbeiter</div>
     <div class="crd" id="br-tml" style="margin-bottom:20px"></div>
@@ -521,7 +549,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 </div>
 
 <div class="pg" id="pg-uebersicht">
-  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="grp_uebersicht_title">Übersicht & Auswertung</div><div class="hs" data-i18n="grp_uebersicht_sub">Woche, Kalender, Einträge, Auswertung, Tagesbericht</div></div></div>
+  <div class="hdr"><button class="bck" onclick="bk('pg-home')">‹</button><div><div class="ht" data-i18n="grp_uebersicht_title">Übersicht & Auswertung</div><div class="hs" data-i18n="grp_uebersicht_sub">Woche, Kalender, Einträge, Auswertung</div></div></div>
   <div class="sc">
     <button class="ba" style="margin-top:10px" onclick="go('pg-woche')">
       <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 20V10M12 20V4M18 20v-6"/></svg></div>
@@ -547,11 +575,6 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       <div class="ar">›</div>
     </button>
 
-    <button class="ba" style="margin-bottom:16px" onclick="go('pg-rep-date')">
-      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></div>
-      <div><div class="at" data-i18n="report_link">Tagesbericht</div><div class="as" data-i18n="report_sub">Rapport-Daten zum Kopieren</div></div>
-      <div class="ar">›</div>
-    </button>
   </div>
 </div>
 
@@ -717,7 +740,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 
 <div class="pg" id="pg-rep-date">
   <div class="hdr">
-    <button class="bck" onclick="bk('pg-uebersicht')">‹</button>
+    <button class="bck" onclick="bk('pg-rapporte')">‹</button>
     <div>
         <div class="ht" data-i18n="report_title">Tagesbericht</div>
         <div class="hs" data-i18n="report_pick_date">Datum wählen</div>
@@ -1298,9 +1321,19 @@ const I18N = {
     lager_btn: "Lager (kein Bauvorhaben)",
     home_blank_title: "Leerer Rapport ohne BV",
     home_blank_sub: "Nur Mitarbeiter, Zeit & Pause – BV-Nr./Adresse bleiben leer, wird nicht gespeichert",
+    home_blank2_title: "Leerer Rapport ohne BV, ohne Zeiten",
+    home_blank2_sub: "Nur Mitarbeiter – BV-Nr./Adresse & Zeiten/Pause bleiben leer",
+    home_rapporte_title: "Rapporte",
+    home_rapporte_sub: "Tagesbericht, Leer-Rapport & Rapport ohne BV",
+    rapporte_title: "Rapporte",
+    rapporte_sub: "Alle Rapport-Funktionen an einem Ort",
+    rapporte_existing_title: "Rapport zu bestehenden Einträgen",
+    rapporte_existing_sub: "Für einen Tag & eine Baustelle mit erfassten Stunden",
     blank_rep_title: "Leerer Rapport ohne BV",
     blank_rep_sub: "Mitarbeiter, Zeit & Pause – wird nur als PDF erzeugt, nicht gespeichert",
     blank_rep_pdf: "PDF erstellen",
+    blank_rep_times_toggle: "Zeiten & Pause eintragen",
+    blank_rep_times_hint: "Wenn ausgeschaltet, bleiben Zeiten, Pause & Stundenzahl im PDF leer.",
     new_bv: "Neue Baustelle",
     bv_nr: "BV-Nr.",
     bv_nr_invalid: "Hinweis: Diese BV-Nummer entspricht nicht dem Schema (5-stellig, beginnt mit 64, 65 oder 66).",
@@ -4453,15 +4486,29 @@ function printEmptyRep(){
   openRapportPdf(repD, repBV.id);
 }
 
-// ═══ Leerer Rapport ohne BV (nur Mitarbeiter/Zeit/Pause, nichts wird gespeichert) ═══
+// ═══ Leerer Rapport ohne BV (nur Mitarbeiter, optional Zeit/Pause, nichts wird gespeichert) ═══
 let brTeamSel=new Set();     // ausgewählte Mitarbeiter
 let brTimes={};              // { maId: {beginn, ende, pause} }
-function openBlankRep(){
+let brTimesMode=true;        // true = Zeiten & Pause werden eingetragen, false = bleiben leer
+function openBlankRep(withTimes){
   document.getElementById("br-datum").value=td();
   brTeamSel=new Set();
   brTimes={};
+  brTimesMode = withTimes!==false;
+  rBrHeader();
   rBrTeam();
   go("pg-blank");
+}
+function rBrHeader(){
+  document.getElementById("br-times-tgl")?.classList.toggle("on", brTimesMode);
+  const t=document.getElementById("brt"), s=document.getElementById("brs");
+  if(t) t.textContent = brTimesMode ? tr("blank_rep_title") : tr("home_blank2_title");
+  if(s) s.textContent = brTimesMode ? tr("blank_rep_sub") : tr("home_blank2_sub");
+}
+function toggleBrTimesMode(){
+  brTimesMode=!brTimesMode;
+  rBrHeader();
+  rBrTeam();
 }
 function rBrTeam(){
   document.getElementById("br-tml").innerHTML=MA.map(m=>{
@@ -4472,7 +4519,7 @@ function rBrTeam(){
       <div class="tmcb ${on?"on":""}" onclick="toggleBrTeam('${m.id}')">${on?"✓":""}</div>
       <div class="av" style="background:${m.bg};color:${m.tc};width:36px;height:36px;font-size:12px">${m.k||"?"}</div>
       <div class="mn" style="font-size:14px;flex:1">${m.name}</div>
-      ${on?`
+      ${on&&brTimesMode?`
       <div style="width:100%;display:flex;gap:8px;margin:8px 0 4px 44px">
         <input type="time" value="${t.beginn}" onchange="brTimeChange('${m.id}','beginn',this.value)" style="flex:1;min-width:0">
         <input type="time" value="${t.ende}" onchange="brTimeChange('${m.id}','ende',this.value)" style="flex:1;min-width:0">
@@ -4496,6 +4543,10 @@ async function printBlankRep(){
   if(brTeamSel.size===0){ toast("Bitte mind. einen Mitarbeiter wählen"); return; }
 
   const rows=[...brTeamSel].map(id=>{
+    if(!brTimesMode){
+      // Zeiten/Pause/Stunden bewusst leer lassen
+      return { ma_id:id, beginn:"", ende:"", pause_min:null, stunden:"" };
+    }
     const t=brTimes[id]||{beginn:"",ende:"",pause:"0"};
     const beginn=t.beginn||"", ende=t.ende||"";
     const pauseMin=parseInt(t.pause,10)||0;
