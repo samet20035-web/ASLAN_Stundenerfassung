@@ -4162,7 +4162,7 @@ async function handleAddBV(nrId, nmId, blIdId, autoSelect) {
 function n2st(){
   if(!sBV)return;
   document.getElementById("stsub").textContent=`${fd(cD)} · BV ${sBV.nr}`;
-  teamSel = presentToday.size ? new Set(MA.filter(m=>presentToday.has(m.id)).map(m=>m.id)) : new Set(MA.filter(m=>!isMaLongAbsentOn(m,cD)).map(m=>m.id));
+  teamSel = new Set();
   sameTime=true;
   curPause=30;
   indivPause={};
@@ -4183,18 +4183,13 @@ function n2st(){
 
 function rTeam(){
   const active=MA.filter(m=>!isMaLongAbsentOn(m,cD));
-  const longAbsent=MA.filter(m=>isMaLongAbsentOn(m,cD));
   const rowHtml=m=>`
     <div class="tmr">
       <div class="tmcb ${teamSel.has(m.id)?"on":""}" onclick="toggleTeam('${m.id}')">${teamSel.has(m.id)?"✓":""}</div>
       <div class="av" style="background:${m.bg};color:${m.tc};width:36px;height:36px;font-size:12px">${m.k||"?"}</div>
       <div class="mn" style="font-size:14px">${m.name}</div>
     </div>`;
-  let html=active.map(rowHtml).join("");
-  if(longAbsent.length){
-    html+=`<div class="lbl" style="margin-top:14px">Bis auf weiteres abwesend</div>${longAbsent.map(rowHtml).join("")}`;
-  }
-  document.getElementById("tml").innerHTML=html;
+  document.getElementById("tml").innerHTML=active.map(rowHtml).join("");
 }
 function toggleTeam(id){
   if(teamSel.has(id)) teamSel.delete(id); else teamSel.add(id);
