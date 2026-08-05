@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -515,7 +514,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
   <div class="hdr"><button class="bck" onclick="bk('pg-rapporte')">‹</button><div><div class="ht" data-i18n="empty_rep_title">Leer-Rapport erstellen</div><div class="hs" data-i18n="empty_rep_sub">Datum · Baustelle · Mitarbeiter</div></div></div>
   <div class="sc"><div style="padding:16px">
     <div class="lbl" style="margin:0 0 6px" data-i18n="empty_rep_date">Datum</div>
-    <input type="date" id="er-datum" style="margin-bottom:16px">
+    <input type="date" id="er-datum" style="margin-bottom:16px" onchange="rErTeam()">
 
     <div class="lbl" style="margin:0 0 6px" data-i18n="empty_rep_bv">Baustelle</div>
     <select id="er-bv" onchange="erBvChanged()" style="margin-bottom:6px"></select>
@@ -533,7 +532,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
   <div class="hdr"><button class="bck" onclick="bk('pg-rapporte')">‹</button><div><div class="ht" id="brt" data-i18n="blank_rep_title">Leerer Rapport ohne BV</div><div class="hs" id="brs" data-i18n="blank_rep_sub">Mitarbeiter, Zeit & Pause – wird nur als PDF erzeugt, nicht gespeichert</div></div></div>
   <div class="sc"><div style="padding:16px">
     <div class="lbl" style="margin:0 0 6px" data-i18n="empty_rep_date">Datum</div>
-    <input type="date" id="br-datum" style="margin-bottom:16px">
+    <input type="date" id="br-datum" style="margin-bottom:16px" onchange="rBrTeam()">
 
     <div class="toggle-row" style="margin-bottom:6px">
       <div class="lbl2" data-i18n="blank_rep_times_toggle">Zeiten & Pause eintragen</div>
@@ -642,7 +641,11 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
   <div class="sc">
     <div class="nbv" style="margin-top:12px">
       <div style="font-size:13px;font-weight:700;color:var(--gd);text-transform:uppercase;letter-spacing:.06em" data-i18n="new_ma">Neuer Mitarbeiter</div>
-      <div class="nbvr" style="margin-top:8px"><input type="text" id="nm-n" data-i18n-ph="full_name" placeholder="Vollständiger Name" style="flex:1"><button class="addb" onclick="addMA()">＋</button></div>
+      <div class="nbvr" style="margin-top:8px">
+        <input type="text" id="nm-n" data-i18n-ph="full_name" placeholder="Vollständiger Name" style="flex:1">
+        <input type="date" id="nm-entry-date" title="Eintrittsdatum" style="flex:0.8;font-size:13px">
+        <button class="addb" onclick="addMA()">＋</button>
+      </div>
     </div>
     <div class="lbl" data-i18n="ma_list">Mitarbeiterliste</div>
     <div class="crd" id="maml" style="margin-bottom:16px"></div>
@@ -1148,6 +1151,22 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     <div id="maea-longabs-since-wrap" style="display:none;margin-bottom:14px">
       <div class="lbl" style="margin:0 0 6px" data-i18n="ma_long_absent_since">Freigestellt ab wann</div>
       <input type="date" id="maea-longabs-since">
+    </div>
+    <div style="margin-bottom:14px">
+      <div class="lbl" style="margin:0 0 6px" data-i18n="ma_entry_date">Eintrittsdatum</div>
+      <input type="date" id="ma-entry-date">
+    </div>
+    <div style="display:flex;align-items:center;gap:11px;padding:11px 0;margin-bottom:6px;border-top:.5px solid var(--b);border-bottom:.5px solid var(--b)">
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:600" data-i18n="ma_dismissed">Mitarbeiter entlassen</div>
+        <div style="font-size:12px;color:var(--s);margin-top:2px" data-i18n="ma_dismissed_hint">Entlassungsdatum eintragen</div>
+      </div>
+      <button class="tgl" id="ma-dismiss-tgl" onclick="toggleMaDismissed()"></button>
+    </div>
+    <div id="ma-dismiss-wrap" style="display:none;margin-bottom:14px">
+      <div class="lbl" style="margin:0 0 6px" data-i18n="ma_exit_date">Entlassungsdatum</div>
+      <input type="date" id="ma-exit-date">
+      <button class="btn" onclick="reemployMA()" style="margin-top:8px" data-i18n="ma_reemploy">Wiedereinstellen</button>
     </div>
     <button class="btn" onclick="svma()" data-i18n="save_changes">Speichern</button>
     <button class="btd" onclick="cDM()" data-i18n="delete_ma">Mitarbeiter löschen</button>
@@ -1697,6 +1716,12 @@ const I18N = {
     abw_single_title: "Einzelne Abwesenheit (Tag)",
     abw_reason_ph: "Grund (optional)",
     abw_add_btn: "Abwesenheit hinzufügen",
+    ma_entry_date: "Eintrittsdatum",
+    ma_dismissed: "Mitarbeiter entlassen",
+    ma_dismissed_hint: "Entlassungsdatum eintragen",
+    ma_exit_date: "Entlassungsdatum",
+    ma_reemploy: "Wiedereinstellen",
+    ma_reemployed: "Mitarbeiter wiedereingestellt",
     abw_list_title: "Erfasste Abwesenheiten",
     abw_leave_title: "Urlaub / Feiertag (Zeitraum)",
     abw_whole_company: "Ganze Firma",
@@ -1759,6 +1784,18 @@ const I18N = {
     home_export_sub: "Seith_Stunden + şantiye adresleri",
     home_push_title: "18:00 hatırlatma",
     home_push_sub: "Saat eksikse her gün",
+    home_rapporte_title: "Raporlar",
+    home_rapporte_sub: "Günlük rapor, boş rapor & BV olmayan rapor",
+    rapporte_title: "Raporlar",
+    rapporte_sub: "Tüm rapor işlevleri bir yerde",
+    rapporte_existing_title: "Mevcut kayıtlar için rapor",
+    rapporte_existing_sub: "Kaydedilmiş saatleri olan bir gün & şantiye için",
+    home_empty_title: "Boş rapor oluştur",
+    home_empty_sub: "Tarih, Şantiye Şefi, Çalışan – saatler boş kalır",
+    home_blank_title: "BV olmayan boş rapor",
+    home_blank_sub: "Yalnızca Çalışan, Zaman & Mola – BV-No./Adres boş kalır, kaydedilmez",
+    home_blank2_title: "BV olmayan boş rapor, zamansız",
+    home_blank2_sub: "Yalnızca Çalışan – BV-No./Adres & Zaman/Mola boş kalır",
     missing_info: "Eksik Bilgiler",
 
     stat_today: "Bugün s",
@@ -2054,8 +2091,6 @@ const I18N = {
     editor_dash_invnext: "Sonraki vadeyi göster",
     editor_dash_deadlines: "Vade listesini göster (toplu faturalar)",
 
-    home_empty_title: "Boş rapor oluştur",
-    home_empty_sub: "Tarih, şantiye şefi, çalışan – saatler boş kalır",
     empty_rep_title: "Boş rapor oluştur",
     empty_rep_sub: "Tarih · Şantiye · Çalışan",
     empty_rep_date: "Tarih",
@@ -2117,6 +2152,12 @@ const I18N = {
     ma_long_absent: "İkinci bir emre kadar devamsız",
     ma_long_absent_hint: "Saat girişinde en altta görünür, otomatik seçilmez",
     ma_long_absent_since: "Ne zamandan itibaren",
+    ma_entry_date: "İşe giriş tarihi",
+    ma_dismissed: "Çalışan işten çıkarıldı",
+    ma_dismissed_hint: "İşten çıkış tarihini girin",
+    ma_exit_date: "İşten çıkış tarihi",
+    ma_reemploy: "Yeniden işe al",
+    ma_reemployed: "Çalışan yeniden işe alındı",
     rg_import_summary: "{added} yeni fatura, {updated} güncellendi, {abr} faturalama satırı aktarıldı",
     rg_import_summary_skipped: ", {skipped} atlandı",
     rg_manual_missing: "Lütfen tarih ve firma girin",
@@ -3449,8 +3490,21 @@ function misscalNav(dir){
   misscalMonth=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
   rMissCal();
 }
+// Zentrale Prüfung: ist ein Mitarbeiter an diesem Datum grundsätzlich "beschäftigt"
+// (eingetreten und noch nicht entlassen)? Wird von allen Filterfunktionen genutzt.
+function isMaEmployedOn(m, ds){
+  if(m.entry_date && m.entry_date > ds) return false; // Noch nicht eingetreten
+  if(m.exit_date && m.exit_date <= ds) return false;  // Bereits entlassen
+  return true;
+}
 function missActiveMaForDay(ds){
-  return MA.filter(m=>!m.archived && !isMaLongAbsentOn(m,ds) && !isMaAbsentOn(m.id,ds));
+  return MA.filter(m=>{
+    if(m.archived) return false;
+    if(!isMaEmployedOn(m,ds)) return false;
+    if(isMaLongAbsentOn(m,ds)) return false;
+    if(isMaAbsentOn(m.id,ds)) return false;
+    return true;
+  });
 }
 function missGroupsUnconfirmed(ds){
   const bvIds=new Set(EN.filter(e=>e.datum===ds).map(e=>e.bv_id));
@@ -3714,7 +3768,7 @@ function rwarn(){
 function gofill(dt){
   document.getElementById("inp-d").value=dt;
   cD=dt;
-  presentToday=new Set(MA.filter(m=>!m.archived && !isMaLongAbsentOn(m,dt)).map(m=>m.id));
+  presentToday=new Set(MA.filter(m=>!m.archived && isMaEmployedOn(m,dt) && !isMaLongAbsentOn(m,dt)).map(m=>m.id));
   sBV=null;
   document.getElementById("bvnx").disabled=true;
   document.getElementById("nb-nr").value="";
@@ -4046,7 +4100,7 @@ async function n2bv(){
   if(!d){alert(tr("pick_date_first"));return;}
   cD=d;
   // Anwesenheit: standardmäßig ist jeder da, außer im Editor (Abwesenheiten & Urlaub) ist für diesen Tag etwas anderes hinterlegt
-  presentToday=new Set(MA.filter(m=>!m.archived && !isMaLongAbsentOn(m,d) && !isMaAbsentOn(m.id,d)).map(m=>m.id));
+  presentToday=new Set(MA.filter(m=>!m.archived && isMaEmployedOn(m,d) && !isMaLongAbsentOn(m,d) && !isMaAbsentOn(m.id,d)).map(m=>m.id));
   document.getElementById("bvsub").textContent=fd(d);
   sBV=null;
   document.getElementById("bvnx").disabled=true;
@@ -4181,7 +4235,7 @@ function n2st(){
 }
 
 function rTeam(){
-  const active=MA.filter(m=>!isMaLongAbsentOn(m,cD));
+  const active=MA.filter(m=>!m.archived && isMaEmployedOn(m,cD) && !isMaLongAbsentOn(m,cD));
   const rowHtml=m=>`
     <div class="tmr">
       <div class="tmcb ${teamSel.has(m.id)?"on":""}" onclick="toggleTeam('${m.id}')">${teamSel.has(m.id)?"✓":""}</div>
@@ -4453,7 +4507,9 @@ function erBvChanged(){
   document.getElementById("er-bl-info").textContent="Bauleiter: "+(bl?bl.name:"—");
 }
 function rErTeam(){
-  document.getElementById("er-tml").innerHTML=MA.map(m=>`
+  const ds=document.getElementById("er-datum").value||td();
+  const active=MA.filter(m=>!m.archived && isMaEmployedOn(m,ds));
+  document.getElementById("er-tml").innerHTML=active.map(m=>`
     <div class="tmr">
       <div class="tmcb ${erTeamSel.has(m.id)?"on":""}" onclick="toggleErTeam('${m.id}')">${erTeamSel.has(m.id)?"✓":""}</div>
       <div class="av" style="background:${m.bg};color:${m.tc};width:36px;height:36px;font-size:12px">${m.k||"?"}</div>
@@ -4505,7 +4561,9 @@ function toggleBrTimesMode(){
   rBrTeam();
 }
 function rBrTeam(){
-  document.getElementById("br-tml").innerHTML=MA.map(m=>{
+  const ds=document.getElementById("br-datum").value||td();
+  const active=MA.filter(m=>!m.archived && isMaEmployedOn(m,ds));
+  document.getElementById("br-tml").innerHTML=active.map(m=>{
     const on=brTeamSel.has(m.id);
     const t=brTimes[m.id]||{beginn:"07:00",ende:"16:00",pause:"30"};
     return `
@@ -5173,10 +5231,13 @@ async function svbv(){
 
 // ═══ MA MANAGE ═══
 function rmam(){
-  document.getElementById("maml").innerHTML=MA.map((m,i)=>`
-    <div class="mmr"><div class="av" style="background:${m.bg};color:${m.tc};width:42px;height:42px">${m.k||"?"}</div>
-    <div style="flex:1"><div style="font-size:16px;font-weight:600">${m.name}</div><div style="font-size:12px;color:var(--s)">Kürzel: ${m.k||"—"}${m.long_absent?` · <span style="color:var(--warn-txt)">bis auf weiteres abwesend${m.long_absent_since?` (ab ${fd(m.long_absent_since)})`:""}</span>`:""}</div></div>
-    <button class="eb" onclick="opma(${i})">${ICON_EDIT}</button></div>`).join("");
+  document.getElementById("maml").innerHTML=MA.map((m,i)=>{
+    const statusText=m.exit_date?`<span style="color:var(--warn-txt)">❌ Entlassen: ${fd(m.exit_date)}</span>`:(m.long_absent?`<span style="color:var(--warn-txt)">bis auf weiteres abwesend${m.long_absent_since?` (ab ${fd(m.long_absent_since)})`:""}</span>`:"");
+    return `
+    <div class="mmr"><div class="av" style="background:${m.bg};color:${m.tc};width:42px;height:42px;opacity:${m.exit_date?0.5:1}">${m.k||"?"}</div>
+    <div style="flex:1;opacity:${m.exit_date?0.6:1}"><div style="font-size:16px;font-weight:600">${m.name}</div><div style="font-size:12px;color:var(--s)">Kürzel: ${m.k||"—"} · ab ${fd(m.entry_date||"1900-01-01")}${statusText?` · ${statusText}`:""}</div></div>
+    <button class="eb" onclick="opma(${i})">${ICON_EDIT}</button></div>`;
+  }).join("");
 }
 
 function opma(i){
@@ -5186,9 +5247,13 @@ function opma(i){
   document.getElementById("man").value=m.name||"";
   document.getElementById("mak").value=m.k||"";
   document.getElementById("mar").value=maRate(m.id);
+  document.getElementById("ma-entry-date").value=m.entry_date||td();
   document.getElementById("maea-longabs-tgl").classList.toggle("on",!!m.long_absent);
   document.getElementById("maea-longabs-since").value=m.long_absent_since||"";
   document.getElementById("maea-longabs-since-wrap").style.display=m.long_absent?"block":"none";
+  document.getElementById("ma-dismiss-tgl").classList.toggle("on",!!m.exit_date);
+  document.getElementById("ma-exit-date").value=m.exit_date||"";
+  document.getElementById("ma-dismiss-wrap").style.display=m.exit_date?"block":"none";
   selC=-1;
   document.getElementById("cpick").innerHTML=CLRS.map((c,ci)=>`
     <div class="cpc ${m.bg===c.bg?"sel":""}" id="cp${ci}" onclick="pkc(${ci})" style="background:${c.bg}">
@@ -5206,6 +5271,19 @@ function toggleMaLongAbsent(){
     document.getElementById("maea-longabs-since").value=td();
   }
 }
+function toggleMaDismissed(){
+  const on=document.getElementById("ma-dismiss-tgl").classList.toggle("on");
+  document.getElementById("ma-dismiss-wrap").style.display=on?"block":"none";
+  if(on && !document.getElementById("ma-exit-date").value){
+    document.getElementById("ma-exit-date").value=td();
+  }
+}
+async function reemployMA(){
+  document.getElementById("ma-dismiss-tgl").classList.remove("on");
+  document.getElementById("ma-dismiss-wrap").style.display="none";
+  document.getElementById("ma-exit-date").value="";
+  toast(tr("ma_reemployed"));
+}
 
 async function svma(){
   if(eMA<0)return;
@@ -5216,8 +5294,11 @@ async function svma(){
   const c=selC>=0?CLRS[selC]:{bg:m.bg,tc:m.tc};
   const long_absent=document.getElementById("maea-longabs-tgl").classList.contains("on");
   const long_absent_since=long_absent ? (document.getElementById("maea-longabs-since").value||td()) : null;
+  const entry_date=document.getElementById("ma-entry-date").value||td();
+  const is_dismissed=document.getElementById("ma-dismiss-tgl").classList.contains("on");
+  const exit_date=is_dismissed ? (document.getElementById("ma-exit-date").value||td()) : null;
 
-  await sbUpd("ma",m.id,{name,k,bg:c.bg,tc:c.tc,sort_order:eMA,long_absent,long_absent_since});
+  await sbUpd("ma",m.id,{name,k,bg:c.bg,tc:c.tc,sort_order:eMA,long_absent,long_absent_since,entry_date,exit_date});
   maRateSet(m.id, document.getElementById("mar").value.trim());
   await syncDown();
   cls("ov-ma");
@@ -5227,12 +5308,14 @@ async function svma(){
 
 async function addMA(){
   const name=document.getElementById("nm-n").value.trim();
+  const entry_date=document.getElementById("nm-entry-date").value||td();
   if(!name){alert(tr("name_required"));return;}
   const k=name.split(" ").map(w=>w[0]||"").join("").toUpperCase().slice(0,2)||"XX";
   const c=CLRS[MA.length%CLRS.length];
-  await sbIns("ma",[{name,k,bg:c.bg,tc:c.tc,sort_order:MA.length}]);
+  await sbIns("ma",[{name,k,bg:c.bg,tc:c.tc,sort_order:MA.length,entry_date,exit_date:null}]);
   await syncDown();
   document.getElementById("nm-n").value="";
+  document.getElementById("nm-entry-date").value="";
   rmam();
   toast(`${name}`);
 }
@@ -5598,11 +5681,13 @@ function rRepViewFromEntries(entries){
 // Mitarbeiter-Auswahl für einen Rapport ohne bestehende Stundeneinträge (z.B. Zukunft)
 function rRepFutureSelect(){
   rRepSetTitle();
+  // Nur aktive Mitarbeiter für das Datum anzeigen
+  const activeMa=missActiveMaForDay(repD);
   const html=rRepHeaderHtml()+`
     <div class="repsec">
       <div class="repsec-h">${tr("report_future_pick_ma")}</div>
       <div class="crd" id="repfuturemal">
-        ${MA.map(m=>`
+        ${activeMa.map(m=>`
         <div class="tmr">
           <div class="tmcb ${repFutureMaSel.has(m.id)?"on":""}" onclick="toggleRepFutureMa('${m.id}')">${repFutureMaSel.has(m.id)?"✓":""}</div>
           <div class="av" style="background:${m.bg};color:${m.tc};width:36px;height:36px;font-size:12px">${m.k||"?"}</div>
