@@ -575,6 +575,12 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       <div class="ar">›</div>
     </button>
 
+	<button class="ba" onclick="go('pg-stundenrpt')">
+ 	 <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 9 6v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21V12h6v9"/><path d="M12 3v9"/></svg></div>
+ 	 <div><div class="at" data-i18n="stdreport_title">Stundenübersicht (Zeitraum)</div><div class="as" data-i18n="stdreport_sub">Rapport mit Datum-Bereich, als PDF exportieren</div></div>
+ 	 <div class="ar">›</div>
+	</button>	  
+	  
   </div>
 </div>
 
@@ -1200,6 +1206,180 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 </div>
 
 <script>
+
+// Stundenübersicht: Initialisierung
+function initStdReport() {
+  const now = new Date();
+  document.getElementById('stdr-von').valueAsDate = now;
+  document.getElementById('stdr-bis').valueAsDate = now;
+  
+  // Baustellen-Dropdown füllen
+  const bvSelect = document.getElementById('stdr-bv-filter');
+  const bvs = db.getBVList?.() || [];
+  bvs.forEach(bv => {
+    const opt = document.createElement('option');
+    opt.value = bv.nr;
+    opt.textContent = `${bv.nr} - ${bv.addr}`;
+    bvSelect.appendChild(opt);
+  });
+  
+  updateStdPreview();
+}
+
+// Daten filtern und Vorschau aktualisieren
+function updateStdPreview() {
+  const vonStr = document.getElementById('stdr-von').value;
+  const bisStr = document.getElementById('stdr-bis').value;
+  const bvFilter = document.getElementById('stdr-bv-filter').value;
+  
+  if (!vonStr || !bisStr) {
+    document.getElementById('stdr-tbody').innerHTML = 
+      '<tr><td colspan="5" style="text-align:center;color:var(--s);padding:20px">Bitte wählen Sie Von- und Bis-Datum</td></tr>';
+    return;
+  }
+  
+  const von = new Date(vonStr);
+  const bis = new Date(bisStr);
+  
+  if (von > bis) {
+    document.getElementById('stdr-tbody').innerHTML = 
+      '<tr><td colspan="5" style="text-align:center;color:var(--s);padding:20px">Von-Datum liegt nach Bis-Datum</td></tr>';
+    return;
+  }
+  
+  // Daten aus lokalem Storage laden
+  const allData = db.getStunden?.() || [];
+  
+  // Filtern nach Zeitraum
+  const filtered = allData.filter(entry => {
+    const entryDate = new Date(entry.datum);
+    const inRange = entryDate >= von && entryDate <= bis;
+    const bvMatch = !bvFilter || entry.bv === bvFilter;
+    return inRange && bvMatch;
+  });
+  
+  // Nach Datum sortieren
+  filtered.sort((a, b) => new Date(a.datum) - new Date(b.datum));
+  
+  // Tabelle rendern
+  const tbody = document.getElementById('stdr-tbody');
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--s);padding:20px">Keine Einträge gefunden</td></tr>';
+    document.getElementById('stdr-count').textContent = '0';
+    document.getElementById('stdr-sum').textContent = '0.00';
+    document.getElementById('stdr-days').textContent = '0';
+    return;
+  }
+  
+  // Eindeutige Tage zählen
+  const uniqueDays = new Set(filtered.map(e => e.datum)).size;
+  
+  // Summen berechnen
+  let totalHours = 0;
+  let html = '';
+  
+  filtered.forEach((entry, idx) => {
+    const hours = parseFloat(entry.stunden) || 0;
+    totalHours += hours;
+    const total = (hours * (entry.satz || 35)).toFixed(2);
+    
+    html += `<tr>
+      <td>${new Date(entry.datum).toLocaleDateString('de-DE')}</td>
+      <td>${entry.bv}</td>
+      <td>${entry.ma}</td>
+      <td style="text-align:right">${hours.toFixed(2)}</td>
+      <td style="text-align:right">${total} €</td>
+    </tr>`;
+  });
+  
+  tbody.innerHTML = html;
+  document.getElementById('stdr-count').textContent = filtered.length;
+  document.getElementById('stdr-sum').textContent = totalHours.toFixed(2);
+  document.getElementById('stdr-days').textContent = uniqueDays;
+}
+
+// Quick-Date Setzer
+function stdrQuickDates(mode) {
+  const today = new Date();
+  const von = document.getElementById('stdr-von');
+  const bis = document.getElementById('stdr-bis');
+  
+  switch(mode) {
+    case 'today':
+      von.valueAsDate = today;
+      bis.valueAsDate = today;
+      break;
+    case 'thisweek':
+      const firstDay = new Date(today);
+      firstDay.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1));
+      von.valueAsDate = firstDay;
+      bis.valueAsDate = today;
+      break;
+    case 'thismonth':
+      const firstMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      von.valueAsDate = firstMonth;
+      bis.valueAsDate = today;
+      break;
+  }
+  
+  updateStdPreview();
+}
+
+// PDF-Generierung mit Word-Vorlage
+async function generateStdReportPDF() {
+  const vonStr = document.getElementById('stdr-von').value;
+  const bisStr = document.getElementById('stdr-bis').value;
+  const status = document.querySelector('input[name="stdr-status"]:checked').value;
+  
+  if (!vonStr || !bisStr) {
+    alert('Bitte wählen Sie Von- und Bis-Datum');
+    return;
+  }
+  
+  const statusEl = document.getElementById('stdr-status');
+  statusEl.textContent = 'PDF wird generiert...';
+  
+  try {
+    // VBA-Funktion aufrufen (Excel/VBA Integration)
+    // Falls Web-basiert: Hier PDF mit Drittanbieter-Lib generieren
+    
+    const von = new Date(vonStr);
+    const bis = new Date(bisStr);
+    const allData = db.getStunden?.() || [];
+    
+    const filtered = allData.filter(entry => {
+      const entryDate = new Date(entry.datum);
+      const inRange = entryDate >= von && entryDate <= bis;
+      return inRange;
+    });
+    
+    // Dateiname mit Status
+    const dateStr = `${vonStr}_${bisStr}`;
+    const statusSuffix = status === 'entwurf' ? '_ENTWURF' : '';
+    const fileName = `Stundenrapport_${dateStr}${statusSuffix}.pdf`;
+    
+    // Hinweis: In echter Integration würde hier Word-VBA aufgerufen
+    // oder ein PDF-Report mit Drittanbieter-Library erstellt
+    
+    statusEl.textContent = `✓ PDF "${fileName}" wurde erstellt (Simulation)`;
+    statusEl.style.color = 'var(--success, #2d7a3a)';
+    
+    // Hier könnte Download-Link generiert werden
+    // downloadFile(pdfBlob, fileName);
+    
+  } catch(err) {
+    statusEl.textContent = `✗ Fehler: ${err.message}`;
+    statusEl.style.color = 'var(--danger-txt)';
+  }
+}
+
+// Seite initialisieren wenn angezeigt
+document.addEventListener('pageShow', function(e) {
+  if (e.detail?.pageId === 'pg-stundenrpt') {
+    initStdReport();
+  }
+});
+
 // Hilfsfunktion: 0.5 -> 0,5
 const formatVal = (val) => {
     if (val === null || val === undefined) return "";
@@ -5874,6 +6054,110 @@ function bxls(data,von,bis){
 document.addEventListener("DOMContentLoaded", () => {
   applyTranslations();
 });
+
+<div class="pg" id="pg-stundenrpt">
+  <div class="hdr">
+    <button class="bck" onclick="bk('pg-uebersicht')">‹</button>
+    <div>
+      <div class="ht" data-i18n="stdreport_title">Stundenübersicht (Zeitraum)</div>
+      <div class="hs" data-i18n="stdreport_sub">Wählen Sie Zeitraum und Status</div>
+    </div>
+  </div>
+
+  <div class="sc">
+    <div style="padding:16px">
+      
+      <!-- ZEITRAUM-AUSWAHL -->
+      <div class="nbv" style="margin-bottom:20px">
+        <div style="font-size:13px;font-weight:700;color:var(--gd);text-transform:uppercase;letter-spacing:.06em" data-i18n="stdreport_timerange">Zeitraum</div>
+        <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+          <div style="flex:1">
+            <div class="lbl" style="margin-bottom:4px;font-size:12px" data-i18n="stdreport_from">Von</div>
+            <input type="date" id="stdr-von" onchange="updateStdPreview()" style="width:100%">
+          </div>
+          <span style="color:var(--s);margin-top:12px">–</span>
+          <div style="flex:1">
+            <div class="lbl" style="margin-bottom:4px;font-size:12px" data-i18n="stdreport_to">Bis</div>
+            <input type="date" id="stdr-bis" onchange="updateStdPreview()" style="width:100%">
+          </div>
+        </div>
+      </div>
+
+      <!-- STATUS-AUSWAHL -->
+      <div class="nbv" style="margin-bottom:20px">
+        <div style="font-size:13px;font-weight:700;color:var(--gd);text-transform:uppercase;letter-spacing:.06em" data-i18n="stdreport_status">Dokument-Status</div>
+        <div style="margin-top:8px;display:flex;gap:8px">
+          <label style="flex:1;display:flex;align-items:center;gap:8px;cursor:pointer;border:.5px solid var(--bs);border-radius:var(--rs);padding:10px;transition:background .2s">
+            <input type="radio" name="stdr-status" value="entwurf" checked onchange="updateStdPreview()" style="cursor:pointer">
+            <span style="font-size:13px" data-i18n="stdreport_draft">Entwurf</span>
+          </label>
+          <label style="flex:1;display:flex;align-items:center;gap:8px;cursor:pointer;border:.5px solid var(--bs);border-radius:var(--rs);padding:10px;transition:background .2s">
+            <input type="radio" name="stdr-status" value="vollstaendig" onchange="updateStdPreview()" style="cursor:pointer">
+            <span style="font-size:13px" data-i18n="stdreport_complete">Vollständig</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- BAUSTELLE-AUSWAHL (Optional) -->
+      <div class="nbv" style="margin-bottom:20px">
+        <div style="font-size:13px;font-weight:700;color:var(--gd);text-transform:uppercase;letter-spacing:.06em" data-i18n="stdreport_bv_filter">Baustelle (Optional)</div>
+        <select id="stdr-bv-filter" onchange="updateStdPreview()" style="margin-top:8px;width:100%">
+          <option value="">— Alle Baustellen —</option>
+        </select>
+      </div>
+
+      <!-- VORSCHAU: Tabellarische Übersicht -->
+      <div class="lbl" data-i18n="stdreport_preview" style="margin-bottom:8px">Vorschau</div>
+      <div style="max-height:400px;overflow-y:auto;border:.5px solid var(--b);border-radius:var(--rs);margin-bottom:16px;background:var(--bg)">
+        <table class="wt" id="stdr-table">
+          <thead>
+            <tr>
+              <th style="width:20%" data-i18n="stdreport_col_date">Datum</th>
+              <th style="width:20%" data-i18n="stdreport_col_bv">BV</th>
+              <th style="width:30%" data-i18n="stdreport_col_ma">Mitarbeiter</th>
+              <th style="width:15%;text-align:right" data-i18n="stdreport_col_hours">Stunden</th>
+              <th style="width:15%;text-align:right" data-i18n="stdreport_col_total">Gesamt</th>
+            </tr>
+          </thead>
+          <tbody id="stdr-tbody">
+            <tr><td colspan="5" style="text-align:center;color:var(--s);padding:20px" data-i18n="stdreport_no_data">Keine Daten für diesen Zeitraum</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- SUMMEN-ZEILE -->
+      <div style="display:flex;gap:16px;margin-bottom:20px;padding:12px;background:var(--gl);border-radius:var(--rs)">
+        <div style="flex:1">
+          <div style="font-size:12px;color:var(--s)" data-i18n="stdreport_sum_entries">Einträge:</div>
+          <div style="font-size:18px;font-weight:700" id="stdr-count">0</div>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:12px;color:var(--s)" data-i18n="stdreport_sum_hours">Gesamt Stunden:</div>
+          <div style="font-size:18px;font-weight:700" id="stdr-sum">0.00</div>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:12px;color:var(--s)" data-i18n="stdreport_sum_days">Tage:</div>
+          <div style="font-size:18px;font-weight:700" id="stdr-days">0</div>
+        </div>
+      </div>
+
+      <!-- BUTTONS -->
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <button class="btn" id="stdr-pdf-btn" onclick="generateStdReportPDF()" style="flex:1" data-i18n="stdreport_pdf_btn">Als PDF erstellen</button>
+        <button class="btn" style="flex:1;background:var(--bs);color:var(--t)" onclick="stdrQuickDates('today')" data-i18n="stdreport_quick_today">Heute</button>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:24px">
+        <button class="btn" style="flex:1;background:var(--bs);color:var(--t)" onclick="stdrQuickDates('thisweek')" data-i18n="stdreport_quick_week">Diese Woche</button>
+        <button class="btn" style="flex:1;background:var(--bs);color:var(--t)" onclick="stdrQuickDates('thismonth')" data-i18n="stdreport_quick_month">Dieser Monat</button>
+      </div>
+
+      <!-- STATUS-MELDUNG -->
+      <div id="stdr-status" style="font-size:12px;color:var(--s);text-align:center;min-height:20px"></div>
+
+    </div>
+  </div>
+</div>
 </script>
 </body>
 </html>
