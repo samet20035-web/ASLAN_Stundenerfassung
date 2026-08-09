@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -332,6 +331,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       <div class="stc" id="dc-invnext"><div class="stn" id="s-rf">–</div><div class="stl" data-i18n="dash_inv_next">Nächste Frist</div></div>
       <div class="stc" id="dc-unbilled" style="background:var(--tile-blue-bg);border-color:var(--tile-blue-border)"><div class="stn money" id="s-ub" style="color:var(--tile-blue-txt)">0 €</div><div class="stl" data-i18n="dash_inv_unbilled">Noch nicht abgerechnet</div></div>
       <div class="stc" id="dc-unbilled-h" style="background:var(--tile-dark-bg);border-color:var(--tile-dark-border)"><div class="stn" id="s-ubh2" style="color:#fff">0 h</div><div class="stl" style="color:var(--tile-dark-txt)" data-i18n="dash_open_hours">Offene Stunden</div></div>
+      <div class="stc" id="dc-peters" style="display:none;background:var(--tile-blue-bg);border-color:var(--tile-blue-border)"><div class="stn money" id="s-peters" style="color:var(--tile-blue-txt)">0</div><div class="stl">Bei Frau Peters zur Prüfung</div></div>
     </div>
 
     <div id="dc-deadlines" style="padding:0 16px;margin-top:14px">
@@ -944,6 +944,16 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
           <div class="lbl2" data-i18n="editor_dash_unbilled">Noch nicht abgerechneten Umsatz anzeigen</div>
           <button class="tgl" id="dtgl-unbilled" onclick="toggleDashStat('unbilled','dtgl-unbilled')"></button>
         </div>
+      </div>
+    </div>
+
+    <div class="lbl">Manueller Wert (Startseite)</div>
+    <div class="crd" style="margin-bottom:16px">
+      <div style="padding:14px 16px">
+        <div style="font-size:11px;color:var(--s);opacity:.8;margin-bottom:10px">Wird als Kachel "Bei Frau Peters zur Prüfung" auf der Startseite angezeigt (z. B. Gesamtsumme, die zur Kontrolle an Frau Peters geschickt wurde). Leer lassen bzw. zurücksetzen, um die Kachel wieder auszublenden.</div>
+        <input type="text" id="peters-val" placeholder="z.B. 15.902 €" style="margin-bottom:10px">
+        <button class="btn" onclick="savePetersVal()">Speichern</button>
+        <button class="bto" onclick="clearPetersVal()">Zurücksetzen (Kachel ausblenden)</button>
       </div>
     </div>
 
@@ -4690,6 +4700,32 @@ function ustats(){
   document.getElementById("s-w").textContent=hW;
   document.getElementById("s-e").textContent=EN.length;
   rgDashStats();
+  renderPetersCard();
+}
+
+// ═══ MANUELLER WERT "Bei Frau Peters zur Prüfung" (Startseite) ═══
+function getPetersVal(){ return lsGet("petersVal",""); }
+function setPetersVal(v){ lsSet("petersVal",v); renderPetersCard(); }
+function renderPetersCard(){
+  const v=(getPetersVal()||"").trim();
+  const el=document.getElementById("dc-peters");
+  if(!el)return;
+  if(v){
+    el.style.display="";
+    document.getElementById("s-peters").textContent=v;
+  }else{
+    el.style.display="none";
+  }
+}
+function savePetersVal(){
+  const v=document.getElementById("peters-val").value.trim();
+  setPetersVal(v);
+  toast(v?"Gespeichert":"Kachel ausgeblendet");
+}
+function clearPetersVal(){
+  document.getElementById("peters-val").value="";
+  setPetersVal("");
+  toast("Zurückgesetzt");
 }
 
 // ═══ DASHBOARD-STATISTIKEN RECHNUNGEN ═══
@@ -5478,6 +5514,8 @@ function initDashTogglesUI(){
     document.getElementById(id)?.classList.toggle("on", t[k]!==false);
   });
   applyRgManualVisibility();
+  const pv=document.getElementById("peters-val");
+  if(pv) pv.value=getPetersVal();
 }
 function rgManualHiddenGet(){ return lsGet("rg_hide_manual", false); }
 function toggleRgManualHidden(){
