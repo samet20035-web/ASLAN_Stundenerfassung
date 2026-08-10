@@ -18,6 +18,7 @@
   --wa-last-bg:#fbe4e0;--wa-last-txt:#c0392b;
   --wa-old-bg:#f6d1cb;--wa-old-txt:#8b1a12;
   --tile-blue-bg:#eaf2ff;--tile-blue-border:#bcd6ff;--tile-blue-txt:#2f6fed;
+  --tile-purple-bg:#f2eaff;--tile-purple-border:#d3bcff;--tile-purple-txt:#7a3fed;
   --tile-dark-bg:#0f2a5c;--tile-dark-border:#0f2a5c;--tile-dark-txt:#cfe0ff;
   --heat1:#cfe3da;--heat1-txt:#134d39;
   --heat2:#9cc3b1;--heat2-txt:#0e352a;
@@ -30,6 +31,7 @@
   --wa-last-bg:#3a1512;--wa-last-txt:#e2685c;
   --wa-old-bg:#4a1310;--wa-old-txt:#ff6b5b;
   --tile-blue-bg:#12213d;--tile-blue-border:#2c4a7a;--tile-blue-txt:#7fb0ff;
+  --tile-purple-bg:#241a3d;--tile-purple-border:#4a2c7a;--tile-purple-txt:#c19bff;
   --tile-dark-bg:#0a1c3d;--tile-dark-border:#0a1c3d;--tile-dark-txt:#bcd6ff;
   --heat1:#173327;--heat1-txt:#bfe3cf;
   --heat2:#1f5440;--heat2-txt:#dff2e8;
@@ -331,7 +333,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       <div class="stc" id="dc-invnext"><div class="stn" id="s-rf">–</div><div class="stl" data-i18n="dash_inv_next">Nächste Frist</div></div>
       <div class="stc" id="dc-unbilled" style="background:var(--tile-blue-bg);border-color:var(--tile-blue-border)"><div class="stn money" id="s-ub" style="color:var(--tile-blue-txt)">0 €</div><div class="stl" data-i18n="dash_inv_unbilled">Noch nicht abgerechnet</div></div>
       <div class="stc" id="dc-unbilled-h" style="background:var(--tile-dark-bg);border-color:var(--tile-dark-border)"><div class="stn" id="s-ubh2" style="color:#fff">0 h</div><div class="stl" style="color:var(--tile-dark-txt)" data-i18n="dash_open_hours">Offene Stunden</div></div>
-      <div class="stc" id="dc-peters" style="display:none;background:var(--tile-blue-bg);border-color:var(--tile-blue-border)"><div class="stn money" id="s-peters" style="color:var(--tile-blue-txt)">0</div><div class="stl">Bei Frau Peters zur Prüfung</div></div>
+      <div class="stc" id="dc-peters" style="display:none;background:var(--tile-purple-bg);border-color:var(--tile-purple-border);cursor:pointer" onclick="go('pg-rg')"><div class="stn money" id="s-peters" style="color:var(--tile-purple-txt)">0</div><div class="stl">Bei Frau Peters zur Prüfung</div></div>
     </div>
 
     <div id="dc-deadlines" style="padding:0 16px;margin-top:14px">
@@ -1080,6 +1082,11 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 
     <div class="lbl" style="margin:0 0 8px" data-i18n="rg_overview">Übersicht</div>
     <div id="rg-list"></div>
+
+    <div style="display:none;margin-top:20px" id="rg-pend-wrap">
+      <div class="lbl" style="margin:0 0 8px;color:var(--tile-purple-txt)">Bei Frau Peters zur Prüfung</div>
+      <div id="rg-pend-list"></div>
+    </div>
 
     <div style="height:8px"></div>
     <div class="lbl" style="margin:20px 0 8px" data-i18n="rg_import_title">Aus Excel einfügen</div>
@@ -2473,6 +2480,7 @@ function lsSet(k,v){
 // ═══ RECHNUNGEN ═══
 let RG=[];
 let ABR=[];
+let PEND=[]; // Prüf-Posten "Bei Frau Peters" (noch nicht bestätigte Abrechnungs-Batches)
 function rgSave(){ lsSet("rg",RG); }
 function rgUid(){ return "rg_"+Date.now()+"_"+Math.random().toString(36).slice(2,8); }
 
@@ -2575,11 +2583,12 @@ async function rgImport(){
     .map(l=>l.trim())
     .filter(l=>l!=="" && !/^(\|\s*:?-+:?\s*)+\|?$/.test(l));
 
-  let addedRg=0, updatedRg=0, addedAbr=0, skipped=0;
+  let addedRg=0, updatedRg=0, addedAbr=0, addedPend=0, skipped=0;
   const headers={};      // rgnr -> {datum,firma,rgnr,text,betrag,faelligkeit,bv_id}
   const calcMap={};      // fallback-Rechnungen aus Stunden berechnet (kein Kopf vorhanden)
   const blockByRgnr={};  // rgnr -> Sammelrechnungs-Block aus den Abrechnungszeilen
   const abrRows=[];
+  const pendMap={};      // block -> Prüf-Posten für "Bei Frau Peters" (5-Spalten-Kurzformat)
 
   for(const line of lines){
     const cols=rgSplitLine(line);
@@ -2603,10 +2612,39 @@ async function rgImport(){
     }
 
     // Abrechnungszeile: Datum, BV-Nr, Mitarbeiter, Stunden, Rgnr, Block
-    if(cols.length<6){ skipped++; continue; }
+    // Auch 5-spaltiges Kurzformat erlaubt: Datum, BV-Nr, Mitarbeiter, Stunden, Text
+    // (kein separates Rgnr-Feld). Dieses Kurzformat geht NICHT direkt in die
+    // Abrechnung, sondern zuerst als Prüf-Posten "Bei Frau Peters zur Prüfung".
+    // Erst wenn dieser Posten mit "OK" bestätigt wird, entsteht daraus eine
+    // offene Rechnung und wird von "Noch nicht abgerechnet" abgezogen.
+    if(cols.length<5){ skipped++; continue; }
     const bv_nr=String(cols[1]||"").trim();
     const ma_name=String(cols[2]||"").trim();
     const stunden=rgParseBetrag(cols[3]);
+    const isShort = cols.length<6;
+
+    if(isShort){
+      const text5=String(cols[4]||"").trim();
+      if(!bv_nr || !ma_name || !text5 || !stunden){ skipped++; continue; }
+      const bv=BV.find(b=>String(b.nr||"").trim()===bv_nr);
+      const bv_id=bv ? bv.id : null;
+      const k=rgNormBlock(text5);
+      if(!pendMap[k]){
+        pendMap[k]={
+          id:"pend_"+Date.now()+"_"+Math.random().toString(36).slice(2,10),
+          block:text5, datum, bv_id: bv_id||null, betrag:0, stunden:0, rows:[]
+        };
+      }
+      const rate=maRateForDate(findMaIdByName(ma_name), datum);
+      pendMap[k].betrag += stunden*rate;
+      pendMap[k].stunden += stunden;
+      if(pendMap[k].bv_id && bv_id && pendMap[k].bv_id!==bv_id) pendMap[k].bv_id=null;
+      if(datum>pendMap[k].datum) pendMap[k].datum=datum;
+      pendMap[k].rows.push({datum,bv_nr,bv_id,ma_name,ma_id:findMaIdByName(ma_name),stunden:abrHours(stunden)});
+      addedPend++;
+      continue;
+    }
+
     const rgnr=String(cols[4]||"").trim();
     const block=String(cols[5]||"").trim();
 
@@ -2649,6 +2687,26 @@ async function rgImport(){
       if(calcMap[k].bv_id && bv_id && calcMap[k].bv_id !== bv_id) calcMap[k].bv_id=null;
       if(datum > calcMap[k].datum) calcMap[k].datum=datum;
     }
+  }
+
+  // Prüf-Posten "Bei Frau Peters" speichern (nur lokal, noch nicht in Rechnungen/Abrechnung)
+  if(Object.keys(pendMap).length){
+    Object.values(pendMap).forEach(p=>{
+      const existing=PEND.find(x=>rgNormBlock(x.block)===rgNormBlock(p.block));
+      if(existing){
+        existing.rows=existing.rows.concat(p.rows);
+        existing.betrag=Math.round((existing.betrag+p.betrag)*100)/100;
+        existing.stunden=Math.round((existing.stunden+p.stunden)*100)/100;
+        if(p.datum>existing.datum) existing.datum=p.datum;
+        if(existing.bv_id && p.bv_id && existing.bv_id!==p.bv_id) existing.bv_id=null;
+      }else{
+        p.betrag=Math.round(p.betrag*100)/100;
+        p.stunden=Math.round(p.stunden*100)/100;
+        PEND.push(p);
+      }
+    });
+    lsSet("abrPending",PEND);
+    renderPetersCard();
   }
 
   // Sammelrechnungs-Block aus den Abrechnungszeilen auf die zugehörigen Kopfdaten übertragen
@@ -2711,6 +2769,7 @@ async function rgImport(){
 
   document.getElementById("rg-import-st").textContent =
     tr("rg_import_summary",{added:addedRg,updated:updatedRg,abr:addedAbr}) +
+    (addedPend ? ` · ${addedPend} Zeile(n) an Frau Peters zur Prüfung.` : "") +
     (skipped ? tr("rg_import_summary_skipped",{skipped}) : "");
 
   document.getElementById("rg-paste-rg").value="";
@@ -2976,6 +3035,7 @@ async function boot(){
   WA=new Set(lsGet("wa",[]));
   RG=lsGet("rg",[]);
   ABR=lsGet("abr",[]);
+  PEND=lsGet("abrPending",[]);
   AB=lsGet("ab",[]);
   LV=lsGet("lv",[]);
   maRatesLoad();
@@ -4703,19 +4763,85 @@ function ustats(){
   renderPetersCard();
 }
 
-// ═══ MANUELLER WERT "Bei Frau Peters zur Prüfung" (Startseite) ═══
+// ═══ "Bei Frau Peters zur Prüfung" (Startseite) ═══
+// Zeigt zwei mögliche Quellen: 1) manuell eingetragener Wert (Editor) und
+// 2) automatisch aus eingefügten Abrechnungstabellen ohne Rechnungskopf
+// entstandene Prüf-Posten (PEND). Erst wenn ein Prüf-Posten mit "OK"
+// bestätigt wird, entsteht daraus eine offene Rechnung und der Betrag wird
+// von "Noch nicht abgerechnet" abgezogen.
 function getPetersVal(){ return lsGet("petersVal",""); }
 function setPetersVal(v){ lsSet("petersVal",v); renderPetersCard(); }
+function pendSum(){ return PEND.reduce((a,p)=>a+(Number(p.betrag)||0),0); }
 function renderPetersCard(){
   const v=(getPetersVal()||"").trim();
   const el=document.getElementById("dc-peters");
   if(!el)return;
-  if(v){
+  const sum=pendSum();
+  if(sum>0){
+    el.style.display="";
+    document.getElementById("s-peters").textContent=rgFmtMoney(Math.round(sum*100)/100);
+  }else if(v){
     el.style.display="";
     document.getElementById("s-peters").textContent=v;
   }else{
     el.style.display="none";
   }
+  renderPendList();
+}
+function renderPendList(){
+  const el=document.getElementById("rg-pend-list");
+  if(!el) return;
+  if(!PEND.length){ el.innerHTML=""; el.parentElement.style.display="none"; return; }
+  el.parentElement.style.display="";
+  el.innerHTML=PEND.map(p=>`
+    <div class="crd" style="padding:12px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:center">
+        <div>
+          <div style="font-weight:600">${p.block}</div>
+          <div style="font-size:12px;color:var(--s)">${rgFmtDatum(p.datum)} · ${p.stunden} h · ${p.rows.length} Zeile(n)</div>
+        </div>
+        <div style="font-weight:700">${rgFmtMoney(p.betrag)}</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn" style="flex:1" onclick="confirmPend('${p.id}')">OK – als offene Rechnung anlegen</button>
+        <button class="bto" onclick="discardPend('${p.id}')">Verwerfen</button>
+      </div>
+    </div>
+  `).join("");
+}
+async function confirmPend(id){
+  const p=PEND.find(x=>x.id===id);
+  if(!p) return;
+  const rgnr=null;
+  const rgRow={
+    id: rgUid(), datum:p.datum, firma:"Seith Energietechnik GmbH & Co. KG",
+    rgnr, text:p.block, betrag:p.betrag, bezahltAm:null,
+    bv_id:p.bv_id||null, block:rgNormBlock(p.block)
+  };
+  const abrRows=p.rows.map(r=>({
+    id:"abr_"+Date.now()+"_"+Math.random().toString(36).slice(2,10),
+    datum:r.datum, bv_nr:r.bv_nr, bv_id:r.bv_id, ma_name:r.ma_name, ma_id:r.ma_id,
+    stunden:r.stunden, rgnr:p.block, block:p.block
+  }));
+  syn("w",tr("sync_now"));
+  const resRg=await sbIns("rg",[rgRow]);
+  if(!resRg){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
+  const resAbr=await sbIns("abr",abrRows);
+  if(!resAbr){ syn("e",tr("sync_error")); alert(tr("save_failed")); return; }
+  PEND=PEND.filter(x=>x.id!==id);
+  lsSet("abrPending",PEND);
+  await syncDown();
+  syn("",tr("sync_saved"));
+  toast("Als offene Rechnung angelegt");
+  renderPetersCard();
+  rgDashStats();
+  rRech();
+}
+function discardPend(id){
+  PEND=PEND.filter(x=>x.id!==id);
+  lsSet("abrPending",PEND);
+  renderPetersCard();
+  toast("Verworfen");
 }
 function savePetersVal(){
   const v=document.getElementById("peters-val").value.trim();
