@@ -739,7 +739,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 
     <button class="ba" onclick="go('pg-bv-editor')" style="margin-bottom:16px">
       <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 9 6v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21V12h6v9"/></svg></div>
-      <div><div class="at" data-i18n="editor_bv_list">Sätze, Budget & Archiv</div><div class="as" data-i18n="editor_bvm_menu_sub">Sätze, Budget, Archivieren, Warnungen</div></div>
+      <div><div class="at" data-i18n="editor_bvm_menu_title">Sätze, Budget & Archiv</div><div class="as" data-i18n="editor_bvm_menu_sub">Sätze, Budget, Archivieren, Warnungen</div></div>
       <div class="ar">›</div>
     </button>
   </div>
@@ -877,6 +877,12 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
         <div style="font-size:11px;color:var(--s);opacity:.75;margin-top:8px" data-i18n="editor_warn_off_global_hint">Gilt geräteübergreifend für alle Nutzer. Einzelne Baustellen können weiterhin über "Sätze, Budget & Archiv" separat behandelt werden.</div>
       </div>
     </div>
+    <button class="ba" onclick="go('pg-bv-editor')" style="margin-bottom:10px">
+      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-6 9 6v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21V12h6v9"/></svg></div>
+      <div><div class="at" data-i18n="editor_bvm_menu_title">Sätze, Budget & Archiv</div><div class="as" data-i18n="editor_bv_edit_hint">BV-Nummer, Adresse, Sätze, Budget & Archiv je Baustelle ändern</div></div>
+      <div class="ar">›</div>
+    </button>
+
     <button class="ba" onclick="go('pg-ma')" style="margin-bottom:10px">
       <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
       <div><div class="at" data-i18n="home_ma_title">Mitarbeiter verwalten</div><div class="as" data-i18n="home_ma_sub">Namen ändern, neu anlegen</div></div>
@@ -1089,6 +1095,14 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     </div>
 
     <div style="height:8px"></div>
+    <div class="lbl" style="margin:20px 0 8px;color:var(--tile-purple-txt)">Bei Frau Peters zur Prüfung einfügen</div>
+    <div class="crd" style="padding:12px">
+      <textarea id="rg-paste-peters" rows="4" placeholder="Zeilen hier einfügen: Datum, BV-Nr, Mitarbeiter, Stunden, Text (Tab-getrennt, wie beim Kopieren aus Excel)…" style="width:100%;font-size:14px;padding:10px;border:.5px solid var(--bs);border-radius:var(--rs);background:var(--c);color:var(--t);font-family:inherit;resize:vertical"></textarea>
+      <div style="font-size:12px;color:var(--s);margin-top:6px">Diese Zeilen werden immer als Prüf-Posten für Frau Peters angelegt, unabhängig vom Spaltenformat. Erst nach Bestätigung mit "OK" oben entsteht daraus eine offene Rechnung.</div>
+      <button class="btn" style="margin-top:10px" onclick="rgImportPeters()">Einfügen &amp; an Frau Peters</button>
+      <div id="rg-import-peters-st" style="margin-top:8px;font-size:13px;color:var(--s)"></div>
+    </div>
+
     <div class="lbl" style="margin:20px 0 8px" data-i18n="rg_import_title">Aus Excel einfügen</div>
     <div class="crd" style="padding:12px">
       <div class="lbl" style="margin:0 0 6px" data-i18n="rg_import_step1">1. Rechnungstabelle</div>
@@ -1724,7 +1738,9 @@ const I18N = {
     select_ma_placeholder: "-- Mitarbeiter --",
     report_date_label: "Datum:",
     pdf_selected_btn: "Ausgewählte PDFs erstellen",
+    editor_bvm_menu_title: "Sätze, Budget & Archiv",
     editor_bvm_menu_sub: "Sätze, Budget, Archivieren, Warnungen",
+    editor_bv_edit_hint: "BV-Nummer, Adresse, Sätze, Budget & Archiv je Baustelle ändern",
     push_menu_sub: "Erinnerungen & Warnungen einstellen",
 
     abw_menu_title: "Abwesenheiten & Urlaub",
@@ -2774,6 +2790,81 @@ async function rgImport(){
 
   document.getElementById("rg-paste-rg").value="";
   document.getElementById("rg-paste-abr").value="";
+  rRech();
+}
+
+// Eigenes, separates Einfüge-Feld für "Bei Frau Peters zur Prüfung":
+// Jede Zeile (Datum, BV-Nr, Mitarbeiter, Stunden, Text) wird IMMER als
+// Prüf-Posten angelegt, unabhängig von der Spaltenanzahl. Erst wenn der
+// Posten mit "OK" bestätigt wird, entsteht daraus eine offene Rechnung.
+async function rgImportPeters(){
+  const raw=document.getElementById("rg-paste-peters")?document.getElementById("rg-paste-peters").value:"";
+  const lines=raw
+    .split(/\r?\n/)
+    .map(l=>l.trim())
+    .filter(l=>l!=="" && !/^(\|\s*:?-+:?\s*)+\|?$/.test(l));
+
+  let addedPend=0, skipped=0;
+  const pendMap={};
+
+  for(const line of lines){
+    const cols=rgSplitLine(line);
+    if(!cols || cols.length<5){ skipped++; continue; }
+
+    const datum=rgParseDatum(cols[0]);
+    if(!datum){ skipped++; continue; }
+
+    const bv_nr=String(cols[1]||"").trim();
+    const ma_name=String(cols[2]||"").trim();
+    const stunden=rgParseBetrag(cols[3]);
+    const text5=String(cols[4]||"").trim();
+    if(!bv_nr || !ma_name || !text5 || !stunden){ skipped++; continue; }
+
+    const bv=BV.find(b=>String(b.nr||"").trim()===bv_nr);
+    const bv_id=bv ? bv.id : null;
+    const k=rgNormBlock(text5);
+    if(!pendMap[k]){
+      pendMap[k]={
+        id:"pend_"+Date.now()+"_"+Math.random().toString(36).slice(2,10),
+        block:text5, datum, bv_id: bv_id||null, betrag:0, stunden:0, rows:[]
+      };
+    }
+    const rate=maRateForDate(findMaIdByName(ma_name), datum);
+    pendMap[k].betrag += stunden*rate;
+    pendMap[k].stunden += stunden;
+    if(pendMap[k].bv_id && bv_id && pendMap[k].bv_id!==bv_id) pendMap[k].bv_id=null;
+    if(datum>pendMap[k].datum) pendMap[k].datum=datum;
+    pendMap[k].rows.push({datum,bv_nr,bv_id,ma_name,ma_id:findMaIdByName(ma_name),stunden:abrHours(stunden)});
+    addedPend++;
+  }
+
+  if(Object.keys(pendMap).length){
+    Object.values(pendMap).forEach(p=>{
+      const existing=PEND.find(x=>rgNormBlock(x.block)===rgNormBlock(p.block));
+      if(existing){
+        existing.rows=existing.rows.concat(p.rows);
+        existing.betrag=Math.round((existing.betrag+p.betrag)*100)/100;
+        existing.stunden=Math.round((existing.stunden+p.stunden)*100)/100;
+        if(p.datum>existing.datum) existing.datum=p.datum;
+        if(existing.bv_id && p.bv_id && existing.bv_id!==p.bv_id) existing.bv_id=null;
+      }else{
+        p.betrag=Math.round(p.betrag*100)/100;
+        p.stunden=Math.round(p.stunden*100)/100;
+        PEND.push(p);
+      }
+    });
+    lsSet("abrPending",PEND);
+    renderPetersCard();
+  }
+
+  const st=document.getElementById("rg-import-peters-st");
+  if(st){
+    st.textContent = addedPend
+      ? `${addedPend} Zeile(n) an Frau Peters zur Prüfung übergeben.`
+      : "Keine gültigen Zeilen gefunden.";
+    if(skipped) st.textContent += ` (${skipped} übersprungen)`;
+  }
+  document.getElementById("rg-paste-peters").value="";
   rRech();
 }
 
@@ -4904,6 +4995,11 @@ let unbilledHours=0;
       unbilledHours += (Number(e.stunden)||0);
     }
   });
+  // Offene (noch unbezahlte) Rechnungen sind bereits abgerechnet, auch wenn die
+  // zugehörigen Stunden (noch) nicht exakt über ABR zugeordnet werden konnten.
+  // Ihr Betrag wird deshalb zusätzlich von "Noch nicht abgerechnet" abgezogen,
+  // damit nichts doppelt gezählt wird.
+  unbilledSum = Math.max(0, unbilledSum - openSum);
   const ubEl=document.getElementById("s-ub"); if(ubEl){ ubEl.textContent=rgFmtMoney(unbilledSum); }
   const ubh2El=document.getElementById("s-ubh2"); if(ubh2El){ ubh2El.textContent=`${unbilledHours.toFixed(1).replace(/\.0$/,"")} h`; }
 
