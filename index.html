@@ -4630,7 +4630,7 @@ async function save(rows){
   if(!rows||!rows.length)return;
 
   syn("w",tr("sync_now"));
-  const res = await sbIns("en", rows, "datum,bv_id,ma_id");
+  const res = await sbIns("en", rows, "datum,bv_id,ma_id,block");
 
   if(!res){
     syn("e",tr("sync_error"));
@@ -5366,7 +5366,8 @@ function rEdRows(){
     </div>`;
   }).join("");
   document.getElementById("ema").innerHTML = totBadge + rowsHtml +
-    `<button class="bto" onclick="edAddRow()" style="margin-top:2px" data-i18n="editor_add_row">Mitarbeiter hinzufügen</button>`;
+    `<button class="bto" onclick="edAddRow()" style="margin-top:2px" data-i18n="editor_add_row">Mitarbeiter hinzufügen</button>
+    <div style="font-size:12px;color:var(--s);margin-top:6px;padding:0 2px">${LANG==="tr" ? "Aynı kişi farklı saatlerle (ör. bölünmüş vardiya) tekrar eklenebilir." : "Derselbe Mitarbeiter kann für einen zweiten Zeitblock (z.B. geteilte Schicht) erneut hinzugefügt werden."}</div>`;
 }
 function edRowTimeChange(i){
   const sEl=document.getElementById("ed-start-"+i), eEl=document.getElementById("ed-end-"+i), pEl=document.getElementById("ed-pause-"+i);
@@ -5422,17 +5423,18 @@ async function svedit(){
 
   for(const r of g.rows) await sbDel("en",r.id);
 
-  const merged={};
+  // Mehrere Zeilen desselben Mitarbeiters = mehrere Zeitblöcke (z.B. 6-9 Uhr und 12-15 Uhr).
+  // Diese werden NICHT mehr zu einer Zeile verschmolzen, sondern einzeln mit fortlaufender
+  // Blocknummer gespeichert, damit Beginn/Ende jedes Blocks erhalten bleiben.
+  const blockCounters={};
+  const rows=[];
   edRows.forEach(r=>{
     if(r.stunden<=0)return;
-    if(!merged[r.ma_id]){
-      merged[r.ma_id]={ datum:edDatum, bv_id:edBvId, ma_id:r.ma_id, stunden:0, beginn:r.beginn, ende:r.ende, pause_min:r.pause_min||0 };
-    }
-    merged[r.ma_id].stunden+=r.stunden;
+    blockCounters[r.ma_id]=(blockCounters[r.ma_id]||0)+1;
+    rows.push({ datum:edDatum, bv_id:edBvId, ma_id:r.ma_id, stunden:r.stunden, beginn:r.beginn, ende:r.ende, pause_min:r.pause_min||0, block:blockCounters[r.ma_id] });
   });
-  const rows=Object.values(merged);
 
-  if(rows.length) await sbIns("en",rows,"datum,bv_id,ma_id");
+  if(rows.length) await sbIns("en",rows,"datum,bv_id,ma_id,block");
   await syncDown();
   cls("ov-e");
   rverl();
