@@ -417,6 +417,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
   <div class="hdr"><button class="bck" onclick="bk('pg-datum')">‹</button><div><div class="ht" data-i18n="step2_title">Schritt 2 – Baustelle</div><div class="hs" id="bvsub">—</div></div></div>
   <div class="stp"><div class="sp dn"></div><div class="sp on"></div><div class="sp"></div></div>
   <div class="sc">
+    <input type="text" id="bv-search" oninput="onBvSearch(this.value)" data-i18n-ph="bv_search_ph" placeholder="Baustelle suchen (Nr., Ort, Adresse)…" style="margin-bottom:14px">
     <button type="button" class="bvb lager-btn" style="width:100%;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--gl);border:1.5px dashed var(--g);" onclick="pkLager()">
       <span style="font-size:20px;line-height:1">📦</span>
       <span style="font-size:15px;font-weight:800;color:var(--gd)" data-i18n="lager_btn">Lager (kein Bauvorhaben)</span>
@@ -1394,7 +1395,9 @@ const I18N = {
     bv_addr: "Adresse / Beschreibung",
     tap_bv: "Baustelle antippen",
     fav_bv_label: "Favoriten",
-    yesterday_bv_label: "Baustellen von gestern",
+    recent_bv_label: "Zuletzt verwendet",
+    bv_search_ph: "Baustelle suchen (Nr., Ort, Adresse)…",
+    bv_search_empty: "Keine Baustelle gefunden.",
     to_hours_btn: "Zu den Stunden →",
 
     step3_title: "Schritt 3 – Stunden",
@@ -1853,7 +1856,9 @@ const I18N = {
     bv_addr: "Adres / Açıklama",
     tap_bv: "Şantiyeye dokun",
     fav_bv_label: "Favoriler",
-    yesterday_bv_label: "Dünkü şantiyeler",
+    recent_bv_label: "Son kullanılanlar",
+    bv_search_ph: "Şantiye ara (No., yer, adres)…",
+    bv_search_empty: "Şantiye bulunamadı.",
     to_hours_btn: "Saatlere git →",
 
     step3_title: "Adım 3 – Saatler",
@@ -2274,6 +2279,8 @@ let WA=new Set(), waFilterOpen=true; // Standardmäßig nur offene (noch nicht a
 let statTab="ma", statScope="month", statPeriod="", calMonth="";
 let misscalMonth="";
 let sBV=null, cD="", eGroupKey="", eBV=null, eMA=-1, eBL=-1, selC=-1, woff=0;
+let bvSearchQ="";
+function onBvSearch(v){ bvSearchQ=v||""; rbvg(); }
 let pstack=["pg-home"];
 let toastT=null;
 let ptimer=null;
@@ -3956,6 +3963,8 @@ function gofill(dt){
   document.getElementById("nb-bl").value="";
   document.getElementById("bvhint").style.display="none";
   document.getElementById("bvsub").textContent=fd(dt);
+  bvSearchQ="";
+  document.getElementById("bv-search").value="";
   rbvg();
   go("pg-bv");
 }
@@ -4288,6 +4297,8 @@ async function n2bv(){
   document.getElementById("nb-nm").value="";
   document.getElementById("nb-bl").value="";
   document.getElementById("bvhint").style.display="none";
+  bvSearchQ="";
+  document.getElementById("bv-search").value="";
   rbvg();
   go("pg-bv");
 }
@@ -4318,18 +4329,42 @@ function rbvg(){
   if(lagerBtn) lagerBtn.classList.toggle("sl", !!(sBV && String(sBV.nr||"").trim().toUpperCase()==="LAGER"));
   const all=[...BV].filter(b=>!b.archived && String(b.nr||"").trim().toUpperCase()!=="LAGER").sort((a,b)=>a.nr.localeCompare(b.nr));
   const favIds=new Set(getFavBvIds());
+
+  // Suche: BV-Nr., Name/Adresse durchsuchen (z.B. "Ettlingen" -> alle BV mit "Ettlingen" im Namen).
+  // Bei aktiver Suche werden nur Treffer gezeigt, Favoriten/Zuletzt-verwendet-Abschnitte ausgeblendet.
+  const q=(bvSearchQ||"").trim().toLowerCase();
+  if(q){
+    const matches=all.filter(b=>
+      String(b.nr||"").toLowerCase().includes(q) ||
+      String(b.name||"").toLowerCase().includes(q)
+    );
+    document.getElementById("bvg-wrap").innerHTML = matches.length
+      ? `<div class="bvg">${matches.map(bvTile).join("")}</div>`
+      : `<div class="emp" style="padding:24px 0;text-align:center;color:var(--s)">${tr("bv_search_empty")}</div>`;
+    return;
+  }
+
   const favs=all.filter(b=>favIds.has(b.id));
 
-  const yDate=prevDayOf(cD);
-  const yIds=new Set(EN.filter(e=>e.datum===yDate).map(e=>e.bv_id));
-  const yesterday=all.filter(b=>yIds.has(b.id) && !favIds.has(b.id));
+  // Zuletzt verwendet: bis zu 6 BVs mit dem jüngsten Eintrag, unabhängig vom exakten Datum
+  // (damit z.B. nach einem Wochenende oder Urlaub trotzdem die zuletzt genutzte Baustelle oben steht).
+  // "Gestern" wird dabei bevorzugt sortiert, danach nach Aktualität.
+  const lastUsed={};
+  EN.forEach(e=>{
+    if(!lastUsed[e.bv_id] || e.datum>lastUsed[e.bv_id]) lastUsed[e.bv_id]=e.datum;
+  });
+  const recentIds=Object.keys(lastUsed)
+    .filter(id=>!favIds.has(id) && lastUsed[id]<cD)
+    .sort((a,b)=>lastUsed[b].localeCompare(lastUsed[a]))
+    .slice(0,6);
+  const recent=recentIds.map(id=>all.find(b=>String(b.id)===String(id))).filter(Boolean);
 
   let html="";
   if(favs.length){
     html+=`<div class="bvrubric"><span style="display:inline-flex;vertical-align:-2px;margin-right:4px">${ICON_STAR}</span>${tr("fav_bv_label")}</div><div class="bvg" style="margin-bottom:18px">${favs.map(bvTile).join("")}</div>`;
   }
-  if(yesterday.length){
-    html+=`<div class="bvrubric"><span style="display:inline-flex;vertical-align:-2px;margin-right:4px">${ICON_CLOCK}</span>${tr("yesterday_bv_label")}</div><div class="bvg" style="margin-bottom:18px">${yesterday.map(bvTile).join("")}</div>`;
+  if(recent.length){
+    html+=`<div class="bvrubric"><span style="display:inline-flex;vertical-align:-2px;margin-right:4px">${ICON_CLOCK}</span>${tr("recent_bv_label")}</div><div class="bvg" style="margin-bottom:18px">${recent.map(bvTile).join("")}</div>`;
   }
   html+=`<div class="lbl" data-i18n="tap_bv">${tr("tap_bv")}</div><div class="bvg">${all.map(bvTile).join("")}</div>`;
 
