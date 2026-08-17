@@ -2367,7 +2367,7 @@ function fillRapportPdf(form, dateStr, bvId, futureMaIds){
     // (Anfang/Ende/Pause/Stunden bleiben leer) statt der gespeicherten Stundeneinträge.
     const rows = (futureMaIds && futureMaIds.length)
         ? futureMaIds.map(maId => ({ ma_id: maId, beginn: "", ende: "", pause_min: null, stunden: "" }))
-        : EN.filter(e => e.datum === dateStr && e.bv_id == bvId);
+        : sortGroupRows(EN.filter(e => e.datum === dateStr && e.bv_id == bvId));
 
     form.getTextField('text_3').setText(bv.nr || "");
     form.getTextField('text_0').setText(formatDate(dateStr));
@@ -3305,6 +3305,24 @@ async function pkLager(){
 
 function bvNrBadge(nr){ return validBVNr(nr) ? "" : ` <span title="${tr("bv_nr_invalid_short")}" style="color:var(--danger-txt);font-weight:bold;display:inline-flex;vertical-align:middle">${ICON_WARN}</span>`; }
 
+// Sortiert Zeilen einer Gruppe (Tag+Baustelle) so, dass mehrere Blöcke desselben
+// Mitarbeiters (z.B. geteilte Schicht 6-9 und 12-15 Uhr) direkt untereinander stehen,
+// mit der früheren Uhrzeit zuerst. Wird von groupedEntries() und dem Rapport-PDF genutzt.
+function sortGroupRows(rows){
+  const order=[], byMa={};
+  rows.forEach(r=>{
+    const k=String(r.ma_id);
+    if(!byMa[k]){ byMa[k]=[]; order.push(k); }
+    byMa[k].push(r);
+  });
+  const timeVal=t=>{ const p=parseTime(t); return p===null?99999:p; };
+  const out=[];
+  order.forEach(k=>{
+    out.push(...byMa[k].slice().sort((a,b)=>timeVal(a.beginn)-timeVal(b.beginn)));
+  });
+  return out;
+}
+
 function groupedEntries(){
   const map={};
   EN.forEach(e=>{
@@ -3312,7 +3330,7 @@ function groupedEntries(){
     if(!map[key]) map[key]={ key, datum:e.datum, bv_id:e.bv_id, rows:[] };
     map[key].rows.push(e);
   });
-  return Object.values(map).sort((a,b)=>a.datum.localeCompare(b.datum));
+  return Object.values(map).map(g=>({...g, rows:sortGroupRows(g.rows)})).sort((a,b)=>a.datum.localeCompare(b.datum));
 }
 
 // ═══ WHATSAPP-VERSAND CHECKLISTE ═══
@@ -4383,6 +4401,10 @@ function n2st(){
   indivPause={};
   indivStart={};
   indivEnd={};
+  indivBlock2={};
+  indivStart2={};
+  indivEnd2={};
+  indivPause2={};
   document.getElementById("t-start").value="";
   document.getElementById("t-end").value="";
   document.getElementById("p-0").classList.remove("sl");
@@ -4446,6 +4468,20 @@ function rTimeMode(){
         <button class="pausebtn ${indivPause[m.id]===30?"sl":""}" id="ti-p30-${m.id}" onclick="pickPauseIndiv('${m.id}',30)">${tr("pause_30")}</button>
         <button class="pausebtn ${indivPause[m.id]===45?"sl":""}" id="ti-p45-${m.id}" onclick="pickPauseIndiv('${m.id}',45)">${tr("pause_45")}</button>
       </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${indivBlock2[m.id]?"8":"14"}px">
+        <div class="lbl" style="margin:0">${LANG==="tr" ? "İkinci zaman dilimi (bölünmüş vardiya)" : "Zweiter Zeitblock (geteilte Schicht)"}</div>
+        <button class="tgl ${indivBlock2[m.id]?"on":""}" onclick="toggleIndivBlock2('${m.id}')"></button>
+      </div>
+      ${indivBlock2[m.id] ? `
+      <div class="timegrid" style="margin-bottom:8px">
+        <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="start_time">Anfang</div><input type="text" id="ti2-start-${m.id}" placeholder="12:00" inputmode="numeric" maxlength="5" value="${indivStart2[m.id]||""}" oninput="autoTimeFmt(this);indivStart2['${m.id}']=this.value;calcIndiv('${m.id}');checkStValid()" onblur="finalizeTimeFmt(this)"></div>
+        <div class="timefld"><div class="lbl" style="margin:0 0 6px" data-i18n="end_time">Ende</div><input type="text" id="ti2-end-${m.id}" placeholder="15:00" inputmode="numeric" maxlength="5" value="${indivEnd2[m.id]||""}" oninput="autoTimeFmt(this);indivEnd2['${m.id}']=this.value;calcIndiv('${m.id}');checkStValid()" onblur="finalizeTimeFmt(this)"></div>
+      </div>
+      <div class="pauseg" style="margin-bottom:14px">
+        <button class="pausebtn ${indivPause2[m.id]===0?"sl":""}" id="ti2-p0-${m.id}" onclick="pickPauseIndiv2('${m.id}',0)">${tr("pause_none")}</button>
+        <button class="pausebtn ${indivPause2[m.id]===30?"sl":""}" id="ti2-p30-${m.id}" onclick="pickPauseIndiv2('${m.id}',30)">${tr("pause_30")}</button>
+        <button class="pausebtn ${indivPause2[m.id]===45?"sl":""}" id="ti2-p45-${m.id}" onclick="pickPauseIndiv2('${m.id}',45)">${tr("pause_45")}</button>
+      </div>` : ""}
       <div class="calcbox" id="ti-calc-${m.id}" style="display:none;margin:0 0 18px">
         <div class="calctot" id="ti-tot-${m.id}">0</div>
         <div class="calclbl">${tr("hours_confirm_lbl")}</div>
@@ -4458,6 +4494,23 @@ function rTimeMode(){
 let indivPause={};
 let indivStart={};
 let indivEnd={};
+// Zweiter Zeitblock (geteilte Schicht, z.B. 6-9 Uhr + 12-15 Uhr) - selten benötigt, daher per Schieberegler pro Mitarbeiter zuschaltbar
+let indivBlock2={};
+let indivStart2={};
+let indivEnd2={};
+let indivPause2={};
+function toggleIndivBlock2(id){
+  indivBlock2[id]=!indivBlock2[id];
+  if(indivBlock2[id] && indivPause2[id]==null) indivPause2[id]=30;
+  rTimeMode();
+  checkStValid();
+}
+function pickPauseIndiv2(id,min){
+  indivPause2[id]=min;
+  ["0","30","45"].forEach(v=>document.getElementById(`ti2-p${v}-${id}`)?.classList.toggle("sl",Number(v)===min));
+  calcIndiv(id);
+  checkStValid();
+}
 function pickPauseIndiv(id,min){
   indivPause[id]=min;
   ["0","30","45"].forEach(v=>document.getElementById(`ti-p${v}-${id}`).classList.toggle("sl",Number(v)===min));
@@ -4524,9 +4577,14 @@ function calcIndiv(id){
   const h=calcHours(document.getElementById(`ti-start-${id}`)?.value,document.getElementById(`ti-end-${id}`)?.value,indivPause[id]||0);
   const box=document.getElementById(`ti-calc-${id}`);
   if(!box)return;
-  if(h===null){ box.style.display="none"; return; }
+  let h2=null;
+  if(indivBlock2[id]){
+    h2=calcHours(document.getElementById(`ti2-start-${id}`)?.value,document.getElementById(`ti2-end-${id}`)?.value,indivPause2[id]||0);
+  }
+  if(h===null && h2===null){ box.style.display="none"; return; }
+  const tot=(h||0)+(h2||0);
   box.style.display="block";
-  document.getElementById(`ti-tot-${id}`).textContent=fmtH(h)+" h";
+  document.getElementById(`ti-tot-${id}`).textContent=fmtH(tot)+" h"+(indivBlock2[id]?` (${fmtH(h||0)}+${fmtH(h2||0)})`:"");
 }
 function fmtH(h){
   return (h%1===0)?String(h):String(h).replace(".",",");
@@ -4538,7 +4596,14 @@ function checkStValid(){
     if(sameTime){
       valid = calcHours(document.getElementById("t-start").value,document.getElementById("t-end").value,curPause)!==null;
     }else{
-      valid = [...teamSel].every(id=>calcHours(document.getElementById(`ti-start-${id}`)?.value,document.getElementById(`ti-end-${id}`)?.value,indivPause[id]||0)!==null);
+      valid = [...teamSel].every(id=>{
+        const ok1=calcHours(document.getElementById(`ti-start-${id}`)?.value,document.getElementById(`ti-end-${id}`)?.value,indivPause[id]||0)!==null;
+        if(!ok1)return false;
+        if(indivBlock2[id]){
+          return calcHours(document.getElementById(`ti2-start-${id}`)?.value,document.getElementById(`ti2-end-${id}`)?.value,indivPause2[id]||0)!==null;
+        }
+        return true;
+      });
     }
   }
   document.getElementById("stnx").disabled=!valid;
@@ -4554,13 +4619,23 @@ function buildRows(){
     const h=calcHours(document.getElementById("t-start").value,document.getElementById("t-end").value,curPause);
     if(h===null)return null;
     [...teamSel].forEach(id=>{
-      rows.push({ datum:cD, bv_id:sBV.id, ma_id:id, stunden:h, beginn:normTime(document.getElementById("t-start").value), ende:normTime(document.getElementById("t-end").value), pause_min:curPause });
+      rows.push({ datum:cD, bv_id:sBV.id, ma_id:id, stunden:h, beginn:normTime(document.getElementById("t-start").value), ende:normTime(document.getElementById("t-end").value), pause_min:curPause, block:1 });
     });
   }else{
     for(const id of teamSel){
       const h=calcHours(document.getElementById(`ti-start-${id}`)?.value,document.getElementById(`ti-end-${id}`)?.value,indivPause[id]||0);
       if(h===null)return null;
-      rows.push({ datum:cD, bv_id:sBV.id, ma_id:id, stunden:h, beginn:normTime(document.getElementById(`ti-start-${id}`).value), ende:normTime(document.getElementById(`ti-end-${id}`).value), pause_min:indivPause[id]||0 });
+      const blocks=[{ stunden:h, beginn:normTime(document.getElementById(`ti-start-${id}`).value), ende:normTime(document.getElementById(`ti-end-${id}`).value), pause_min:indivPause[id]||0 }];
+      if(indivBlock2[id]){
+        const h2=calcHours(document.getElementById(`ti2-start-${id}`)?.value,document.getElementById(`ti2-end-${id}`)?.value,indivPause2[id]||0);
+        if(h2===null)return null;
+        blocks.push({ stunden:h2, beginn:normTime(document.getElementById(`ti2-start-${id}`).value), ende:normTime(document.getElementById(`ti2-end-${id}`).value), pause_min:indivPause2[id]||0 });
+      }
+      // Chronologisch sortieren, damit Block 1 immer die frühere Uhrzeit ist (unabhängig davon, in welches Feld sie eingetragen wurde)
+      blocks.sort((a,b)=>(parseTime(a.beginn)??99999)-(parseTime(b.beginn)??99999));
+      blocks.forEach((b,i)=>{
+        rows.push({ datum:cD, bv_id:sBV.id, ma_id:id, stunden:b.stunden, beginn:b.beginn, ende:b.ende, pause_min:b.pause_min, block:i+1 });
+      });
     }
   }
   return rows;
@@ -4605,7 +4680,7 @@ function confirmAndSave(){
   const rows=buildRows();
   if(!rows||!rows.length){ alert(tr("warn_no_team_or_time")); return; }
   const tot=rows.reduce((a,b)=>a+b.stunden,0);
-  const namesTxt=rows.map(r=>{const m=maById(r.ma_id);return m?m.name.split(" ")[0]:"?";}).join(", ");
+  const namesTxt=[...new Set(rows.map(r=>{const m=maById(r.ma_id);return m?m.name.split(" ")[0]:"?";}))].join(", ");
   const msg = sameTime
     ? tr("confirm_hours_msg",{hours:fmtH(tot/rows.length),names:namesTxt})
     : tr("confirm_hours_msg_multi",{names:namesTxt});
