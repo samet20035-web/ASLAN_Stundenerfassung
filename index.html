@@ -417,7 +417,12 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
   <div class="hdr"><button class="bck" onclick="bk('pg-datum')">‹</button><div><div class="ht" data-i18n="step2_title">Schritt 2 – Baustelle</div><div class="hs" id="bvsub">—</div></div></div>
   <div class="stp"><div class="sp dn"></div><div class="sp on"></div><div class="sp"></div></div>
   <div class="sc">
-    <input type="text" id="bv-search" oninput="onBvSearch(this.value)" data-i18n-ph="bv_search_ph" placeholder="Baustelle suchen (Nr., Ort, Adresse)…" style="margin-bottom:14px">
+    <div style="position:relative;margin-bottom:14px">
+      <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);width:20px;height:20px;color:var(--s);pointer-events:none;display:flex;align-items:center;justify-content:center">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      </span>
+      <input type="text" id="bv-search" oninput="onBvSearch(this.value)" data-i18n-ph="bv_search_ph" placeholder="Baustelle suchen (Nr., Ort, Adresse)…" style="padding-left:42px">
+    </div>
     <button type="button" class="bvb lager-btn" style="width:100%;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--gl);border:1.5px dashed var(--g);" onclick="pkLager()">
       <span style="font-size:20px;line-height:1">📦</span>
       <span style="font-size:15px;font-weight:800;color:var(--gd)" data-i18n="lager_btn">Lager (kein Bauvorhaben)</span>
