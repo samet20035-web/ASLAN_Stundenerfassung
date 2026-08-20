@@ -417,12 +417,14 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
   <div class="hdr"><button class="bck" onclick="bk('pg-datum')">‹</button><div><div class="ht" data-i18n="step2_title">Schritt 2 – Baustelle</div><div class="hs" id="bvsub">—</div></div></div>
   <div class="stp"><div class="sp dn"></div><div class="sp on"></div><div class="sp"></div></div>
   <div class="sc">
-    <div style="position:relative;margin-bottom:14px">
+    <div style="position:relative;margin-bottom:6px">
       <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);width:20px;height:20px;color:var(--s);pointer-events:none;display:flex;align-items:center;justify-content:center">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
       </span>
-      <input type="text" id="bv-search" oninput="onBvSearch(this.value)" data-i18n-ph="bv_search_ph" placeholder="Baustelle suchen (Nr., Ort, Adresse)…" style="padding-left:42px">
+      <input type="text" id="bv-search" oninput="onBvSearch(this.value)" data-i18n-ph="bv_search_ph" placeholder="Baustelle suchen (Nr., Ort, Adresse)…" style="padding-left:42px;padding-right:40px">
+      <button type="button" id="bv-search-clear" onclick="clearBvSearch()" aria-label="Suche leeren" style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);width:28px;height:28px;border:none;border-radius:50%;background:var(--bs);color:var(--s);font-size:16px;line-height:1;cursor:pointer;align-items:center;justify-content:center">✕</button>
     </div>
+    <div id="bv-search-count" style="font-size:12px;color:var(--s);margin:0 2px 14px;min-height:16px"></div>
     <button type="button" class="bvb lager-btn" style="width:100%;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--gl);border:1.5px dashed var(--g);" onclick="pkLager()">
       <span style="font-size:20px;line-height:1">📦</span>
       <span style="font-size:15px;font-weight:800;color:var(--gd)" data-i18n="lager_btn">Lager (kein Bauvorhaben)</span>
@@ -449,6 +451,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
   <div class="stp"><div class="sp dn"></div><div class="sp dn"></div><div class="sp on"></div></div>
   <div class="sc">
     <div class="lbl" data-i18n="team_label">Wer hat mitgearbeitet?</div>
+    <div id="team-suggest" style="margin-bottom:8px"></div>
     <div class="crd" id="tml" style="margin-bottom:8px"></div>
     <div style="padding:0 16px;margin-bottom:18px">
       <div class="toggle-row">
@@ -2285,7 +2288,21 @@ let statTab="ma", statScope="month", statPeriod="", calMonth="";
 let misscalMonth="";
 let sBV=null, cD="", eGroupKey="", eBV=null, eMA=-1, eBL=-1, selC=-1, woff=0;
 let bvSearchQ="";
-function onBvSearch(v){ bvSearchQ=v||""; rbvg(); }
+function onBvSearch(v){
+  bvSearchQ=v||"";
+  const clr=document.getElementById("bv-search-clear");
+  if(clr) clr.style.display = bvSearchQ ? "flex" : "none";
+  rbvg();
+}
+function clearBvSearch(){
+  bvSearchQ="";
+  const inp=document.getElementById("bv-search");
+  if(inp) inp.value="";
+  const clr=document.getElementById("bv-search-clear");
+  if(clr) clr.style.display="none";
+  rbvg();
+  document.getElementById("bv-search")?.focus();
+}
 let pstack=["pg-home"];
 let toastT=null;
 let ptimer=null;
@@ -3970,6 +3987,8 @@ function gofill(dt){
   document.getElementById("bvsub").textContent=fd(dt);
   bvSearchQ="";
   document.getElementById("bv-search").value="";
+  const bvClr=document.getElementById("bv-search-clear"); if(bvClr) bvClr.style.display="none";
+  const bvCnt=document.getElementById("bv-search-count"); if(bvCnt) bvCnt.textContent="";
   rbvg();
   go("pg-bv");
 }
@@ -4304,6 +4323,8 @@ async function n2bv(){
   document.getElementById("bvhint").style.display="none";
   bvSearchQ="";
   document.getElementById("bv-search").value="";
+  const bvClr=document.getElementById("bv-search-clear"); if(bvClr) bvClr.style.display="none";
+  const bvCnt=document.getElementById("bv-search-count"); if(bvCnt) bvCnt.textContent="";
   rbvg();
   go("pg-bv");
 }
@@ -4338,16 +4359,23 @@ function rbvg(){
   // Suche: BV-Nr., Name/Adresse durchsuchen (z.B. "Ettlingen" -> alle BV mit "Ettlingen" im Namen).
   // Bei aktiver Suche werden nur Treffer gezeigt, Favoriten/Zuletzt-verwendet-Abschnitte ausgeblendet.
   const q=(bvSearchQ||"").trim().toLowerCase();
+  const countEl=document.getElementById("bv-search-count");
   if(q){
     const matches=all.filter(b=>
       String(b.nr||"").toLowerCase().includes(q) ||
       String(b.name||"").toLowerCase().includes(q)
     );
+    if(countEl){
+      countEl.textContent = matches.length
+        ? (LANG==="tr" ? `${matches.length} sonuç` : (matches.length===1 ? "1 Treffer" : `${matches.length} Treffer`))
+        : "";
+    }
     document.getElementById("bvg-wrap").innerHTML = matches.length
       ? `<div class="bvg">${matches.map(bvTile).join("")}</div>`
       : `<div class="emp" style="padding:24px 0;text-align:center;color:var(--s)">${tr("bv_search_empty")}</div>`;
     return;
   }
+  if(countEl) countEl.textContent="";
 
   const favs=all.filter(b=>favIds.has(b.id));
 
@@ -4454,10 +4482,46 @@ function n2st(){
   document.getElementById("tgl-same").classList.add("on");
   document.getElementById("stnx").disabled=true;
   rTeam();
+  rTeamSuggest();
   rTimeMode();
   go("pg-st");
 }
 
+// Ermittelt das zuletzt (vor dem aktuellen Datum) auf dieser Baustelle eingesetzte Team
+function lastTeamForBv(bvId, beforeDate){
+  const rows=EN.filter(e=>String(e.bv_id)===String(bvId) && e.datum<beforeDate);
+  if(!rows.length) return null;
+  const lastDate=rows.reduce((max,e)=>e.datum>max?e.datum:max, rows[0].datum);
+  const maIds=[...new Set(rows.filter(e=>e.datum===lastDate).map(e=>e.ma_id))];
+  return { date:lastDate, maIds };
+}
+function rTeamSuggest(){
+  const box=document.getElementById("team-suggest");
+  if(!box)return;
+  if(!sBV){ box.innerHTML=""; return; }
+  const info=lastTeamForBv(sBV.id, cD);
+  const active=new Set(MA.filter(m=>!m.archived && isMaEmployedOn(m,cD) && !isMaLongAbsentOn(m,cD)).map(m=>m.id));
+  const availableIds = info ? info.maIds.filter(id=>active.has(id)) : [];
+  if(!info || !availableIds.length){ box.innerHTML=""; return; }
+  const alreadySelected = availableIds.length===teamSel.size && availableIds.every(id=>teamSel.has(id));
+  if(alreadySelected){ box.innerHTML=""; return; }
+  const names = availableIds.map(id=>{const m=maById(id); return m?m.name.split(" ")[0]:null;}).filter(Boolean);
+  box.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--gl);border:1px solid var(--g);border-radius:12px;padding:10px 14px">
+    <div style="font-size:13px;line-height:1.4">${LANG==="tr" ? `Bu şantiyede en son (${fd(info.date)}) çalışan ekip: <b>${names.join(", ")}</b>` : `Zuletzt (${fd(info.date)}) auf dieser Baustelle: <b>${names.join(", ")}</b>`}</div>
+    <button type="button" class="bto" style="white-space:nowrap;flex-shrink:0" onclick="applyLastTeam()">${LANG==="tr" ? "Aynı ekip" : "Gleiches Team"}</button>
+  </div>`;
+}
+function applyLastTeam(){
+  if(!sBV)return;
+  const info=lastTeamForBv(sBV.id, cD);
+  if(!info)return;
+  const active=new Set(MA.filter(m=>!m.archived && isMaEmployedOn(m,cD) && !isMaLongAbsentOn(m,cD)).map(m=>m.id));
+  teamSel = new Set(info.maIds.filter(id=>active.has(id)));
+  rTeam();
+  rTimeMode();
+  checkStValid();
+  rTeamSuggest();
+}
 function rTeam(){
   const active=MA.filter(m=>!m.archived && isMaEmployedOn(m,cD) && !isMaLongAbsentOn(m,cD));
   const rowHtml=m=>`
@@ -4473,6 +4537,7 @@ function toggleTeam(id){
   rTeam();
   rTimeMode();
   checkStValid();
+  rTeamSuggest();
 }
 
 function toggleSameTime(){
