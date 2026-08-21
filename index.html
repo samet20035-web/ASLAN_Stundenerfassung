@@ -293,16 +293,21 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 .tlempty{padding:40px 20px;text-align:center;color:var(--s);font-size:14px;}
 .tlouter{display:flex;padding:10px 16px 4px;gap:0;}
 .tlaxis{flex-shrink:0;width:42px;position:relative;}
+.tlaxishead{min-height:28px;}
 .tlaxis-lbl{position:absolute;right:6px;transform:translateY(-50%);font-size:10.5px;font-weight:700;color:var(--s);}
 .tlscroll{flex:1;overflow-x:auto;overflow-y:hidden;border-left:.5px solid var(--b);-webkit-overflow-scrolling:touch;}
 .tlgrid{position:relative;display:flex;}
 .tlgridlines{position:absolute;inset:0;pointer-events:none;}
 .tlgline{position:absolute;left:0;right:0;border-top:.5px solid var(--b);}
 .tlcol{position:relative;width:84px;flex-shrink:0;border-right:.5px solid var(--b);}
-.tlcolhead{position:sticky;top:0;font-size:11px;font-weight:700;text-align:center;padding:3px 2px;color:var(--t);background:var(--bg);border-bottom:.5px solid var(--b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tlcolhead{position:sticky;top:0;z-index:5;font-size:11.5px;font-weight:800;text-align:center;padding:6px 3px;color:var(--t);background:var(--c);border-bottom:1.5px solid var(--bs);white-space:normal;overflow-wrap:break-word;line-height:1.15;min-height:28px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(10,12,14,.08);}
+.tlcol-overlap .tlcolhead{background:rgba(192,57,43,.14);border-bottom:1.5px solid #c0392b;color:#c0392b;}
+.tlcolwarn{display:inline-block;margin-right:3px;}
 .tlblock{position:absolute;left:3px;right:3px;border-radius:7px;color:#fff;font-size:10px;font-weight:700;line-height:1.25;padding:3px 4px;overflow:hidden;box-shadow:0 1px 3px rgba(10,12,14,.18);cursor:pointer;}
 .tlblock .tlbt{opacity:.92;font-weight:600;font-size:9.5px;}
 .tlpause{position:absolute;left:0;right:0;bottom:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,0) 0,rgba(255,255,255,0) 3px,rgba(255,255,255,.55) 3px,rgba(255,255,255,.55) 6px);border-top:1px dashed rgba(255,255,255,.85);pointer-events:none;}
+.tlblock.tloverlap{outline:2.5px solid #c0392b;outline-offset:1px;box-shadow:0 0 0 3px rgba(192,57,43,.25),0 1px 3px rgba(10,12,14,.18);z-index:3;}
+.tlwarnbadge{position:absolute;top:2px;right:2px;width:14px;height:14px;background:#c0392b;color:#fff;border-radius:50%;font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(10,12,14,.3);z-index:4;}
 .tlcolfoot{margin-top:6px;padding:6px 3px;border-top:1px solid var(--b);text-align:center;}
 .tlcolfoot .tlcfh{font-size:11px;font-weight:800;color:var(--t);}
 .tlcolfoot .tlcfp{font-size:9.5px;font-weight:700;color:var(--s);margin-top:1px;}
@@ -1389,6 +1394,7 @@ const I18N = {
     tages_no_times: "Für diesen Tag liegen Einträge ohne erfasste Uhrzeiten vor:",
     tages_gap: "Lücke",
     tages_gap_hint: "Zwischen zwei Einsätzen liegt eine Lücke – z. B. Fahrzeit, Pause oder nicht erfasste Zeit.",
+    tages_overlap_hint: "Achtung: Dieser Mitarbeiter hat zeitlich überlappende Einsätze auf unterschiedlichen Baustellen.",
     tages_block_title: "Einsatz",
     tages_no_time_row: "ohne Uhrzeit erfasst",
     tages_total_day: "Gesamt an diesem Tag",
@@ -1864,6 +1870,7 @@ const I18N = {
     tages_no_times: "Bu gün için saat bilgisi girilmemiş kayıtlar:",
     tages_gap: "Boşluk",
     tages_gap_hint: "İki görev arasında bir boşluk var – örn. yol süresi, mola veya kaydedilmemiş süre.",
+    tages_overlap_hint: "Dikkat: Bu çalışanın farklı şantiyelerde zaman olarak çakışan görevleri var.",
     tages_block_title: "Görev",
     tages_no_time_row: "saat girilmedi",
     tages_total_day: "Bu günün toplamı",
@@ -3884,6 +3891,18 @@ function rTages(){
       const ma=maById(maId);
       let blocksHtml="";
       const blocks=parsed[maId];
+
+      // Spuren zuweisen, damit sich zeitlich überlappende Einsätze nicht verdecken
+      const laneEnds=[];
+      blocks.forEach(b=>{
+        let lane=laneEnds.findIndex(endT=>b.start>=endT);
+        if(lane===-1){ lane=laneEnds.length; laneEnds.push(b.end); }
+        else laneEnds[lane]=b.end;
+        b.lane=lane;
+      });
+      const laneCount=Math.max(1,laneEnds.length);
+      const hasOverlap=laneCount>1;
+
       blocks.forEach((b,i)=>{
         bvIdsUsed.add(b.bv_id);
         const top=((b.start-winStart)/60)*TL_HOUR_PX;
@@ -3891,14 +3910,18 @@ function rTages(){
         const bv=bvById(b.bv_id);
         const beginnTxt=normTime(b.e.beginn)||tlMins2hhmm(b.start);
         const endeTxt=normTime(b.e.ende)||tlMins2hhmm(b.end%(24*60));
-        tlRegistry.push({type:"block",maId,bvId:b.bv_id,beginn:beginnTxt,ende:endeTxt,pauseMin:b.pause_min,stunden:b.stunden});
+        tlRegistry.push({type:"block",maId,bvId:b.bv_id,beginn:beginnTxt,ende:endeTxt,pauseMin:b.pause_min,stunden:b.stunden,overlap:hasOverlap});
         const regIdx=tlRegistry.length-1;
         const pauseH=b.pause_min>0?Math.min(h-2,(b.pause_min/60)*TL_HOUR_PX):0;
         const pauseHtml=pauseH>0?`<div class="tlpause" style="height:${pauseH}px" title="${tr("pause_label")}: ${b.pause_min} Min"></div>`:"";
-        blocksHtml+=`<div class="tlblock" style="top:${top}px;height:${h}px;background:${bvColor(b.bv_id)}" onclick="tagesShowReg(${regIdx})">
-          <div>BV ${bv?.nr||"?"}</div><div class="tlbt">${beginnTxt}–${endeTxt}</div>${pauseHtml}
+        const laneW=100/laneCount;
+        const leftStyle=laneCount>1?`left:calc(${b.lane*laneW}% + 2px);right:auto;width:calc(${laneW}% - 4px)`:`left:3px;right:3px`;
+        const overlapCls=hasOverlap?" tloverlap":"";
+        const overlapBadge=hasOverlap?`<div class="tlwarnbadge" title="${tr("tages_overlap_hint")}">⚠</div>`:"";
+        blocksHtml+=`<div class="tlblock${overlapCls}" style="top:${top}px;height:${h}px;${leftStyle};background:${bvColor(b.bv_id)}" onclick="tagesShowReg(${regIdx})">
+          ${overlapBadge}<div>BV ${bv?.nr||"?"}</div><div class="tlbt">${beginnTxt}–${endeTxt}</div>${pauseHtml}
         </div>`;
-        if(i<blocks.length-1){
+        if(i<blocks.length-1 && b.lane===blocks[i+1].lane){
           const gapStart=b.end, gapEnd=blocks[i+1].start;
           const gapMin=gapEnd-gapStart;
           if(gapMin>=5){
@@ -3914,7 +3937,8 @@ function rTages(){
       });
       const maTotalH=blocks.reduce((a,b)=>a+(Number(b.stunden)||0),0);
       const maTotalP=blocks.reduce((a,b)=>a+(Number(b.pause_min)||0),0);
-      colsHtml+=`<div class="tlcol"><div class="tlcolhead">${ma?.name||"—"}</div><div class="tltrack" style="height:${totalPx}px">${blocksHtml}</div>
+      const overlapFlag=hasOverlap?`<div class="tlcolwarn" title="${tr("tages_overlap_hint")}">⚠</div>`:"";
+      colsHtml+=`<div class="tlcol${hasOverlap?" tlcol-overlap":""}"><div class="tlcolhead">${overlapFlag}${ma?.name||"—"}</div><div class="tltrack" style="height:${totalPx}px">${blocksHtml}</div>
         <div class="tlcolfoot"><div class="tlcfh">${fmtH(maTotalH)}</div><div class="tlcfp">${tr("pause_label")}: ${maTotalP?maTotalP+" Min":tr("pause_none")}</div></div>
       </div>`;
     });
