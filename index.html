@@ -287,6 +287,30 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
 .calcell.h4{background:var(--gd);border-color:var(--gd);color:#fff;}
 .callegend{display:flex;align-items:center;justify-content:center;gap:6px;padding:0 16px 8px;font-size:11px;color:var(--s);}
 .callegend .calcell{width:16px;height:16px;aspect-ratio:unset;border-radius:4px;cursor:default;}
+
+/* --- Tagesansicht (visuelle Tages-Timeline) --- */
+.tlsum{padding:12px 16px 4px;font-size:13px;color:var(--s);}
+.tlempty{padding:40px 20px;text-align:center;color:var(--s);font-size:14px;}
+.tlouter{display:flex;padding:10px 16px 4px;gap:0;}
+.tlaxis{flex-shrink:0;width:42px;position:relative;}
+.tlaxis-lbl{position:absolute;right:6px;transform:translateY(-50%);font-size:10.5px;font-weight:700;color:var(--s);}
+.tlscroll{flex:1;overflow-x:auto;overflow-y:hidden;border-left:.5px solid var(--b);-webkit-overflow-scrolling:touch;}
+.tlgrid{position:relative;display:flex;}
+.tlgridlines{position:absolute;inset:0;pointer-events:none;}
+.tlgline{position:absolute;left:0;right:0;border-top:.5px solid var(--b);}
+.tlcol{position:relative;width:84px;flex-shrink:0;border-right:.5px solid var(--b);}
+.tlcolhead{position:sticky;top:0;font-size:11px;font-weight:700;text-align:center;padding:3px 2px;color:var(--t);background:var(--bg);border-bottom:.5px solid var(--b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tlblock{position:absolute;left:3px;right:3px;border-radius:7px;color:#fff;font-size:10px;font-weight:700;line-height:1.25;padding:3px 4px;overflow:hidden;box-shadow:0 1px 3px rgba(10,12,14,.18);cursor:pointer;}
+.tlblock .tlbt{opacity:.92;font-weight:600;font-size:9.5px;}
+.tlgap{position:absolute;left:3px;right:3px;border-radius:7px;border:1.5px dashed #c0392b;background:repeating-linear-gradient(135deg,rgba(192,57,43,.14),rgba(192,57,43,.14) 5px,rgba(192,57,43,.28) 5px,rgba(192,57,43,.28) 10px);display:flex;align-items:center;justify-content:center;text-align:center;font-size:9.5px;font-weight:800;color:#c0392b;cursor:pointer;}
+.tllegend{display:flex;flex-wrap:wrap;gap:8px;padding:14px 16px 4px;}
+.tllegit{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--s);font-weight:600;}
+.tllegsw{width:12px;height:12px;border-radius:4px;flex-shrink:0;}
+.tlnav{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;background:var(--c);border-bottom:.5px solid var(--b);gap:8px;}
+.tlnav .kwb{flex-shrink:0;}
+.tldatepick{border:.5px solid var(--bs);border-radius:var(--rs);background:var(--bg);color:var(--t);font-size:13.5px;font-weight:700;padding:8px 6px;font-family:inherit;text-align:center;flex:1;min-width:0;}
+.tllist .li{cursor:default;}
+.tlwarnbadge{display:inline-block;background:rgba(192,57,43,.13);color:#c0392b;font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:20px;margin-left:6px;}
 #lang-switch{
   position:absolute;
   right:12px;
@@ -569,6 +593,12 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
       <div class="ar">›</div>
     </button>
 
+    <button class="ba" onclick="go('pg-tagesansicht')">
+      <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 3v3M16 3v3"/><path d="M7 13h2M7 17h2M12 13h2M12 17h2"/></svg></div>
+      <div><div class="at" data-i18n="home_tages_title">Tagesansicht</div><div class="as" data-i18n="home_tages_sub">Wer hat wann gearbeitet – visuell, mit Lücken</div></div>
+      <div class="ar">›</div>
+    </button>
+
     <button class="ba" onclick="go('pg-misscal')">
       <div class="ai"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 3v3M16 3v3"/></svg></div>
       <div><div class="at" data-i18n="home_misscal_title">Kalender & fehlende Einträge</div><div class="as" data-i18n="home_misscal_sub">Übersicht wer noch nicht erfasst wurde</div></div>
@@ -598,6 +628,24 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
     <button class="kwb" onclick="woff++;rw()" data-i18n="next_week">Nächste ▶</button>
   </div>
   <div class="sc" id="wbody" style="padding-bottom:24px"></div>
+</div>
+
+<div class="pg" id="pg-tagesansicht">
+  <div class="hdr"><button class="bck" onclick="bk('pg-uebersicht')">‹</button><div><div class="ht" data-i18n="home_tages_title">Tagesansicht</div><div class="hs" id="tages-hs">—</div></div></div>
+  <div class="tlnav">
+    <button class="kwb" onclick="tagesNav(-1)">◀</button>
+    <input type="date" id="tages-datepick" class="tldatepick" onchange="tagesPickDate(this.value)">
+    <button class="kwb" onclick="tagesNav(1)">▶</button>
+  </div>
+  <div class="sc" id="tagesbody" style="padding-bottom:24px"></div>
+</div>
+
+<div class="ov" id="ov-tagesdetail" onclick="clov('ov-tagesdetail',event)">
+  <div class="sh" onclick="event.stopPropagation()">
+    <div class="shh"></div><div class="sht" id="tagesdetail-t">—</div>
+    <div class="crd" id="tagesdetail-body" style="margin-bottom:14px"></div>
+    <button class="bto" onclick="cls('ov-tagesdetail')" data-i18n="stat_close">Schliessen</button>
+  </div>
 </div>
 
 <div class="pg" id="pg-misscal">
@@ -832,6 +880,7 @@ input:focus,select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(45,122,
   <div class="sh" onclick="event.stopPropagation()">
     <div class="shh"></div><div class="sht" id="caldetail-t" data-i18n="stat_day">Tag</div>
     <div class="crd" id="caldetail-body" style="margin-bottom:14px"></div>
+    <button class="btn" id="caldetail-tages-btn" style="margin-bottom:8px" onclick="tagesGoto(caldetailDs)" data-i18n="home_tages_title">Tagesansicht</button>
     <button class="bto" onclick="cls('ov-caldetail')" data-i18n="stat_close">Schliessen</button>
   </div>
 </div>
@@ -1330,6 +1379,17 @@ const I18N = {
     home_add_sub: "Datum · Baustelle · Mitarbeiter",
     home_week_title: "Wochenübersicht",
     home_week_sub: "Stunden pro Mitarbeiter & BV",
+    home_tages_title: "Tagesansicht",
+    home_tages_sub: "Wer hat wann gearbeitet – visuell, mit Lücken",
+    tages_no_entries: "Für diesen Tag liegen keine Einträge vor.",
+    tages_no_times: "Für diesen Tag liegen Einträge ohne erfasste Uhrzeiten vor:",
+    tages_gap: "Lücke",
+    tages_gap_hint: "Zwischen zwei Einsätzen liegt eine Lücke – z. B. Fahrzeit, Pause oder nicht erfasste Zeit.",
+    tages_block_title: "Einsatz",
+    tages_no_time_row: "ohne Uhrzeit erfasst",
+    tages_total_day: "Gesamt an diesem Tag",
+    tages_employees_count: "Mitarbeiter an diesem Tag",
+    tages_swipe_hint: "← Nach links wischen, um alle Mitarbeiter zu sehen →",
     home_misscal_title: "Kalender & fehlende Einträge",
     home_misscal_sub: "Übersicht wer noch nicht erfasst wurde",
     misscal_title: "Kalender & fehlende Einträge",
@@ -3263,6 +3323,7 @@ function go(id){
   if(id==="pg-abw")rAbw();
   if(id==="pg-bv-editor")rEditorBv();
   if(id==="pg-woche"){woff=0;rw();}
+  if(id==="pg-tagesansicht"){tagesDate=td();rTages();}
   if(id==="pg-misscal"){misscalMonth=td().slice(0,7);rMissCal();}
   if(id==="pg-wa"){rwaList();syncDown();}
   if(id==="pg-stat"){statSetTab(statTab);syncDown();}
@@ -3286,6 +3347,7 @@ function bk(to){
   if(to==="pg-abw")rAbw();
   if(to==="pg-bv-editor")rEditorBv();
   if(to==="pg-woche")rw();
+  if(to==="pg-tagesansicht")rTages();
   if(to==="pg-misscal")rMissCal();
   if(to==="pg-wa"){rwaList();syncDown();}
   if(to==="pg-stat"){statSetTab(statTab);syncDown();}
@@ -3312,6 +3374,12 @@ function gkw(ds){
 
 function bvById(id){ return BV.find(b=>String(b.id)===String(id)); }
 function maById(id){ return MA.find(m=>String(m.id)===String(id)); }
+const TL_PALETTE=["#1f6e52","#c0392b","#2874a6","#b9770e","#7d3c98","#117864","#a04000","#1a5276","#943126","#196f3d","#6c3483","#935116"];
+function bvColor(id){
+  const s=String(id||"");
+  let h=0; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0;
+  return TL_PALETTE[h%TL_PALETTE.length];
+}
 function blById(id){ return BL.find(b=>String(b.id)===String(id)); }
 function validBVNr(nr){
   const v=String(nr||"").trim().toUpperCase();
@@ -3672,7 +3740,9 @@ function rStatCal(){
       <span>${tr("stat_heat_high")}</span>
     </div><div style="height:24px"></div>`;
 }
+let caldetailDs="";
 function openCalDay(ds){
+  caldetailDs=ds;
   const rows=EN.filter(e=>e.datum===ds);
   document.getElementById("caldetail-t").textContent=fd(ds);
   const c=document.getElementById("caldetail-body");
@@ -3689,6 +3759,167 @@ function openCalDay(ds){
     }).join("")+`<div class="li" style="background:var(--gl)"><div class="lii"><div class="lib">${tr("stat_total")}</div></div><div class="statrv">${fmtH(tot)}</div></div>`;
   }
   opov("ov-caldetail");
+}
+
+// ═══ TAGESANSICHT (visuelle Timeline pro Tag) ═══
+let tagesDate=td();
+const TL_HOUR_PX=52;
+let tlRegistry=[];
+
+function tagesNav(dir){
+  const d=new Date(tagesDate+"T00:00:00");
+  d.setDate(d.getDate()+dir);
+  tagesDate=d.toISOString().split("T")[0];
+  rTages();
+}
+function tagesPickDate(v){
+  if(!v)return;
+  tagesDate=v;
+  rTages();
+}
+function tagesGoto(ds){
+  tagesDate=ds;
+  cls("ov-caldetail");
+  go("pg-tagesansicht");
+}
+function tlMins2hhmm(m){
+  const h=Math.floor(m/60)%24, mm=Math.floor(m%60);
+  return `${String(h).padStart(2,"0")}:${String(mm).padStart(2,"0")}`;
+}
+function tagesShowReg(idx){
+  const r=tlRegistry[idx];
+  if(!r)return;
+  if(r.type==="block"){
+    const ma=maById(r.maId), bv=bvById(r.bvId);
+    document.getElementById("tagesdetail-t").textContent=ma?.name||"—";
+    document.getElementById("tagesdetail-body").innerHTML=`
+      <div class="li"><div class="lii"><div class="lid">${tr("tages_block_title")}</div><div class="lib">BV ${bv?.nr||"?"} · ${bv?.name||"—"}</div></div></div>
+      <div class="li"><div class="lii"><div class="lid">${tr("start_time")} – ${tr("end_time")}</div><div class="lib">${r.beginn} – ${r.ende}</div></div></div>
+      <div class="li"><div class="lii"><div class="lid">${tr("pause_label")}</div><div class="lib">${r.pauseMin?r.pauseMin+" Min":tr("pause_none")}</div></div></div>
+      <div class="li"><div class="lii"><div class="lid">${tr("stat_total")}</div><div class="lib">${fmtH(r.stunden)}</div></div></div>`;
+  }else{
+    document.getElementById("tagesdetail-t").textContent=maById(r.maId)?.name||tr("tages_gap");
+    document.getElementById("tagesdetail-body").innerHTML=`
+      <div class="li"><div class="lii"><div class="lid">${tr("tages_gap")}</div><div class="lib">${r.start} – ${r.end} (${r.durTxt})</div></div></div>
+      <div class="li"><div class="lii"><div class="lid" style="color:var(--s);font-weight:600">${tr("tages_gap_hint")}</div></div></div>`;
+  }
+  opov("ov-tagesdetail");
+}
+function rTages(){
+  const dpEl=document.getElementById("tages-datepick");
+  if(dpEl) dpEl.value=tagesDate;
+  const locale=LANG==="tr"?"tr-TR":"de-DE";
+  let dLbl=tagesDate;
+  try{ dLbl=new Date(tagesDate+"T00:00:00").toLocaleDateString(locale,{weekday:"long",day:"2-digit",month:"2-digit",year:"numeric"}); }catch(e){}
+  const hsEl=document.getElementById("tages-hs");
+  if(hsEl) hsEl.textContent=dLbl;
+
+  const body=document.getElementById("tagesbody");
+  if(!body)return;
+  tlRegistry=[];
+
+  const rows=EN.filter(e=>e.datum===tagesDate && (Number(e.stunden)>0 || (e.beginn && e.ende)));
+  if(!rows.length){
+    body.innerHTML=`<div class="tlempty">${tr("tages_no_entries")}</div>`;
+    return;
+  }
+
+  const byMa={};
+  rows.forEach(e=>{ if(!byMa[e.ma_id])byMa[e.ma_id]=[]; byMa[e.ma_id].push(e); });
+  const maIds=Object.keys(byMa).sort((a,b)=>(maById(a)?.name||"").localeCompare(maById(b)?.name||"","de"));
+
+  const parsed={};
+  let globalMin=null, globalMax=null;
+  const noTimeRows=[];
+  maIds.forEach(maId=>{
+    const blocks=byMa[maId].map(e=>{
+      const s=parseTime(e.beginn), en0=parseTime(e.ende);
+      if(s===null||en0===null){ noTimeRows.push(e); return null; }
+      let en=en0; if(en<=s) en+=24*60;
+      return {start:s,end:en,bv_id:e.bv_id,pause_min:Number(e.pause_min)||0,stunden:Number(e.stunden)||0,e};
+    }).filter(Boolean).sort((a,b)=>a.start-b.start);
+    if(blocks.length){
+      parsed[maId]=blocks;
+      blocks.forEach(b=>{
+        if(globalMin===null||b.start<globalMin)globalMin=b.start;
+        if(globalMax===null||b.end>globalMax)globalMax=b.end;
+      });
+    }
+  });
+
+  const maWithTimes=maIds.filter(id=>parsed[id]);
+  let html="";
+  const totalHours=rows.reduce((a,e)=>a+(Number(e.stunden)||0),0);
+  html+=`<div class="tlsum">${tr("tages_employees_count")}: <strong style="color:var(--t)">${maIds.length}</strong> · ${tr("tages_total_day")}: <strong style="color:var(--t)">${fmtH(totalHours)}</strong></div>`;
+
+  if(maWithTimes.length){
+    const winStart=Math.floor(globalMin/60)*60;
+    let winEnd=Math.ceil(globalMax/60)*60;
+    if(winEnd-winStart<60) winEnd=winStart+60;
+    const totalPx=((winEnd-winStart)/60)*TL_HOUR_PX;
+
+    let axisHtml="";
+    for(let m=winStart;m<=winEnd;m+=60){
+      const top=((m-winStart)/60)*TL_HOUR_PX;
+      axisHtml+=`<div class="tlaxis-lbl" style="top:${top}px">${tlMins2hhmm(m)}</div>`;
+    }
+
+    let colsHtml="";
+    const bvIdsUsed=new Set();
+    maWithTimes.forEach(maId=>{
+      const ma=maById(maId);
+      let blocksHtml="";
+      const blocks=parsed[maId];
+      blocks.forEach((b,i)=>{
+        bvIdsUsed.add(b.bv_id);
+        const top=((b.start-winStart)/60)*TL_HOUR_PX;
+        const h=Math.max(20,((b.end-b.start)/60)*TL_HOUR_PX);
+        const bv=bvById(b.bv_id);
+        const beginnTxt=normTime(b.e.beginn)||tlMins2hhmm(b.start);
+        const endeTxt=normTime(b.e.ende)||tlMins2hhmm(b.end%(24*60));
+        tlRegistry.push({type:"block",maId,bvId:b.bv_id,beginn:beginnTxt,ende:endeTxt,pauseMin:b.pause_min,stunden:b.stunden});
+        const regIdx=tlRegistry.length-1;
+        blocksHtml+=`<div class="tlblock" style="top:${top}px;height:${h}px;background:${bvColor(b.bv_id)}" onclick="tagesShowReg(${regIdx})">
+          <div>BV ${bv?.nr||"?"}</div><div class="tlbt">${beginnTxt}–${endeTxt}</div>
+        </div>`;
+        if(i<blocks.length-1){
+          const gapStart=b.end, gapEnd=blocks[i+1].start;
+          const gapMin=gapEnd-gapStart;
+          if(gapMin>=5){
+            const gTop=((gapStart-winStart)/60)*TL_HOUR_PX;
+            const gH=Math.max(16,(gapMin/60)*TL_HOUR_PX);
+            const gh=Math.floor(gapMin/60), gm=Math.round(gapMin%60);
+            const durTxt=gh>0?`${gh}h ${gm}min`:`${gm}min`;
+            tlRegistry.push({type:"gap",maId,start:tlMins2hhmm(gapStart),end:tlMins2hhmm(gapEnd),durTxt});
+            const gRegIdx=tlRegistry.length-1;
+            blocksHtml+=`<div class="tlgap" style="top:${gTop}px;height:${gH}px" onclick="tagesShowReg(${gRegIdx})">${gH>=28?durTxt:""}</div>`;
+          }
+        }
+      });
+      colsHtml+=`<div class="tlcol"><div class="tlcolhead">${ma?.name||"—"}</div><div class="tltrack" style="height:${totalPx}px">${blocksHtml}</div></div>`;
+    });
+
+    html+=`<div class="tlouter">
+      <div class="tlaxis"><div class="tlaxishead"></div><div class="tlaxistrack" style="height:${totalPx}px">${axisHtml}</div></div>
+      <div class="tlscroll"><div class="tlgrid">${colsHtml}</div></div>
+    </div>`;
+    if(maWithTimes.length>3) html+=`<div style="padding:2px 16px 0;font-size:11px;color:var(--s);text-align:center">${tr("tages_swipe_hint")}</div>`;
+
+    html+=`<div class="tllegend">${[...bvIdsUsed].map(id=>{
+      const bv=bvById(id);
+      return `<div class="tllegit"><div class="tllegsw" style="background:${bvColor(id)}"></div>BV ${bv?.nr||"?"} · ${bv?.name||"—"}</div>`;
+    }).join("")}</div>`;
+  }
+
+  if(noTimeRows.length){
+    html+=`<div class="tlsum" style="padding-top:14px">${tr("tages_no_times")}</div>
+    <div class="crd tllist" style="margin:6px 16px 0">${noTimeRows.map(e=>{
+      const ma=maById(e.ma_id), bv=bvById(e.bv_id);
+      return `<div class="li"><div class="lii"><div class="lib">${ma?.name||"—"}</div><div class="lid">BV ${bv?.nr||"?"} · ${bv?.name||"—"} · ${tr("tages_no_time_row")}</div></div><div class="statrv">${fmtH(Number(e.stunden)||0)}</div></div>`;
+    }).join("")}</div>`;
+  }
+
+  body.innerHTML=html+`<div style="height:10px"></div>`;
 }
 
 // ═══ KALENDER & FEHLENDE EINTRÄGE ═══
