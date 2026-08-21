@@ -1854,6 +1854,17 @@ const I18N = {
     home_add_sub: "Tarih · Şantiye · Çalışan",
     home_week_title: "Haftalık özet",
     home_week_sub: "Çalışan ve şantiye bazında saatler",
+    home_tages_title: "Gün görünümü",
+    home_tages_sub: "Kim ne zaman çalıştı – görsel, boşluklarla birlikte",
+    tages_no_entries: "Bu gün için kayıt bulunmuyor.",
+    tages_no_times: "Bu gün için saat bilgisi girilmemiş kayıtlar:",
+    tages_gap: "Boşluk",
+    tages_gap_hint: "İki görev arasında bir boşluk var – örn. yol süresi, mola veya kaydedilmemiş süre.",
+    tages_block_title: "Görev",
+    tages_no_time_row: "saat girilmedi",
+    tages_total_day: "Bu günün toplamı",
+    tages_employees_count: "Bu gün çalışan sayısı",
+    tages_swipe_hint: "← Tüm çalışanları görmek için sola kaydırın →",
     home_misscal_title: "Takvim & eksik girişler",
     home_misscal_sub: "Kimin henüz girmediğine genel bakış",
     misscal_title: "Takvim & eksik girişler",
@@ -3515,7 +3526,6 @@ async function toggleWaSent(key){
 }
 
 // ═══ AUSWERTUNG ═══
-function fmtH(h){ return (Math.round(h*100)/100).toString().replace(".",",")+" h"; }
 function fmtCHF(v){ return "CHF "+(Math.round(v*100)/100).toLocaleString("de-CH",{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function statInit(){
   if(!statPeriod) statPeriod=td().slice(0,7);
@@ -4923,7 +4933,8 @@ function calcIndiv(id){
   document.getElementById(`ti-tot-${id}`).textContent=fmtH(tot)+" h"+(indivBlock2[id]?` (${fmtH(h||0)}+${fmtH(h2||0)})`:"");
 }
 function fmtH(h){
-  return (h%1===0)?String(h):String(h).replace(".",",");
+  const r=Math.round((Number(h)||0)*100)/100;
+  return (r%1===0)?String(r):String(r).replace(".",",");
 }
 
 function checkStValid(){
@@ -5519,8 +5530,10 @@ function rw(){
     if(!bmap[e.bv_id]) bmap[e.bv_id]={bv_id:e.bv_id, ma:{}};
     bmap[e.bv_id].ma[e.ma_id]=(bmap[e.bv_id].ma[e.ma_id]||0)+h;
   });
+  Object.keys(mt).forEach(k=>mt[k]=Math.round(mt[k]*100)/100);
+  Object.values(bmap).forEach(x=>Object.keys(x.ma).forEach(k=>x.ma[k]=Math.round(x.ma[k]*100)/100));
 
-  const tot=Object.values(mt).reduce((a,b)=>a+b,0);
+  const tot=Math.round(Object.values(mt).reduce((a,b)=>a+b,0)*100)/100;
   const dnames=LANG==="tr"?["Paz","Pzt","Sal","Çar","Per","Cum","Cts"]:["So","Mo","Di","Mi","Do","Fr","Sa"];
 
   let h=`<div style="padding:12px 16px 0">`;
@@ -5530,24 +5543,24 @@ function rw(){
     ${MA.map(m=>{
       const v=mt[m.id]||0;
       const cls=v===0?"z":v<30?"l":"k";
-      return `<tr><td><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${m.tc};display:inline-block"></span>${m.name}</span></td><td><span class="hb ${cls}">${v}h</span></td></tr>`;
+      return `<tr><td><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${m.tc};display:inline-block"></span>${m.name}</span></td><td><span class="hb ${cls}">${String(v).replace(".",",")}h</span></td></tr>`;
     }).join("")}
-    <tr><td><strong>${LANG==="tr"?"Toplam":"Gesamt"}</strong></td><td><span class="hb k">${tot}h</span></td></tr>
+    <tr><td><strong>${LANG==="tr"?"Toplam":"Gesamt"}</strong></td><td><span class="hb k">${String(tot).replace(".",",")}h</span></td></tr>
   </table></div>`;
 
   if(Object.keys(bmap).length){
     h+=`<div class="lbl" style="margin-top:18px;margin-bottom:8px">${LANG==="tr"?"Şantiyeye göre":"Nach Baustelle"}</div>`;
     Object.values(bmap).forEach(x=>{
       const bv=bvById(x.bv_id);
-      const bt=Object.values(x.ma).reduce((a,b)=>a+b,0);
+      const bt=Math.round(Object.values(x.ma).reduce((a,b)=>a+b,0)*100)/100;
       h+=`<div class="crd" style="margin-bottom:10px;overflow:visible">
         <div style="padding:9px 14px;background:var(--gl);font-size:13px;font-weight:700;color:var(--gd);display:flex;justify-content:space-between">
-          <span>BV ${bv?.nr||"?"} · ${bv?.name||"—"}</span><span>${bt}h</span></div>
+          <span>BV ${bv?.nr||"?"} · ${bv?.name||"—"}</span><span>${String(bt).replace(".",",")}h</span></div>
         <table class="wt">${
           MA.map(m=>{
             const v=x.ma[m.id]||0;
             if(!v)return"";
-            return `<tr><td>${m.name.split(" ")[0]}</td><td><span class="hb k">${v}h</span></td></tr>`;
+            return `<tr><td>${m.name.split(" ")[0]}</td><td><span class="hb k">${String(v).replace(".",",")}h</span></td></tr>`;
           }).join("")
         }</table></div>`;
     });
